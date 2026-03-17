@@ -24,6 +24,11 @@
 }
 
 /* ===== GLOBAL ===== */
+html {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+}
+
 body {
     font-family: 'Poppins', sans-serif;
     color: #333333;
@@ -879,6 +884,34 @@ ul {
     border-top: 1px solid rgba(255, 255, 255, 0.15);
 }
 
+/* Back to Top Button */
+.back-to-top {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    width: 40px;
+    height: 40px;
+    background-color: rgba(0, 0, 0, 0.4);
+    /* Faint black */
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1000;
+    transition: background-color 0.3s ease;
+}
+
+.back-to-top:hover {
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+.back-to-top i {
+    font-size: 20px;
+}
+
 .text-light-gray {
     color: #b0bbd6 !important;
     font-weight: 600;
@@ -1059,19 +1092,70 @@ ul {
 
     .services-section,
     .why-choose-section,
-    .about-section {
-        padding: 60px 0 !important;
+    .about-section,
+    .footer-section {
+        padding: 0 !important;
+        margin-top: 0 !important;
+        margin-bottom: 2px !important;
+    }
+
+    .footer-section {
+        margin-top: 10px !important;
     }
 
     .hero-section {
-        min-height: 450px !important;
+        min-height: 480px !important;
+        /* Balanced height for banner image visibility */
+        margin-bottom: 2px !important;
+        padding: 0 !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .why-choose-section .row.mb-5.pb-xl-4 {
         margin-bottom: 40px !important;
     }
 
+    /* Aggressive reset for internal spacings to achieve tight 2px look */
+    .services-section *,
+    .why-choose-section *,
+    .about-section *,
+    .footer-section * {
+        margin-top: 0 !important;
+    }
+
+    .services-section .container,
+    .why-choose-section .container,
+    .about-section .container {
+        padding-top: 5px !important;
+        padding-bottom: 5px !important;
+    }
+
+    /* Header top (Sticky position, Industry Level) */
+    .main-navbar {
+        position: sticky !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        z-index: 1000 !important;
+        padding-top: 10px !important;
+        padding-bottom: 10px !important;
+        background-color: #ffffff !important;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Hiding background decorations on mobile */
+    .footer-bg-map,
+    .why-choose-section::before,
+    .about-bg-underlay,
+    .about-bg-image {
+        display: none !important;
+    }
+
     .hero-content {
+        padding-top: 60px !important;
+        /* Clearance for sticky header */
         padding-left: 20px !important;
         padding-right: 20px !important;
         max-width: 100vw;
@@ -1096,25 +1180,74 @@ ul {
         opacity: 0.35 !important;
     }
 
-    /* Center the CareyGo footer logo on mobile */
+    /* Center logo and handle spacing */
     .footer-logo {
         display: block !important;
         margin-left: auto !important;
         margin-right: auto !important;
+        margin-bottom: 20px !important;
     }
 
-    /* Resolving Footer Social Icons Overlap on Mobile */
-    .footer-socials {
-        position: relative !important;
-        top: auto !important;
-        left: auto !important;
-        margin-top: 150px !important;
-        margin-bottom: 30px !important;
-        margin-left: 3.5% !important;
-    }
-
-    /* Adding small left gap to all bottom footer content */
     .footer-col {
-        padding-left: 3.5% !important;
+        margin-bottom: 20px !important;
+        padding-left: 0 !important;
+    }
+
+    /* Mobile Footer v2 Refinements */
+    .footer-mobile-v2 {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 10px 15px 10px 48px !important;
+        /* Header top gap matched, reduced left gap */
+        margin: 0 !important;
+        text-align: left !important;
+    }
+
+    .footer-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+        font-size: 11px;
+        font-weight: 400;
+        color: #b0bbd6;
+    }
+
+    .footer-row a {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: #b0bbd6;
+        text-decoration: none;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .footer-row .sep {
+        color: rgba(255, 255, 255, 0.3);
+    }
+
+    .footer-row i {
+        color: #009cff;
+        font-size: 11px;
+    }
+
+    .websoftera-text {
+        color: #009cff !important;
+        font-weight: 500 !important;
+    }
+
+    /* Back to Top Mobile Flush Positioning */
+    .back-to-top {
+        bottom: 0 !important;
+        left: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border-radius: 0 4px 0 0 !important;
+        width: 45px;
+        height: 45px;
+        z-index: 10001;
     }
 }
