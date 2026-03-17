@@ -24,7 +24,8 @@
 }
 
 /* ===== GLOBAL ===== */
-html, body {
+html,
+body {
     scroll-behavior: smooth;
     overflow-x: hidden;
     max-width: 100%;
