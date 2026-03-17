@@ -831,6 +831,12 @@ ul {
     margin-bottom: 25px !important;
 }
 
+@media (min-width: 992px) {
+    .footer-useful-links {
+        padding-left: 80px !important; /* Shifting Useful Links to the right to clear globe */
+    }
+}
+
 .footer-heading i {
     font-size: 18px;
     color: rgba(255, 255, 255, 0.7);
