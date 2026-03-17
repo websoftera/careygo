@@ -24,9 +24,10 @@
 }
 
 /* ===== GLOBAL ===== */
-html {
+html, body {
     scroll-behavior: smooth;
     overflow-x: hidden;
+    max-width: 100%;
 }
 
 body {
@@ -796,8 +797,10 @@ ul {
 .footer-bg-map {
     position: absolute;
     top: 90px;
-    left: 2%;
+    left: 0;
     width: 390px;
+    max-width: 35vw;
+    /* Enforces proportional scaling on tablet/small screens */
     height: 250px;
     background-image: url('../assets/images/gloabe-bg.png');
     background-size: contain;
