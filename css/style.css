@@ -256,7 +256,7 @@ ul {
 
 /* ===== HERO SECTION ===== */
 .hero-section {
-    min-height: 520px !important;
+    min-height: 500px !important;
     background-image: url('../assets/images/Main-banner-1.jpg');
     background-size: cover;
     background-position: right center;
@@ -265,6 +265,7 @@ ul {
     margin: 0 !important;
     max-width: 100% !important;
     border-radius: 0 !important;
+    padding: 60px 0;
 }
 
 /* Dark overlay so text is clearly visible */
@@ -295,7 +296,7 @@ ul {
     padding: 10px 32px;
     border-radius: 50px;
     display: inline-block;
-    margin-bottom: 25px !important;
+    margin-bottom: 20px !important;
     letter-spacing: 0.5px;
 }
 
@@ -304,7 +305,7 @@ ul {
     font-weight: 800;
     line-height: 1.15;
     letter-spacing: -0.5px;
-    margin-bottom: 35px !important;
+    margin-bottom: 28px !important;
 }
 
 .hero-btn-container {
@@ -383,7 +384,7 @@ ul {
 
 /* ===== SERVICES SECTION ===== */
 .services-section {
-    padding: 80px 0 10px 0;
+    padding: 70px 0;
     background-color: #ffffff;
 }
 
@@ -443,7 +444,7 @@ ul {
     width: 100%;
     border-radius: 6px;
     overflow: hidden;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }
 
 /* Fixed height & object-fit ensures all images align perfectly uniformly regardless of source aspect ratio */
@@ -464,7 +465,7 @@ ul {
     font-size: 16px;
     font-weight: 700 !important;
     letter-spacing: -0.2px;
-    margin-bottom: 12px !important;
+    margin-bottom: 10px !important;
     color: var(--primary-blue) !important;
 }
 
@@ -491,13 +492,14 @@ ul {
     }
 
     .services-intro .btn-primary-custom {
-        margin-bottom: 30px;
+        margin-bottom: 20px;
     }
 }
 
 @media (max-width: 767.98px) {
     .services-section {
-        padding: 40px 0;
+        padding: 50px 0;
+    }
     }
 
     .service-img-wrapper img {
@@ -508,7 +510,7 @@ ul {
 
 /* ===== WHY CHOOSE US SECTION ===== */
 .why-choose-section {
-    padding: 10px 0 5px 0;
+    padding: 70px 0;
     background-color: #f2f5f9;
     /* Clean light slate-blue background matching the reference flow perfectly */
     position: relative;
@@ -541,7 +543,7 @@ ul {
 
 .section-heading {
     letter-spacing: -0.5px;
-    margin-bottom: 24px !important;
+    margin-bottom: 20px !important;
 }
 
 .why-choose-subtitle {
@@ -554,6 +556,7 @@ ul {
 .feature-item {
     text-align: left;
     transition: transform 0.3s ease;
+    margin-bottom: 30px;
 }
 
 .feature-item:hover {
@@ -605,13 +608,13 @@ ul {
 
 @media (max-width: 991.98px) {
     .why-choose-section {
-        padding: 80px 0;
+        padding: 60px 0;
     }
 }
 
 @media (max-width: 767.98px) {
     .why-choose-section {
-        padding: 60px 0;
+        padding: 50px 0;
     }
 
     /* Center text for ABOUT CAREYGO and VALUE PROPOSITION headings */
@@ -682,7 +685,7 @@ ul {
 
 /* ===== ABOUT / DELIVERY SECTION ===== */
 .about-section {
-    padding: 15px 0 120px 0;
+    padding: 70px 0;
     background-color: #f2f5f9;
     position: relative;
     overflow: hidden;
@@ -726,7 +729,7 @@ ul {
 .about-feature-item {
     display: flex;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     font-size: 16px;
     font-family: 'Poppins', sans-serif;
     font-weight: 700;
@@ -760,13 +763,13 @@ ul {
 
 @media (max-width: 991.98px) {
     .about-section {
-        padding: 80px 0;
+        padding: 60px 0;
     }
 }
 
 @media (max-width: 767.98px) {
     .about-section {
-        padding: 60px 0;
+        padding: 50px 0;
     }
 }
 
@@ -816,7 +819,7 @@ ul {
 .footer-logo {
     height: 90px;
     object-fit: contain;
-    margin-bottom: 150px !important;
+    margin-bottom: 60px !important;
 }
 
 .footer-socials {
@@ -960,25 +963,25 @@ ul {
     }
 }
 
-/* 1. Global Section Vertical Spacing */
+/* 1. Global Section Vertical Spacing - Modern Tight Spacing */
 .top-bar {
-    padding: 5px 0 !important;
+    padding: 4px 0 !important;
 }
 
 .main-navbar {
-    padding: 10px 0 !important;
+    padding: 8px 0 !important;
 }
 
 .services-section {
-    padding: 100px 0 !important;
+    padding: 70px 0 !important;
 }
 
 .why-choose-section {
-    padding: 100px 0 !important;
+    padding: 70px 0 !important;
 }
 
 .about-section {
-    padding: 100px 0 !important;
+    padding: 70px 0 !important;
 }
 
 .about-section>.container {
@@ -991,12 +994,32 @@ ul {
 }
 
 .footer-bottom-bar {
-    padding: 10px 0 !important;
+    padding: 8px 0 !important;
 }
 
 /* 2. Hero Section Height & Alignment */
 .hero-section {
-    min-height: 600px !important;
+    min-height: 500px !important;
+}
+
+/* 3. Reduce Large Margins on Service Section */
+.services-section .row.gx-5.mb-4 {
+    margin-bottom: 30px !important;
+}
+
+/* 4. Optimize Bootstrap Utility Margins Desktop View */
+@media (min-width: 992px) {
+    .services-intro {
+        margin-bottom: 0 !important;
+    }
+    
+    .services-intro h2 {
+        margin-bottom: 18px !important;
+    }
+    
+    .services-intro p {
+        margin-bottom: 24px !important;
+    }
 }
 
 .hero-content {
@@ -1171,12 +1194,19 @@ ul {
         overflow-wrap: break-word;
     }
 
+    /* Hero button styling for mobile - match services button */
+    .hero-section .btn-primary-custom {
+        padding-left: 26px !important;
+        padding-right: 26px !important;
+    }
+
     /* SERVICES – heading in one line & tighter spacing */
     .services-intro h2 {
         font-size: 30px !important;
         line-height: 1.15 !important;
         letter-spacing: -0.5px !important;
         margin-bottom: 14px !important;
+        white-space: nowrap !important;
     }
 
     .services-intro h2 br {
@@ -1188,21 +1218,21 @@ ul {
     }
 
     .services-intro p {
-        margin-bottom: 18px !important;
+        margin-bottom: 8px !important;
     }
 
     /* First “Connect With Us” button under Business Verticals */
     .services-intro .btn-primary-custom {
         padding-left: 26px !important;
         padding-right: 26px !important;
-        margin-left: 4px !important;
-        margin-top: 6px !important;
-        margin-bottom: 10px !important;
+        margin-left: 25px !important;
+        margin-top: 0px !important;
+        margin-bottom: 0px !important;
     }
 
     /* Tighten space under VALUE PROPOSITION / Why Choose CAREYGO heading */
     .why-choose-section .section-heading {
-        margin-bottom: 12px !important;
+        margin-bottom: 1px !important;
     }
 
     /* Reduce top gap before first feature card block */
