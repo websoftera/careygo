@@ -1106,17 +1106,18 @@ ul {
     .footer-section {
         padding: 18px 0 !important;
         margin-top: 0 !important;
-        margin-bottom: 8px !important;
+        margin-bottom: 3px !important; /* ~3px gap between sections */
     }
 
     .footer-section {
         margin-top: 10px !important;
+        margin-bottom: 0 !important; /* remove white band under footer */
     }
 
     .hero-section {
         min-height: 480px !important;
         /* Balanced height for banner image visibility */
-        margin-b    ottom: 6px !important;
+        margin-bottom: 6px !important;
         padding: 0 !important;
         display: flex;
         align-items: center;
@@ -1132,60 +1133,6 @@ ul {
     .about-section .container {
         padding-top: 10px !important;
         padding-bottom: 10px !important;
-    }
-
-    /* SERVICES – heading in one line & tighter spacing */
-    .services-intro h2 {
-        font-size: 30px !important;
-        line-height: 1.15 !important;
-        letter-spacing: -0.5px !important;
-        margin-bottom: 14px !important;
-    }
-
-    .services-intro h2 br {
-        display: none;
-    }
-
-    .services-intro h6 {
-        margin-bottom: 6px !important;
-    }
-
-    .services-intro p {
-        margin-bottom: 18px !important;
-    }
-
-    /* First “Connect With Us” button under Business Verticals */
-    .services-intro .btn-primary-custom {
-        padding-left: 26px !important;
-        padding-right: 26px !important;
-        margin-left: 2px !important;
-        margin-top: 6px !important;
-        margin-bottom: 10px !important;
-    }
-
-    /* ABOUT section – reduce gaps & align spacing with services */
-    .about-section {
-        margin-top: 0 !important;
-    }
-
-    .about-heading {
-        margin-bottom: 18px !important;
-    }
-
-    .about-desc {
-        margin-bottom: 18px !important;
-    }
-
-    .about-section .row.mb-5 {
-        margin-bottom: 18px !important;
-    }
-
-    .about-feature-item {
-        margin-bottom: 10px !important;
-    }
-
-    .about-section .mt-2 {
-        margin-top: 10px !important;
     }
 
     /* Header top (Sticky position, Industry Level) */
@@ -1224,8 +1171,78 @@ ul {
         overflow-wrap: break-word;
     }
 
+    /* SERVICES – heading in one line & tighter spacing */
+    .services-intro h2 {
+        font-size: 30px !important;
+        line-height: 1.15 !important;
+        letter-spacing: -0.5px !important;
+        margin-bottom: 14px !important;
+    }
+
+    .services-intro h2 br {
+        display: none;
+    }
+
+    .services-intro h6 {
+        margin-bottom: 6px !important;
+    }
+
     .services-intro p {
-        margin-bottom: 30px !important;
+        margin-bottom: 18px !important;
+    }
+
+    /* First “Connect With Us” button under Business Verticals */
+    .services-intro .btn-primary-custom {
+        padding-left: 26px !important;
+        padding-right: 26px !important;
+        margin-left: 4px !important;
+        margin-top: 6px !important;
+        margin-bottom: 10px !important;
+    }
+
+    /* Tighten space under VALUE PROPOSITION / Why Choose CAREYGO heading */
+    .why-choose-section .section-heading {
+        margin-bottom: 12px !important;
+    }
+
+    /* Reduce top gap before first feature card block */
+    .why-choose-section .row.g-4.g-lg-5.mt-2.mb-0 {
+        margin-top: 8px !important;
+    }
+
+    /* General feature item spacing */
+    .feature-item {
+        margin-bottom: 10px !important;
+    }
+
+    /* Shorten bottom margin of feature descriptions */
+    .feature-desc {
+        margin-bottom: 16px !important;
+    }
+
+    /* ABOUT section – mobile spacing aligned with services */
+    .about-section {
+        margin-top: 0 !important;
+    }
+
+    .about-heading {
+        margin-bottom: 18px !important;
+    }
+
+    .about-desc {
+        margin-bottom: 18px !important;
+    }
+
+    .about-section .row.mb-5 {
+        margin-bottom: 18px !important;
+    }
+
+    .about-feature-item {
+        margin-bottom: 10px !important;
+    }
+
+    .about-section .mt-2 {
+        margin-top: 10px !important;
     }
 
     /* Resolving Footer Mobile Background overlay */
@@ -1254,25 +1271,50 @@ ul {
         display: flex;
         flex-direction: column;
         align-items: flex-start;
-        gap: 8px;
-        padding: 10px 15px 10px 48px !important;
-        /* Header top gap matched, reduced left gap */
+        gap: 6px;
+        padding: 10px 14px 10px 14px !important;
         margin: 0 !important;
         text-align: left !important;
     }
 
-    .footer-row {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        white-space: nowrap;
+        .footer-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            font-size: 11px;
+            line-height: 1.3;
+            font-weight: 400;
+            color: #b0bbd6;
+            
+        }
+
+    /* First row: About / Returns / Privacy / FAQ */
+    .footer-row:first-child {
+        justify-content: flex-start;
+        gap: 4px;
         font-size: 11px;
-        font-weight: 400;
-        color: #b0bbd6;
+    }
+
+    /* Middle row: phone + email */
+    .footer-row:nth-child(2) {
+        justify-content: flex-start;
+        gap: 4px;
+        font-size: 11px;
+    }
+
+    .footer-mobile-v2 a {
+        font-size: 11px;
+        letter-spacing: 0.1px;
+    }
+
+    /* Vertical gap between footer rows */
+    .footer-mobile-v2 .footer-row + .footer-row {
+        margin-top: 2px;
     }
 
     .footer-row a {
-        display: flex;
+        display: inline-flex;
         align-items: center;
         gap: 4px;
         color: #b0bbd6;
@@ -1290,10 +1332,35 @@ ul {
         font-size: 11px;
     }
 
-    .websoftera-text {
+    /* Ensure last line (© 2026...) stays on one row and small */
+    .footer-row:last-child span {
+        display: inline-flex;
+        align-items: center;
+        flex-wrap: nowrap;
+        white-space: nowrap;
+        font-size: 10.5px;
+    }
+
+    .footer-section .container {
+        padding-bottom: 0 !important;
+        margin-bottom: 0 !important;
+    }
+    .footer-row {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+      }
+      
+      .footer-row span {
+        white-space: nowrap;
+      }
+      
+      .websoftera-text {
         color: #009cff !important;
         font-weight: 500 !important;
-    }
+        white-space: nowrap;
+      }
 
     /* Back to Top Mobile Flush Positioning */
     .back-to-top {
