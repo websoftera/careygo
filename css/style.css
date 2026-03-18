@@ -1104,9 +1104,9 @@ ul {
     .why-choose-section,
     .about-section,
     .footer-section {
-        padding: 0 !important;
+        padding: 18px 0 !important;
         margin-top: 0 !important;
-        margin-bottom: 2px !important;
+        margin-bottom: 8px !important;
     }
 
     .footer-section {
@@ -1116,7 +1116,7 @@ ul {
     .hero-section {
         min-height: 480px !important;
         /* Balanced height for banner image visibility */
-        margin-bottom: 2px !important;
+        margin-b    ottom: 6px !important;
         padding: 0 !important;
         display: flex;
         align-items: center;
@@ -1124,22 +1124,68 @@ ul {
     }
 
     .why-choose-section .row.mb-5.pb-xl-4 {
-        margin-bottom: 40px !important;
-    }
-
-    /* Aggressive reset for internal spacings to achieve tight 2px look */
-    .services-section *,
-    .why-choose-section *,
-    .about-section *,
-    .footer-section * {
-        margin-top: 0 !important;
+        margin-bottom: 28px !important;
     }
 
     .services-section .container,
     .why-choose-section .container,
     .about-section .container {
-        padding-top: 5px !important;
-        padding-bottom: 5px !important;
+        padding-top: 10px !important;
+        padding-bottom: 10px !important;
+    }
+
+    /* SERVICES – heading in one line & tighter spacing */
+    .services-intro h2 {
+        font-size: 30px !important;
+        line-height: 1.15 !important;
+        letter-spacing: -0.5px !important;
+        margin-bottom: 14px !important;
+    }
+
+    .services-intro h2 br {
+        display: none;
+    }
+
+    .services-intro h6 {
+        margin-bottom: 6px !important;
+    }
+
+    .services-intro p {
+        margin-bottom: 18px !important;
+    }
+
+    /* First “Connect With Us” button under Business Verticals */
+    .services-intro .btn-primary-custom {
+        padding-left: 26px !important;
+        padding-right: 26px !important;
+        margin-left: 2px !important;
+        margin-top: 6px !important;
+        margin-bottom: 10px !important;
+    }
+
+    /* ABOUT section – reduce gaps & align spacing with services */
+    .about-section {
+        margin-top: 0 !important;
+    }
+
+    .about-heading {
+        margin-bottom: 18px !important;
+    }
+
+    .about-desc {
+        margin-bottom: 18px !important;
+    }
+
+    .about-section .row.mb-5 {
+        margin-bottom: 18px !important;
+    }
+
+    .about-feature-item {
+        margin-bottom: 10px !important;
+    }
+
+    .about-section .mt-2 {
+        margin-top: 10px !important;
     }
 
     /* Header top (Sticky position, Industry Level) */
