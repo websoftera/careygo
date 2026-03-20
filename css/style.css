@@ -340,6 +340,17 @@ ul {
     }
 }
 
+/* Hero at 1200px–1350px — prevent content overflow */
+@media (min-width: 1200px) and (max-width: 1350px) {
+    .hero-title {
+        font-size: 3rem !important;
+    }
+
+    .hero-content {
+        max-width: 560px !important;
+    }
+}
+
 @media (max-width: 991.98px) {
     .hero-section {
         min-height: 500px;
@@ -499,7 +510,6 @@ ul {
 @media (max-width: 767.98px) {
     .services-section {
         padding: 50px 0;
-    }
     }
 
     .service-img-wrapper img {
@@ -938,6 +948,71 @@ ul {
 
 /* ===== REFINED SPACING FIXES ===== */
 
+/* ===== ZOOM-STABLE NAVBAR — fluid scaling across all zoom levels ===== */
+
+/* Base: ensure navbar never overflows its container */
+.main-navbar .container {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    min-width: 0;
+}
+
+.main-navbar .navbar-collapse {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+/* Logo: fluid max-height so it scales with zoom */
+.brand-logo {
+    max-height: clamp(48px, 5vw, 72px);
+    width: auto;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+/* Nav links wrapper: allow shrinking, fluid padding */
+.nav-links-wrapper {
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+/* Nav links: fluid font and padding */
+.navbar-nav .nav-link {
+    white-space: nowrap;
+    padding: 8px clamp(6px, 1vw, 18px) !important;
+    font-size: clamp(11px, 0.85vw, 13px) !important;
+}
+
+/* Search btn: fluid size */
+.search-btn {
+    width: clamp(36px, 3vw, 44px);
+    height: clamp(36px, 3vw, 44px);
+    min-width: clamp(36px, 3vw, 44px);
+    flex-shrink: 0;
+    margin-right: clamp(8px, 1vw, 18px);
+}
+
+/* Connect With Us: fluid, never wraps */
+.nav-actions .btn-primary-custom {
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-size: clamp(12px, 0.9vw, 14px) !important;
+    height: clamp(36px, 3vw, 44px);
+}
+
+.nav-actions .icon-circle {
+    flex-shrink: 0;
+}
+
+/* Nav actions wrapper */
+.nav-actions {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 0.5rem;
+}
+
 /* Prevent Navigation Icons Layout Break at 110% Zoom */
 @media (min-width: 1200px) {
     .main-navbar .navbar-collapse {
@@ -949,6 +1024,58 @@ ul {
         white-space: nowrap !important;
         flex-wrap: nowrap !important;
     }
+}
+
+/* ===== 1200px–1600px BREAKPOINT — covers 110%–150% zoom on all screen sizes ===== */
+@media (min-width: 1200px) and (max-width: 1600px) {
+
+    .brand-logo {
+        max-height: 58px !important;
+    }
+
+    .nav-links-wrapper {
+        padding: 6px clamp(8px, 1.2vw, 24px) !important;
+    }
+
+    .navbar-nav .nav-link {
+        padding: 8px clamp(5px, 0.8vw, 14px) !important;
+        font-size: clamp(11px, 0.78vw, 13px) !important;
+    }
+
+    .search-btn {
+        margin-right: clamp(6px, 0.8vw, 14px) !important;
+    }
+
+    .nav-actions .btn-primary-custom {
+        padding: 0 6px 0 clamp(10px, 1vw, 18px) !important;
+        font-size: clamp(11px, 0.82vw, 13px) !important;
+    }
+
+    .main-navbar .container {
+        padding-left: clamp(8px, 1vw, 16px) !important;
+        padding-right: clamp(8px, 1vw, 16px) !important;
+    }
+
+    .top-info {
+        gap: clamp(12px, 1.5vw, 28px) !important;
+    }
+}
+
+/* ===== HERO — fluid scaling across zoom levels ===== */
+.hero-section {
+    min-height: clamp(400px, 40vw, 600px) !important;
+}
+
+.hero-content {
+    max-width: min(650px, 60%) !important;
+}
+
+.hero-title {
+    font-size: clamp(1.6rem, 3.2vw, 3.5rem) !important;
+}
+
+.hero-label {
+    font-size: clamp(13px, 1.1vw, 18px) !important;
 }
 
 @media (min-width: 992px) {
@@ -1127,20 +1254,21 @@ ul {
     .why-choose-section,
     .about-section,
     .footer-section {
-        padding: 18px 0 !important;
+        padding: 0 !important;
         margin-top: 0 !important;
-        margin-bottom: 3px !important; /* ~3px gap between sections */
+        margin-bottom: 1px !important; /* 1px gap between sections */
     }
 
     .footer-section {
-        margin-top: 10px !important;
-        margin-bottom: 0 !important; /* remove white band under footer */
+        margin-bottom: 0 !important; /* last element — no gap below */
+        padding-top: 0 !important;
+        padding-bottom: 8px !important; /* equal top & bottom */
     }
 
     .hero-section {
         min-height: 480px !important;
         /* Balanced height for banner image visibility */
-        margin-bottom: 6px !important;
+        margin-bottom: 1px !important; /* consistent 1px gap */
         padding: 0 !important;
         display: flex;
         align-items: center;
@@ -1148,14 +1276,18 @@ ul {
     }
 
     .why-choose-section .row.mb-5.pb-xl-4 {
-        margin-bottom: 28px !important;
+        margin-bottom:1px !important;
     }
 
     .services-section .container,
-    .why-choose-section .container,
+    .why-choose-section .container {
+        padding-top: 2px !important;
+        padding-bottom: 2px !important;
+    }
+
     .about-section .container {
-        padding-top: 10px !important;
-        padding-bottom: 10px !important;
+        padding-top: 5px !important;
+        padding-bottom: 5px !important;
     }
 
     /* Header top (Sticky position, Industry Level) */
@@ -1205,7 +1337,7 @@ ul {
         font-size: 30px !important;
         line-height: 1.15 !important;
         letter-spacing: -0.5px !important;
-        margin-bottom: 14px !important;
+        margin-bottom: 1px !important;
         white-space: nowrap !important;
     }
 
@@ -1214,11 +1346,11 @@ ul {
     }
 
     .services-intro h6 {
-        margin-bottom: 6px !important;
+        margin-bottom: 5px !important;
     }
 
     .services-intro p {
-        margin-bottom: 8px !important;
+        margin-bottom: 5px !important;
     }
 
     /* First “Connect With Us” button under Business Verticals */
@@ -1226,7 +1358,7 @@ ul {
         padding-left: 26px !important;
         padding-right: 26px !important;
         margin-left: 25px !important;
-        margin-top: 0px !important;
+        margin-top: 1px !important;
         margin-bottom: 0px !important;
     }
 
@@ -1235,19 +1367,24 @@ ul {
         margin-bottom: 1px !important;
     }
 
+    /* Remove bottom margin from heading row wrapper */
+    .why-choose-section .row.mb-3 {
+        margin-bottom: 0 !important;
+    }
+
     /* Reduce top gap before first feature card block */
     .why-choose-section .row.g-4.g-lg-5.mt-2.mb-0 {
-        margin-top: 8px !important;
+        margin-top: 1px !important;
     }
 
-    /* General feature item spacing */
+    /* General feature item spacing — halved */
     .feature-item {
-        margin-bottom: 10px !important;
+        margin-bottom: 2px !important;
     }
 
-    /* Shorten bottom margin of feature descriptions */
+    /* Shorten bottom margin of feature descriptions — halved */
     .feature-desc {
-        margin-bottom: 16px !important;
+        margin-bottom: 2px !important;
     }
 
     /* ABOUT section – mobile spacing aligned with services */
@@ -1256,23 +1393,64 @@ ul {
     }
 
     .about-heading {
-        margin-bottom: 18px !important;
+        margin-bottom: 0px !important;
     }
 
     .about-desc {
-        margin-bottom: 18px !important;
-    }
-
-    .about-section .row.mb-5 {
-        margin-bottom: 18px !important;
-    }
-
-    .about-feature-item {
         margin-bottom: 10px !important;
     }
 
+    .about-section .row.mb-5 {
+        margin-bottom: 10px !important;
+    }
+
+    .about-feature-item {
+        margin-bottom: 0 !important; /* gap controlled by ul gap only */
+    }
+
+    /* Tighten the ul gap so both columns are equal */
+    .about-section .list-unstyled.gap-3 {
+        gap: 4px !important;
+    }
+
+    /* Stack both feature columns into one on mobile, remove row gap */
+    .about-section .row.gy-3 {
+        --bs-gutter-y: 0 !important;
+    }
+
+    .about-section .col-sm-6 {
+        width: 100% !important;
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* Keep consistent 4px gap between second ul and first when stacked */
+    .about-section .col-sm-6:last-child ul {
+        margin-top: 4px !important;
+    }
+
+    /* About section — halve space between image and content card on mobile */
+    .about-section .row.g-4 {
+        gap: 1px !important; /* was 24px (g-4) */
+    }
+
+    .about-section .col-lg-6.mb-4 {
+        margin-bottom: 1px !important; /* was 16px (mb-4) */
+    }
+
+    /* Halve inner card top padding on mobile */
+    .about-section .col-lg-6:last-child .p-4 {
+        padding-top: 2px !important;
+        padding-bottom: 2px !important; /* match top — equal spacing */
+    }
+
     .about-section .mt-2 {
-        margin-top: 10px !important;
+        margin-top: 2px !important;
+    }
+
+    /* Remove space below Connect With Us button */
+    .about-section .mt-2.pb-2 {
+        padding-bottom: 2px !important;
     }
 
     /* Resolving Footer Mobile Background overlay */
@@ -1302,7 +1480,7 @@ ul {
         flex-direction: column;
         align-items: flex-start;
         gap: 6px;
-        padding: 10px 14px 10px 14px !important;
+        padding: 10px 14px !important; /* equal top & bottom inner spacing */
         margin: 0 !important;
         text-align: left !important;
     }
