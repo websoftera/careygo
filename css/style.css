@@ -806,9 +806,8 @@ ul {
     position: absolute;
     top: 90px;
     left: 0;
-    width: 390px;
-    max-width: 35vw;
-    /* Enforces proportional scaling on tablet/small screens */
+    width: 320px;
+    max-width: 320px;
     height: 250px;
     background-image: url('../assets/images/gloabe-bg.png');
     background-size: contain;
@@ -824,12 +823,13 @@ ul {
     height: 90px;
     object-fit: contain;
     margin-bottom: 60px !important;
+    padding-left: 20px;
 }
 
 .footer-socials {
     position: absolute;
     top: 135px;
-    left: 0.5%;
+    left: 20px;
 }
 
 .footer-heading {
@@ -937,26 +937,6 @@ ul {
 @media (max-width: 991px) {
     .footer-col {
         margin-bottom: 40px !important;
-    }
-}
-
-/* ===== DESKTOP INTER-SECTION SPACING (10–15px vertical gap between sections) ===== */
-/* Applied at lg+ (992px+) only — does NOT affect mobile or tablet */
-@media (min-width: 992px) {
-    .services-section {
-        margin-top: 12px;
-    }
-
-    .why-choose-section {
-        margin-top: 12px;
-    }
-
-    .about-section {
-        margin-top: 12px !important; /* overrides inline style="margin-top: -45px" on the element */
-    }
-
-    .footer-section {
-        margin-top: 12px;
     }
 }
 
@@ -1090,7 +1070,7 @@ ul {
 }
 
 .hero-content {
-    padding-left: 0 !important;
+    padding-left: 30px !important;
     padding-top: 0 !important;
     padding-bottom: 0 !important;
 }
@@ -1583,5 +1563,56 @@ ul {
         width: 45px;
         height: 45px;
         z-index: 10001;
+    }
+}
+
+/* ===== DESKTOP 10px SIDE SPACING FIX (≥992px only) ===== */
+/* Targets: top-bar, navbar, services, why-choose, about, footer containers */
+/* Hero and footer structure/design are NOT changed */
+
+@media (min-width: 992px) {
+
+    /* Force all section containers to exactly 10px left/right padding */
+    .top-bar .container,
+    .main-navbar .container,
+    .services-section .container,
+    .why-choose-section .container,
+    .about-section .container {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+        max-width: 100% !important;
+    }
+
+    /* Footer desktop container: override px-lg-4 (24px) down to 10px */
+    .footer-section .container {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+        max-width: 100% !important;
+    }
+
+    /* Fix top-info negative margin that was compensating for old container padding */
+    .top-info {
+        margin-left: 0 !important;
+    }
+
+    /* Hero section spans full width — keep as-is, only ensure no side overflow */
+    .hero-section {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    /* Hero inner container keeps Bootstrap default so content aligns with 10px edge */
+    .hero-section .container {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+        max-width: 100% !important;
+    }
+}
+
+/* 1200px–1350px: keep navbar container at 10px (overrides the 12px set earlier) */
+@media (min-width: 1200px) and (max-width: 1350px) {
+    .main-navbar .container {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
     }
 }
