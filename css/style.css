@@ -1566,6 +1566,7 @@ ul {
     }
 }
 
+<<<<<<< HEAD
 /* ===== DESKTOP 10px SIDE SPACING FIX (≥992px only) ===== */
 /* Targets: top-bar, navbar, services, why-choose, about, footer containers */
 /* Hero and footer structure/design are NOT changed */
@@ -1614,5 +1615,580 @@ ul {
     .main-navbar .container {
         padding-left: 10px !important;
         padding-right: 10px !important;
+=======
+
+/* ===== SITE HEADER (Fixed) ===== */
+.site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1030;
+    background-color: #ffffff;
+}
+
+/* Push body content below fixed header */
+body {
+    padding-top: 128px;
+}
+
+@media (max-width: 991.98px) {
+    body {
+        padding-top: 64px;
+    }
+}
+
+/* Brand logo desktop */
+.navbar-brand {
+    margin-left: -15px;
+}
+
+/* ===== MOBILE OVERRIDES (max-width: 767.98px) ===== */
+/* Spacing system:
+   Section padding : 24px top/bottom
+   Heading label   : 4px bottom
+   Content gap     : 10–12px
+   Element margin  : 6–16px
+*/
+@media (max-width: 767.98px) {
+
+    /* --- HEADER --- */
+    .brand-logo       { max-height: 46px !important; }
+    .navbar-brand     { margin-left: 0 !important; }
+    .main-navbar      { padding: 4px 0 !important; }
+
+    /* --- SECTION WRAPPERS --- */
+    .services-section,
+    .why-choose-section,
+    .about-section,
+    .footer-section {
+        padding: 24px 0 !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    .services-section .container,
+    .why-choose-section .container,
+    .about-section .container {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    /* --- HERO --- */
+    .hero-section {
+        min-height: 360px !important;
+        margin-bottom: 0 !important;
+        padding: 0 !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .hero-content {
+        padding: 24px 20px !important;
+        max-width: 100vw;
+        box-sizing: border-box;
+        text-align: center;
+    }
+
+    .hero-label   { margin-bottom: 12px !important; }
+
+    .hero-title {
+        font-size: 26px !important;
+        line-height: 1.2 !important;
+        margin-bottom: 16px !important;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+
+    .hero-btn-container { margin-top: 0 !important; }
+
+    .hero-section .btn-primary-custom {
+        padding-left: 26px !important;
+        padding-right: 26px !important;
+    }
+
+    /* --- SERVICES --- */
+    .services-intro {
+        text-align: left !important;
+        margin-bottom: 16px !important;
+    }
+
+    .services-intro h6 { margin-bottom: 4px !important; }
+
+    .services-intro h2 {
+        font-size: 28px !important;
+        line-height: 1.15 !important;
+        letter-spacing: -0.5px !important;
+        margin-bottom: 10px !important;
+        white-space: nowrap !important;
+        text-align: left !important;
+    }
+
+    .services-intro h2 br { display: none; }
+
+    .services-intro p { margin-bottom: 12px !important; }
+
+    .services-btn-wrapper {
+        text-align: center;
+        margin-top: 4px !important;
+    }
+
+    .services-intro .btn-primary-custom {
+        padding-left: 26px !important;
+        padding-right: 26px !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    .services-section .row.gx-5.mb-4 { margin-bottom: 16px !important; }
+
+    .service-card        { padding: 0 8px !important; }
+    .service-img-wrapper { margin-bottom: 10px !important; }
+    .service-title       { margin-bottom: 6px !important; }
+
+    /* --- WHY CHOOSE --- */
+    .why-choose-section .col-lg-8 h6 { margin-bottom: 4px !important; }
+
+    /* Reduce h2 font size so it doesn't span 3 lines */
+    .why-choose-section .section-heading {
+        font-size: 26px !important;
+        line-height: 1.2 !important;
+        margin-bottom: 8px !important;
+    }
+
+    .why-choose-section .row.mb-3 { margin-bottom: 0 !important; }
+
+    /* Tighten the features grid gap */
+    .why-choose-section .row.g-4.g-lg-5.mt-2.mb-0 {
+        margin-top: 4px !important;
+        --bs-gutter-y: 8px !important;
+    }
+
+    /* Feature item internals — 8px spacing throughout */
+    .feature-item {
+        margin-bottom: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    .feature-item .feature-icon-wrapper {
+        order: 1;
+        margin: 0 auto 8px auto !important;
+        width: 64px !important;
+        height: 64px !important;
+    }
+
+    .feature-item .feature-title-group {
+        order: 2;
+        margin-bottom: 8px !important;
+    }
+
+    .feature-item .feature-desc {
+        order: 3;
+        margin-bottom: 0 !important;
+    }
+
+    .feature-desc { margin-bottom: 0 !important; }
+
+    /* --- ABOUT --- */
+    .about-section { margin-top: 0 !important; }
+
+    .about-section .col-lg-6.mb-4 { margin-bottom: 12px !important; }
+
+    .about-section .position-relative h6 { margin-bottom: 4px !important; }
+
+    .about-heading { margin-bottom: 10px !important; }
+    .about-desc    { margin-bottom: 12px !important; }
+
+    .about-section .row.mb-5 { margin-bottom: 12px !important; }
+
+    .about-feature-item { margin-bottom: 6px !important; }
+
+    /* Remove extra top gap on second bullet column when stacked on mobile */
+    .about-section .col-sm-6:last-child ul {
+        margin-top: 0 !important;
+    }
+
+    /* Equal spacing above and below CTA button */
+    .about-section .mt-2 { margin-top: 8px !important; }
+    .about-section .mt-2.text-start {
+        text-align: center !important;
+        padding-bottom: 8px !important;
+    }
+
+    /* --- LEFT-ALIGN SECTION HEADINGS --- */
+    .services-intro h6,
+    .services-intro h2,
+    .why-choose-section .col-lg-8 h6,
+    .why-choose-section .col-lg-8 h2,
+    .why-choose-section .why-choose-subtitle,
+    .about-section .position-relative h6,
+    .about-section .position-relative h2 {
+        text-align: left !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    /* --- HIDE DECORATIVE ELEMENTS --- */
+    .footer-bg-map,
+    .why-choose-section::before,
+    .about-bg-underlay,
+    .about-bg-image {
+        display: none !important;
+    }
+
+    /* --- FOOTER --- */
+    .footer-logo {
+        display: block !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        margin-bottom: 16px !important;
+    }
+
+    .footer-col     { margin-bottom: 16px !important; padding-left: 0 !important; }
+    .footer-heading { margin-bottom: 12px !important; }
+
+    .footer-bg-map {
+        width: 350px !important;
+        left: 0 !important;
+        background-position: left center !important;
+        opacity: 0.35 !important;
+    }
+
+    .footer-globe-marker { left: 181px !important; }
+
+    /* Equal top/bottom footer spacing on mobile */
+    .footer-section {
+        padding-top: 16px !important;
+        padding-bottom: 16px !important;
+    }
+
+    /* Hide location globe marker on mobile */
+    .footer-globe-marker {
+        display: none !important;
+    }
+
+    .footer-mobile-v2 {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        padding: 0 14px 8px !important;
+        margin: 0 !important;
+        text-align: left !important;
+    }
+
+    .footer-row {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        gap: 4px;
+        white-space: nowrap;
+        font-size: 11px;
+        line-height: 1.3;
+        font-weight: 400;
+        color: #b0bbd6;
+    }
+
+    .footer-row + .footer-row { margin-top: 2px; }
+
+    .footer-row a {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        color: #b0bbd6;
+        text-decoration: none;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 11px;
+        letter-spacing: 0.1px;
+    }
+
+    .footer-row .sep  { color: rgba(255,255,255,0.3); }
+    .footer-row i     { color: #009cff; font-size: 11px; }
+    .footer-row span  { white-space: nowrap; }
+
+    .footer-row:last-child span {
+        display: inline-flex;
+        align-items: center;
+        flex-wrap: nowrap;
+        white-space: nowrap;
+        font-size: 10.5px;
+    }
+
+    .websoftera-text {
+        color: #009cff !important;
+        font-weight: 500 !important;
+        white-space: nowrap;
+    }
+
+    .footer-section .container {
+        padding-bottom: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    /* --- BACK TO TOP --- */
+    .back-to-top {
+        bottom: 0 !important;
+        left: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border-radius: 0 4px 0 0 !important;
+        width: 45px;
+        height: 45px;
+        z-index: 10001;
+    }
+}
+
+/* ===== NAVBAR SEARCH BAR ===== */
+.navbar-search-bar {
+    flex: 0 1 0;
+    min-width: 0;
+    max-width: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-width 0.35s ease, opacity 0.3s ease, flex-basis 0.35s ease;
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+.navbar-search-bar.search-open {
+    flex: 1 1 auto;
+    max-width: 420px;
+    opacity: 1;
+    margin: 0 12px;
+}
+
+.navbar-search-inner {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    background-color: #F1F3F5;
+    border-radius: 50rem;
+    padding: 0 16px;
+    height: 44px;
+    border: 1.5px solid transparent;
+    transition: border-color 0.2s ease;
+    min-width: 0;
+}
+
+.navbar-search-inner:focus-within {
+    border-color: var(--primary-blue);
+    background-color: #fff;
+}
+
+.navbar-search-icon {
+    color: #888;
+    font-size: 14px;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+.navbar-search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    color: #333;
+    min-width: 0;
+}
+
+.navbar-search-input::placeholder { color: #aaa; }
+
+.navbar-search-close {
+    background: none;
+    border: none;
+    padding: 0;
+    margin-left: 10px;
+    color: #666;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: color 0.2s ease;
+    line-height: 1;
+}
+
+.navbar-search-close:hover { color: var(--primary-blue); }
+
+/* Desktop: hide nav links when search open */
+@media (min-width: 1200px) {
+    .search-active .nav-links-wrapper {
+        display: none !important;
+    }
+    .nav-actions { flex-shrink: 0; }
+}
+
+/* Prevent wrap at 110% zoom */
+@media (min-width: 1200px) {
+    .main-navbar .navbar-collapse { flex-wrap: nowrap !important; }
+    .main-navbar .nav-links-wrapper,
+    .main-navbar .nav-actions {
+        white-space: nowrap !important;
+        flex-wrap: nowrap !important;
+    }
+    .search-active .navbar-collapse {
+        flex-wrap: nowrap !important;
+        overflow: hidden;
+    }
+}
+
+/* Mobile: search bar full width */
+@media (max-width: 1199.98px) {
+    .navbar-search-bar {
+        margin: 10px 0 0;
+        max-width: 0;
+        flex-basis: 0;
+    }
+    .navbar-search-bar.search-open {
+        flex: 1 1 100%;
+        max-width: 100%;
+        width: 100%;
+        margin: 10px 0 0;
+    }
+}
+
+/* ===== FOOTER TEXT SIZE — MOBILE ===== */
+@media (max-width: 767.98px) {
+    .footer-row {
+        font-size: 13px !important;
+    }
+
+    .footer-row a {
+        font-size: 13px !important;
+    }
+
+    .footer-row i {
+        font-size: 13px !important;
+    }
+
+    .footer-row:last-child span {
+        font-size: 12px !important;
+    }
+}
+
+/* ===== HERO BANNER — REDUCED VERTICAL SPACING ===== */
+.hero-section {
+    min-height: 380px !important;
+    padding: 30px 0 !important;
+}
+
+@media (max-width: 991.98px) {
+    .hero-section {
+        min-height: 320px !important;
+        padding: 24px 0 !important;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .hero-section {
+        min-height: 260px !important;
+        padding: 0 !important;
+    }
+}
+
+/* ===== VALUE PROPOSITION — 8px top gap (mobile) ===== */
+@media (max-width: 767.98px) {
+    .why-choose-section {
+        padding-top: 8px !important;
+    }
+}
+
+/* ===== FOOTER GLOBE — INLINE (DESKTOP) ===== */
+
+/* Globe wrap: contains both globe image and pinned marker */
+.footer-globe-wrap {
+    position: relative;
+    width: 220px;
+    height: 180px;
+    margin-bottom: 16px;
+    flex-shrink: 0;
+}
+
+/* Globe background rendered as a div inside the column */
+.footer-bg-map-inline {
+    position: absolute;
+    inset: 0;
+    background-image: url('../assets/images/gloabe-bg.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center left;
+    filter: brightness(0) invert(1);
+    opacity: 0.45;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Marker pinned at ~46% from left, ~52% from top of the globe wrap */
+.footer-globe-marker-inline {
+    position: absolute;
+    left: 46%;
+    top: 48%;
+    transform: translate(-50%, -100%);
+    z-index: 2;
+    color: #ffffff;
+    font-size: 22px;
+    line-height: 1;
+    pointer-events: none;
+}
+
+/* Logo sizing inside footer column */
+.footer-logo {
+    height: 70px !important;
+    object-fit: contain;
+    margin-bottom: 8px !important;
+}
+
+/* Socials back to normal flow */
+.footer-socials {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    margin-top: 0 !important;
+}
+
+/* Column 1 layout: flex column so logo → globe → socials stack cleanly */
+.footer-col:first-child {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+/* Remove the old absolute-positioned globe and marker (now hidden) */
+.footer-bg-map,
+.footer-globe-marker {
+    display: none !important;
+}
+
+/* Useful Links — reduce left padding now globe is contained in col */
+@media (min-width: 992px) {
+    .footer-useful-links {
+        padding-left: 40px !important;
+    }
+}
+
+/* Stable column layout at all desktop sizes */
+@media (min-width: 1200px) {
+    .footer-globe-wrap {
+        width: 240px;
+        height: 200px;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1199.98px) {
+    .footer-globe-wrap {
+        width: 180px;
+        height: 150px;
+    }
+
+    .footer-globe-marker-inline {
+        font-size: 18px;
+>>>>>>> 242d29e (Fixed mobile and deskop issue)
     }
 }
