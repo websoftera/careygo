@@ -340,17 +340,6 @@ ul {
     }
 }
 
-/* Hero at 1200px–1350px — prevent content overflow */
-@media (min-width: 1200px) and (max-width: 1350px) {
-    .hero-title {
-        font-size: 3rem !important;
-    }
-
-    .hero-content {
-        max-width: 560px !important;
-    }
-}
-
 @media (max-width: 991.98px) {
     .hero-section {
         min-height: 500px;
@@ -508,7 +497,10 @@ ul {
 }
 
 @media (max-width: 767.98px) {
-    /* services-section padding handled by main mobile block below */
+    .services-section {
+        padding: 50px 0;
+    }
+    }
 
     .service-img-wrapper img {
         height: 200px;
@@ -621,7 +613,9 @@ ul {
 }
 
 @media (max-width: 767.98px) {
-    /* why-choose-section padding handled by main mobile block below */
+    .why-choose-section {
+        padding: 50px 0;
+    }
 
     /* Center text for ABOUT CAREYGO and VALUE PROPOSITION headings */
     .why-choose-section .col-lg-8 h6,
@@ -640,19 +634,19 @@ ul {
         flex-direction: column;
         align-items: center;
         text-align: center;
-        margin-bottom: 2px;
+        margin-bottom: 10px;
     }
 
     .feature-item .feature-icon-wrapper {
         order: 1;
         /* Icon first */
-        margin: 0 auto 2px auto !important;
+        margin: 0 auto 20px auto !important;
     }
 
     .feature-item .feature-title-group {
         order: 2;
         /* Title in middle */
-        margin-bottom: 2px !important;
+        margin-bottom: 20px !important;
     }
 
     .feature-item .feature-desc {
@@ -774,7 +768,9 @@ ul {
 }
 
 @media (max-width: 767.98px) {
-    /* about-section padding handled by main mobile block below */
+    .about-section {
+        padding: 50px 0;
+    }
 }
 
 /* ===== FOOTER SECTION ===== */
@@ -806,8 +802,9 @@ ul {
     position: absolute;
     top: 90px;
     left: 0;
-    width: 320px;
-    max-width: 320px;
+    width: 390px;
+    max-width: 35vw;
+    /* Enforces proportional scaling on tablet/small screens */
     height: 250px;
     background-image: url('../assets/images/gloabe-bg.png');
     background-size: contain;
@@ -823,13 +820,12 @@ ul {
     height: 90px;
     object-fit: contain;
     margin-bottom: 60px !important;
-    padding-left: 20px;
 }
 
 .footer-socials {
     position: absolute;
     top: 135px;
-    left: 20px;
+    left: 0.5%;
 }
 
 .footer-heading {
@@ -955,49 +951,6 @@ ul {
     }
 }
 
-/* ===== 1200px–1350px BREAKPOINT FIX ===== */
-/* Navbar items are too wide at this range — scale down without design change */
-@media (min-width: 1200px) and (max-width: 1350px) {
-
-    /* Shrink logo slightly */
-    .brand-logo {
-        max-height: 58px !important;
-    }
-
-    /* Tighten nav link padding */
-    .navbar-nav .nav-link {
-        padding: 8px 10px !important;
-        font-size: 12px !important;
-    }
-
-    /* Tighten nav links pill wrapper */
-    .nav-links-wrapper {
-        padding: 6px 16px !important;
-    }
-
-    /* Reduce search btn right margin */
-    .search-btn {
-        margin-right: 10px !important;
-    }
-
-    /* Tighten Connect With Us button */
-    .nav-actions .btn-primary-custom {
-        padding: 0px 6px 0px 14px !important;
-        font-size: 13px !important;
-    }
-
-    /* Ensure navbar container doesn't overflow */
-    .main-navbar .container {
-        padding-left: 12px !important;
-        padding-right: 12px !important;
-    }
-
-    /* Top bar — tighten info gap */
-    .top-info {
-        gap: 18px !important;
-    }
-}
-
 @media (min-width: 992px) {
     .top-bar .row {
         flex-wrap: nowrap !important;
@@ -1070,7 +1023,7 @@ ul {
 }
 
 .hero-content {
-    padding-left: 30px !important;
+    padding-left: 0 !important;
     padding-top: 0 !important;
     padding-bottom: 0 !important;
 }
@@ -1168,122 +1121,44 @@ ul {
     }
 }
 
-
 @media (max-width: 767.98px) {
 
-    /* ============================================================
-       MOBILE SPACING SYSTEM — 2px vertical rhythm everywhere
-       Systematic override of all Bootstrap utility spacing classes
-       ============================================================ */
-
-    /* 1. SECTION WRAPPERS — 2px gap between all sections */
     .services-section,
     .why-choose-section,
     .about-section,
     .footer-section {
-        padding: 0 !important;
+        padding: 18px 0 !important;
         margin-top: 0 !important;
-        margin-bottom: 2px !important;
+        margin-bottom: 3px !important; /* ~3px gap between sections */
     }
 
     .footer-section {
-        margin-bottom: 0 !important;
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
+        margin-top: 10px !important;
+        margin-bottom: 0 !important; /* remove white band under footer */
     }
 
     .hero-section {
         min-height: 480px !important;
-        margin-bottom: 2px !important;
+        /* Balanced height for banner image visibility */
+        margin-bottom: 6px !important;
         padding: 0 !important;
         display: flex;
         align-items: center;
         justify-content: center;
     }
 
-    /* 2. SECTION CONTAINERS — 2px inner top/bottom */
+    .why-choose-section .row.mb-5.pb-xl-4 {
+        margin-bottom: 28px !important;
+    }
+
     .services-section .container,
     .why-choose-section .container,
     .about-section .container {
-        padding-top: 2px !important;
-        padding-bottom: 2px !important;
+        padding-top: 10px !important;
+        padding-bottom: 10px !important;
     }
 
-    /* 3. GLOBAL BOOTSTRAP MARGIN OVERRIDES — mb-* inside all sections */
-    .services-section .mb-1, .services-section .mb-2,
-    .services-section .mb-3, .services-section .mb-4, .services-section .mb-5,
-    .why-choose-section .mb-1, .why-choose-section .mb-2,
-    .why-choose-section .mb-3, .why-choose-section .mb-4, .why-choose-section .mb-5,
-    .about-section .mb-1, .about-section .mb-2,
-    .about-section .mb-3, .about-section .mb-4, .about-section .mb-5 {
-        margin-bottom: 2px !important;
-    }
-
-    /* 4. GLOBAL BOOTSTRAP TOP MARGIN OVERRIDES — mt-* inside all sections */
-    .services-section .mt-1, .services-section .mt-2,
-    .services-section .mt-3, .services-section .mt-4, .services-section .mt-5,
-    .why-choose-section .mt-1, .why-choose-section .mt-2,
-    .why-choose-section .mt-3, .why-choose-section .mt-4, .why-choose-section .mt-5,
-    .about-section .mt-1, .about-section .mt-2,
-    .about-section .mt-3, .about-section .mt-4, .about-section .mt-5 {
-        margin-top: 2px !important;
-    }
-
-    /* 5. GLOBAL BOOTSTRAP PADDING OVERRIDES — pb-* pt-* inside sections */
-    .services-section .pb-0, .services-section .pb-1, .services-section .pb-2,
-    .services-section .pb-3, .services-section .pb-4,
-    .why-choose-section .pb-0, .why-choose-section .pb-1, .why-choose-section .pb-2,
-    .why-choose-section .pb-3, .why-choose-section .pb-4,
-    .about-section .pb-0, .about-section .pb-1, .about-section .pb-2,
-    .about-section .pb-3, .about-section .pb-4 {
-        padding-bottom: 2px !important;
-    }
-
-    .services-section .pt-0, .services-section .pt-1, .services-section .pt-2,
-    .why-choose-section .pt-0, .why-choose-section .pt-1, .why-choose-section .pt-2,
-    .about-section .pt-0, .about-section .pt-1, .about-section .pt-2 {
-        padding-top: 2px !important;
-    }
-
-    /* 6. ROW GAPS — g-* gy-* inside sections */
-    /* CSS custom properties ignore !important — override column padding directly */
-    .services-section .g-4 > *,
-    .services-section .g-3 > *,
-    .why-choose-section .g-4 > *,
-    .why-choose-section .g-3 > * {
-        padding-top: 2px !important;
-        padding-bottom: 0 !important;
-    }
-
-    .services-section .g-4,
-    .services-section .g-3,
-    .why-choose-section .g-4,
-    .why-choose-section .g-3 {
-        --bs-gutter-x: 1rem;
-        --bs-gutter-y: 2px;
-        margin-top: 0 !important;
-    }
-
-    .about-section .g-4 {
-        --bs-gutter-y: 0;
-        --bs-gutter-x: 1rem;
-        margin-top: 0 !important;
-    }
-
-    .about-section .g-4 > * {
-        padding-top: 2px !important;
-        padding-bottom: 0 !important;
-    }
-
-    .about-section .gy-3 {
-        --bs-gutter-y: 0;
-    }
-
-    .about-section .gy-3 > * {
-        padding-top: 0 !important;
-    }
-
-    /* 7. NAVBAR — keep functional spacing */
+    /* Header top (Sticky position, Industry Level) */
     .main-navbar {
         position: sticky !important;
         top: 0 !important;
@@ -1296,7 +1171,7 @@ ul {
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
 
-    /* 8. HIDE DECORATIVE ELEMENTS */
+    /* Hiding background decorations on mobile */
     .footer-bg-map,
     .why-choose-section::before,
     .about-bg-underlay,
@@ -1304,9 +1179,9 @@ ul {
         display: none !important;
     }
 
-    /* 9. HERO — internal spacing */
     .hero-content {
         padding-top: 60px !important;
+        /* Clearance for sticky header */
         padding-left: 20px !important;
         padding-right: 20px !important;
         max-width: 100vw;
@@ -1314,22 +1189,23 @@ ul {
     }
 
     .hero-title {
-        margin-bottom: 2px !important;
+        margin-bottom: 25px !important;
         word-wrap: break-word;
         overflow-wrap: break-word;
     }
 
+    /* Hero button styling for mobile - match services button */
     .hero-section .btn-primary-custom {
         padding-left: 26px !important;
         padding-right: 26px !important;
     }
 
-    /* 10. SERVICES INTRO */
+    /* SERVICES – heading in one line & tighter spacing */
     .services-intro h2 {
         font-size: 30px !important;
         line-height: 1.15 !important;
         letter-spacing: -0.5px !important;
-        margin-bottom: 2px !important;
+        margin-bottom: 14px !important;
         white-space: nowrap !important;
     }
 
@@ -1338,180 +1214,119 @@ ul {
     }
 
     .services-intro h6 {
-        margin-bottom: 2px !important;
+        margin-bottom: 6px !important;
     }
 
     .services-intro p {
-        margin-bottom: 2px !important;
+        margin-bottom: 8px !important;
     }
 
+    /* First “Connect With Us” button under Business Verticals */
     .services-intro .btn-primary-custom {
         padding-left: 26px !important;
         padding-right: 26px !important;
         margin-left: 25px !important;
-        margin-top: 2px !important;
-        margin-bottom: 5px !important;
+        margin-top: 0px !important;
+        margin-bottom: 0px !important;
     }
 
-    .services-intro.mb-5 {
-        margin-bottom: 2px !important;
-    }
-
-    /* 11. SERVICE CARDS */
-    .service-img-wrapper {
-        margin-bottom: 2px !important;
-    }
-
-    .service-title {
-        margin-bottom: 2px !important;
-    }
-
-    .service-card {
-        padding: 0 15px !important;
-        height: auto !important;
-    }
-
-    /* Fix: gap between top 3-card row and bottom 8-card row on mobile */
-    .services-section .row.gx-5.mb-4,
-    .services-section .row.mb-4 {
-        margin-bottom: 2px !important;
-    }
-
-    /* Fix: outer row stretch + inner h-100 causing space below B2B card */
-    .services-section .row.gx-5 {
-        align-items: flex-start !important;
-    }
-
-    .services-section .col-lg-9,
-    .services-section .col-lg-9 > .row {
-        height: auto !important;
-    }
-
-    .service-img-wrapper img {
-        height: 200px;
-    }
-
-    /* 12. WHY CHOOSE SECTION */
-    .why-choose-section .row.mb-3 {
-        margin-bottom: 0 !important;
-    }
-
-    .why-choose-section .row.mb-5.pb-xl-4 {
-        margin-bottom: 2px !important;
-    }
-
+    /* Tighten space under VALUE PROPOSITION / Why Choose CAREYGO heading */
     .why-choose-section .section-heading {
-        margin-bottom: 2px !important;
+        margin-bottom: 1px !important;
     }
 
+    /* Reduce top gap before first feature card block */
     .why-choose-section .row.g-4.g-lg-5.mt-2.mb-0 {
-        margin-top: 2px !important;
+        margin-top: 8px !important;
     }
 
-    .feature-title-group {
-        margin-bottom: 2px !important;
-    }
-
+    /* General feature item spacing */
     .feature-item {
-        margin-bottom: 2px !important;
-        height: auto !important;
-        padding-bottom: 0 !important;
+        margin-bottom: 10px !important;
     }
 
-    .feature-icon-wrapper {
-        margin-bottom: 2px !important;
-        margin-top: 0 !important;
-    }
-
+    /* Shorten bottom margin of feature descriptions */
     .feature-desc {
-        margin-bottom: 2px !important;
+        margin-bottom: 16px !important;
     }
 
-    /* 13. ABOUT SECTION */
+    /* ABOUT section – mobile spacing aligned with services */
     .about-section {
         margin-top: 0 !important;
     }
 
     .about-heading {
-        margin-bottom: 2px !important;
+        margin-bottom: 18px !important;
     }
 
     .about-desc {
-        margin-bottom: 2px !important;
+        margin-bottom: 18px !important;
     }
 
-    .about-section .col-lg-6.mb-4 {
-        margin-bottom: 2px !important;
-    }
-
-    /* Zero out all padding on the white card — top/bottom to 2px, keep side padding */
-    .about-section .col-lg-6:last-child .p-4,
-    .about-section .col-lg-6:last-child .p-lg-5 {
-        padding-top: 2px !important;
-        padding-bottom: 2px !important;
-    }
-
-    .about-section .list-unstyled.gap-3 {
-        gap: 2px !important;
-    }
-
-    .about-section .col-sm-6 {
-        width: 100% !important;
-        flex: 0 0 100% !important;
-        max-width: 100% !important;
-    }
-
-    .about-section .col-sm-6:last-child ul {
-        margin-top: 2px !important;
+    .about-section .row.mb-5 {
+        margin-bottom: 18px !important;
     }
 
     .about-feature-item {
-        margin-bottom: 0 !important;
+        margin-bottom: 10px !important;
     }
 
-    .about-section .mt-2.pb-2 {
-        padding-bottom: 2px !important;
+    .about-section .mt-2 {
+        margin-top: 10px !important;
     }
 
-    /* 14. FOOTER MOBILE */
-    .footer-section .container {
-        padding-bottom: 5px !important;
-        margin-bottom: 5px !important;
+    /* Resolving Footer Mobile Background overlay */
+    .footer-bg-map {
+        width: 350px !important;
+        left: 0 !important;
+        background-position: left center !important;
+        opacity: 0.35 !important;
     }
 
+    /* Center logo and handle spacing */
+    .footer-logo {
+        display: block !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        margin-bottom: 20px !important;
+    }
+
+    .footer-col {
+        margin-bottom: 20px !important;
+        padding-left: 0 !important;
+    }
+
+    /* Mobile Footer v2 Refinements */
     .footer-mobile-v2 {
         display: flex;
         flex-direction: column;
         align-items: flex-start;
         gap: 6px;
-        padding: 10px 14px !important;
+        padding: 10px 14px 10px 14px !important;
         margin: 0 !important;
         text-align: left !important;
     }
 
-    .footer-mobile-v2 .footer-row + .footer-row {
-        margin-top: 2px;
-    }
+        .footer-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            font-size: 11px;
+            line-height: 1.3;
+            font-weight: 400;
+            color: #b0bbd6;
+            
+        }
 
-    .footer-row {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        gap: 6px;
-        white-space: nowrap;
-        font-size: 11px;
-        line-height: 1.3;
-        font-weight: 400;
-        color: #b0bbd6;
-    }
-
+    /* First row: About / Returns / Privacy / FAQ */
     .footer-row:first-child {
         justify-content: flex-start;
         gap: 4px;
         font-size: 11px;
     }
 
+    /* Middle row: phone + email */
     .footer-row:nth-child(2) {
         justify-content: flex-start;
         gap: 4px;
@@ -1521,6 +1336,11 @@ ul {
     .footer-mobile-v2 a {
         font-size: 11px;
         letter-spacing: 0.1px;
+    }
+
+    /* Vertical gap between footer rows */
+    .footer-mobile-v2 .footer-row + .footer-row {
+        margin-top: 2px;
     }
 
     .footer-row a {
@@ -1533,10 +1353,16 @@ ul {
         padding: 0 !important;
     }
 
-    .footer-row .sep { color: rgba(255, 255, 255, 0.3); }
+    .footer-row .sep {
+        color: rgba(255, 255, 255, 0.3);
+    }
 
-    .footer-row i { color: #009cff; font-size: 11px; }
+    .footer-row i {
+        color: #009cff;
+        font-size: 11px;
+    }
 
+    /* Ensure last line (© 2026...) stays on one row and small */
     .footer-row:last-child span {
         display: inline-flex;
         align-items: center;
@@ -1545,15 +1371,28 @@ ul {
         font-size: 10.5px;
     }
 
-    .footer-row span { white-space: nowrap; }
-
-    .websoftera-text {
+    .footer-section .container {
+        padding-bottom: 0 !important;
+        margin-bottom: 0 !important;
+    }
+    .footer-row {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+      }
+      
+      .footer-row span {
+        white-space: nowrap;
+      }
+      
+      .websoftera-text {
         color: #009cff !important;
         font-weight: 500 !important;
         white-space: nowrap;
-    }
+      }
 
-    /* 15. BACK TO TOP */
+    /* Back to Top Mobile Flush Positioning */
     .back-to-top {
         bottom: 0 !important;
         left: 0 !important;
@@ -1566,56 +1405,6 @@ ul {
     }
 }
 
-<<<<<<< HEAD
-/* ===== DESKTOP 10px SIDE SPACING FIX (≥992px only) ===== */
-/* Targets: top-bar, navbar, services, why-choose, about, footer containers */
-/* Hero and footer structure/design are NOT changed */
-
-@media (min-width: 992px) {
-
-    /* Force all section containers to exactly 10px left/right padding */
-    .top-bar .container,
-    .main-navbar .container,
-    .services-section .container,
-    .why-choose-section .container,
-    .about-section .container {
-        padding-left: 10px !important;
-        padding-right: 10px !important;
-        max-width: 100% !important;
-    }
-
-    /* Footer desktop container: override px-lg-4 (24px) down to 10px */
-    .footer-section .container {
-        padding-left: 10px !important;
-        padding-right: 10px !important;
-        max-width: 100% !important;
-    }
-
-    /* Fix top-info negative margin that was compensating for old container padding */
-    .top-info {
-        margin-left: 0 !important;
-    }
-
-    /* Hero section spans full width — keep as-is, only ensure no side overflow */
-    .hero-section {
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-    }
-
-    /* Hero inner container keeps Bootstrap default so content aligns with 10px edge */
-    .hero-section .container {
-        padding-left: 10px !important;
-        padding-right: 10px !important;
-        max-width: 100% !important;
-    }
-}
-
-/* 1200px–1350px: keep navbar container at 10px (overrides the 12px set earlier) */
-@media (min-width: 1200px) and (max-width: 1350px) {
-    .main-navbar .container {
-        padding-left: 10px !important;
-        padding-right: 10px !important;
-=======
 
 /* ===== SITE HEADER (Fixed) ===== */
 .site-header {
@@ -2100,95 +1889,52 @@ body {
     }
 }
 
-/* ===== FOOTER GLOBE — INLINE (DESKTOP) ===== */
+/* ===== FOOTER — LOGO, GLOBE MARKER FIXES ===== */
 
-/* Globe wrap: contains both globe image and pinned marker */
-.footer-globe-wrap {
-    position: relative;
-    width: 220px;
-    height: 180px;
-    margin-bottom: 16px;
-    flex-shrink: 0;
+/* Logo: match header size */
+.footer-logo {
+    height: 72px !important;
+    object-fit: contain;
+    margin-bottom: 20px !important;
 }
 
-/* Globe background rendered as a div inside the column */
-.footer-bg-map-inline {
+/* Globe marker: pinned on right side of globe image */
+.footer-globe-marker {
     position: absolute;
-    inset: 0;
-    background-image: url('../assets/images/gloabe-bg.png');
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center left;
-    filter: brightness(0) invert(1);
-    opacity: 0.45;
-    pointer-events: none;
-    z-index: 1;
-}
-
-/* Marker pinned at ~46% from left, ~52% from top of the globe wrap */
-.footer-globe-marker-inline {
-    position: absolute;
-    left: 46%;
-    top: 48%;
-    transform: translate(-50%, -100%);
-    z-index: 2;
+    top: 175px;       /* vertical center of globe (top:90px + ~85px) */
+    left: 290px;      /* right portion of globe (globe is ~390px wide) */
+    z-index: 3;
     color: #ffffff;
-    font-size: 22px;
+    font-size: 28px;
     line-height: 1;
     pointer-events: none;
+    /* Responsive: scale with globe's max-width: 35vw */
+    left: clamp(180px, calc(35vw * 0.74), 290px);
+    top: clamp(130px, calc(90px + 35vw * 0.245), 175px);
 }
 
-/* Logo sizing inside footer column */
-.footer-logo {
-    height: 70px !important;
-    object-fit: contain;
-    margin-bottom: 8px !important;
+.footer-globe-marker i {
+    color: #ffffff;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
 }
 
-/* Socials back to normal flow */
-.footer-socials {
-    position: static !important;
-    top: auto !important;
-    left: auto !important;
-    margin-top: 0 !important;
-}
-
-/* Column 1 layout: flex column so logo → globe → socials stack cleanly */
-.footer-col:first-child {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-}
-
-/* Remove the old absolute-positioned globe and marker (now hidden) */
-.footer-bg-map,
-.footer-globe-marker {
-    display: none !important;
-}
-
-/* Useful Links — reduce left padding now globe is contained in col */
-@media (min-width: 992px) {
-    .footer-useful-links {
-        padding-left: 40px !important;
+/* Tablet: globe scales via max-width: 35vw, marker follows */
+@media (max-width: 1199.98px) {
+    .footer-globe-marker {
+        left: clamp(140px, calc(35vw * 0.74), 290px);
+        top: clamp(120px, calc(90px + 35vw * 0.245), 175px);
+        font-size: 24px;
     }
 }
 
-/* Stable column layout at all desktop sizes */
-@media (min-width: 1200px) {
-    .footer-globe-wrap {
-        width: 240px;
-        height: 200px;
-    }
-}
-
-@media (min-width: 992px) and (max-width: 1199.98px) {
-    .footer-globe-wrap {
-        width: 180px;
-        height: 150px;
+/* Mobile: keep hidden */
+@media (max-width: 767.98px) {
+    .footer-globe-marker {
+        display: none !important;
     }
 
-    .footer-globe-marker-inline {
-        font-size: 18px;
->>>>>>> 242d29e (Fixed mobile and deskop issue)
+    .footer-logo {
+        height: 72px !important;
+        margin-bottom: 12px !important;
     }
 }
