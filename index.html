@@ -56,7 +56,7 @@
 
             <!-- Navbar Links & Actions -->
             <div class="collapse navbar-collapse" id="mainNav">
-                <ul class="navbar-nav mx-auto mb-3 mb-xl-0 nav-links-wrapper px-4 py-2 mt-3 mt-xl-0">
+                <ul class="navbar-nav ms-auto mb-3 mb-lg-0 nav-links-wrapper px-4 py-2 mt-3 mt-lg-0">
                     <li class="nav-item px-1 px-xl-2">
                         <a class="nav-link active" href="#">HOME</a>
                     </li>
@@ -77,21 +77,23 @@
                     </li>
                 </ul>
 
-                <!-- Search Bar (hidden by default) -->
-                <div class="navbar-search-bar" id="navbarSearchBar" aria-hidden="true">
-                    <div class="navbar-search-inner">
-                        <i class="bi bi-search navbar-search-icon"></i>
-                        <input type="text" class="navbar-search-input" placeholder="Search..." aria-label="Search">
-                        <button class="navbar-search-close" id="searchCloseBtn" aria-label="Close search">
-                            <i class="bi bi-x-lg"></i>
-                        </button>
-                    </div>
-                </div>
-
                 <div class="d-flex justify-content-center align-items-center gap-3 nav-actions">
+                    <!-- Search Icon Button -->
                     <button class="btn search-btn rounded-circle shadow-none" type="button" aria-label="Search" id="searchOpenBtn">
                         <i class="bi bi-search"></i>
                     </button>
+
+                    <!-- Search Bar (opens between icon and button) -->
+                    <div class="navbar-search-bar" id="navbarSearchBar" aria-hidden="true">
+                        <div class="navbar-search-inner">
+                            <i class="bi bi-search navbar-search-icon"></i>
+                            <input type="text" class="navbar-search-input" placeholder="Search..." aria-label="Search">
+                            <button class="navbar-search-close" id="searchCloseBtn" aria-label="Close search">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+
                     <a href="#"
                         class="btn btn-primary-custom rounded-pill text-white px-4 py-2 d-flex align-items-center gap-2 fw-semibold">
                         Connect With Us
@@ -666,6 +668,7 @@
                 searchBar.classList.add('search-open');
                 searchBar.setAttribute('aria-hidden', 'false');
                 navbar.classList.add('search-active');
+                openBtn.style.display = 'none';
                 setTimeout(function () { input.focus(); }, 350);
             });
 
@@ -673,6 +676,7 @@
                 searchBar.classList.remove('search-open');
                 searchBar.setAttribute('aria-hidden', 'true');
                 navbar.classList.remove('search-active');
+                openBtn.style.display = '';
                 input.value = '';
             });
         })();

@@ -136,13 +136,10 @@ ul {
 /* Navigation Links Wrapper */
 .nav-links-wrapper {
     background-color: #E2E6EA;
-    padding: 6px 36px !important;
-}
-
-@media (min-width: 992px) {
-    .nav-links-wrapper {
-        border-radius: 50rem;
-    }
+    border-radius: 50rem;
+    padding: 6px 24px !important;
+    flex-shrink: 1;
+    min-width: 0;
 }
 
 @media (max-width: 991.98px) {
@@ -162,8 +159,9 @@ ul {
     font-size: 13px;
     font-weight: 600;
     color: #333333 !important;
-    padding: 8px 18px !important;
+    padding: 8px 14px !important;
     text-transform: uppercase;
+    white-space: nowrap;
     transition: color 0.3s ease;
 }
 
@@ -499,7 +497,6 @@ ul {
 @media (max-width: 767.98px) {
     .services-section {
         padding: 50px 0;
-    }
     }
 
     .service-img-wrapper img {
@@ -940,19 +937,35 @@ ul {
 
 /* Prevent Navigation Icons Layout Break at High Zoom */
 @media (min-width: 992px) {
+    /* Navbar collapse: single row, no wrap, consistent gap */
     .main-navbar .navbar-collapse {
         flex-wrap: nowrap !important;
         min-width: 0;
+        align-items: center;
+        gap: 8px;
     }
 
+    /* Nav pill: natural size, ms-auto handles positioning */
     .main-navbar .nav-links-wrapper {
-        flex-shrink: 1 !important;
+        flex: 0 0 auto !important;
         min-width: 0;
     }
 
+    /* Nav items inside pill: never wrap to second line */
+    .main-navbar .navbar-nav {
+        flex-wrap: nowrap !important;
+    }
+
+    /* Button group: never shrinks, always visible */
     .main-navbar .nav-actions {
+        flex: 0 0 auto !important;
         white-space: nowrap !important;
-        flex-shrink: 0 !important;
+        overflow: visible;
+    }
+
+    /* Logo: never shrinks */
+    .navbar-brand {
+        flex-shrink: 0;
     }
 }
 
@@ -1737,32 +1750,49 @@ body {
 
 /* ===== NAVBAR SEARCH BAR ===== */
 .navbar-search-bar {
-    flex: 0 1 0;
+    flex: 0 0 0px;
     min-width: 0;
     max-width: 0;
     overflow: hidden;
     opacity: 0;
-    transition: max-width 0.35s ease, opacity 0.3s ease, flex-basis 0.35s ease;
+    transition: max-width 0.35s ease, opacity 0.3s ease, flex 0.35s ease;
     display: flex;
     align-items: center;
-    margin: 0;
 }
 
-.navbar-search-bar.search-open {
-    flex: 1 1 auto;
-    max-width: 420px;
-    opacity: 1;
-    margin: 0 12px;
+/* Desktop open: fixed comfortable size, capped so it never overflows */
+@media (min-width: 992px) {
+    .navbar-search-bar.search-open {
+        flex: 0 0 200px;
+        max-width: 200px;
+        opacity: 1;
+    }
+
+    .navbar-search-inner {
+        width: 200px;
+    }
+}
+
+/* Mobile open: compact width so button stays on screen */
+@media (max-width: 991.98px) {
+    .navbar-search-bar.search-open {
+        flex: 0 0 150px;
+        max-width: 150px;
+        opacity: 1;
+    }
+
+    .navbar-search-inner {
+        width: 150px;
+    }
 }
 
 .navbar-search-inner {
     display: flex;
     align-items: center;
-    width: 100%;
     background-color: #F1F3F5;
     border-radius: 50rem;
-    padding: 0 16px;
-    height: 44px;
+    padding: 0 12px;
+    height: 40px;
     border: 1.5px solid transparent;
     transition: border-color 0.2s ease;
     min-width: 0;
@@ -1775,8 +1805,8 @@ body {
 
 .navbar-search-icon {
     color: #888;
-    font-size: 14px;
-    margin-right: 10px;
+    font-size: 13px;
+    margin-right: 8px;
     flex-shrink: 0;
 }
 
@@ -1786,9 +1816,10 @@ body {
     background: transparent;
     outline: none;
     font-family: 'Poppins', sans-serif;
-    font-size: 13px;
+    font-size: 12px;
     color: #333;
     min-width: 0;
+    width: 0; /* forces flex to control width, not content */
 }
 
 .navbar-search-input::placeholder { color: #aaa; }
@@ -1797,9 +1828,9 @@ body {
     background: none;
     border: none;
     padding: 0;
-    margin-left: 10px;
+    margin-left: 8px;
     color: #666;
-    font-size: 14px;
+    font-size: 13px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -1811,46 +1842,38 @@ body {
 
 .navbar-search-close:hover { color: var(--primary-blue); }
 
-/* Desktop: hide nav links when search open */
+/* Desktop: when search open, compress nav pill to make room */
 @media (min-width: 992px) {
     .search-active .nav-links-wrapper {
-        display: none !important;
+        padding: 6px 8px !important;
     }
-    .nav-actions { flex-shrink: 0 !important; }
+    .search-active .navbar-nav .nav-link {
+        padding: 8px 7px !important;
+        font-size: 12px !important;
+    }
 }
 
-/* Prevent wrap — flex nowrap for desktop navbar */
+/* Desktop navbar: single-row, no overflow */
 @media (min-width: 992px) {
     .main-navbar .navbar-collapse {
         flex-wrap: nowrap !important;
         min-width: 0;
+        align-items: center;
+        gap: 8px;
+    }
+    .main-navbar .navbar-nav {
+        flex-wrap: nowrap !important;
     }
     .main-navbar .nav-links-wrapper {
-        flex-shrink: 1 !important;
+        flex: 0 0 auto !important; /* don't stretch, sit naturally after ms-auto push */
         min-width: 0;
     }
     .main-navbar .nav-actions {
+        flex: 0 0 auto !important;
         white-space: nowrap !important;
-        flex-shrink: 0 !important;
-    }
-    .search-active .navbar-collapse {
-        flex-wrap: nowrap !important;
-        overflow: hidden;
-    }
-}
-
-/* Mobile: search bar full width */
-@media (max-width: 991.98px) {
-    .navbar-search-bar {
-        margin: 10px 0 0;
-        max-width: 0;
-        flex-basis: 0;
-    }
-    .navbar-search-bar.search-open {
-        flex: 1 1 100%;
-        max-width: 100%;
-        width: 100%;
-        margin: 10px 0 0;
+        gap: 8px !important;
+        align-items: center;
+        overflow: visible;
     }
 }
 
@@ -1950,62 +1973,141 @@ body {
     }
 }
 
-/* ===== DESKTOP ZOOM STABILITY (992px+) ===== */
-/* Compress nav link padding at mid-range widths (125%–150% zoom on large screens) */
-@media (min-width: 992px) {
-    /* Container must never overflow */
-    .main-navbar .container {
-        flex-wrap: nowrap;
-        overflow: visible;
-    }
+/* ===== DESKTOP ZOOM STABILITY ===== */
 
-    /* Logo: allow slight shrink but keep readable */
-    .navbar-brand {
-        flex-shrink: 0;
+/* 100% zoom (full desktop ≥1350px): match 110% reference layout */
+@media (min-width: 1350px) {
+    .main-navbar .nav-links-wrapper {
+        margin-left: 40px !important;
+        margin-right: auto !important; /* push nav-actions to right */
     }
-
-    /* Nav pill: shrinks first, button never gets pushed out */
-    .nav-links-wrapper {
-        flex: 0 1 auto;
-        min-width: 0;
-        overflow: hidden;
-    }
-
-    /* Button group: never shrinks */
-    .nav-actions {
-        flex: 0 0 auto;
+    .main-navbar .nav-actions {
+        margin-left: 16px !important;
     }
 }
 
-/* Tighten nav link padding at 992–1280px (covers 125%+ zoom on 1440px screens) */
-@media (min-width: 992px) and (max-width: 1280px) {
-    .nav-links-wrapper {
-        padding: 6px 16px !important;
+/* At 110% zoom (~1309px on 1440px screen): tighten pill padding */
+@media (min-width: 992px) and (max-width: 1350px) {
+    .main-navbar .nav-links-wrapper {
+        margin-left: 32px !important;
+        margin-right: auto !important;
     }
-
+    .main-navbar .nav-actions {
+        margin-left: 16px !important;
+    }
+    .nav-links-wrapper {
+        padding: 6px 14px !important;
+    }
     .navbar-nav .nav-link {
         padding: 8px 10px !important;
+        font-size: 12.5px !important;
+    }
+    /* search-active: compress pill further to fit search bar */
+    .search-active .nav-links-wrapper {
+        padding: 6px 6px !important;
+    }
+    .search-active .navbar-nav .nav-link {
+        padding: 8px 6px !important;
         font-size: 12px !important;
     }
 }
 
-/* Further compress at 992–1100px (covers 150% zoom) */
-@media (min-width: 992px) and (max-width: 1100px) {
-    .nav-links-wrapper {
-        padding: 6px 10px !important;
+/* At 125% zoom (~1152px on 1440px screen): compress further */
+@media (min-width: 992px) and (max-width: 1200px) {
+    .main-navbar .nav-links-wrapper {
+        margin-left: 24px !important;
+        margin-right: auto !important;
     }
-
+    .main-navbar .nav-actions {
+        margin-left: 12px !important;
+    }
+    .brand-logo {
+        max-height: 58px !important;
+    }
+    .nav-links-wrapper {
+        padding: 6px 8px !important;
+    }
     .navbar-nav .nav-link {
         padding: 8px 7px !important;
         font-size: 11.5px !important;
     }
-
     .nav-actions .btn-primary-custom {
-        padding: 0px 6px 0px 14px !important;
-        font-size: 13px !important;
+        padding: 0px 6px 0px 12px !important;
+        font-size: 12.5px !important;
     }
-
+    .nav-actions .icon-circle {
+        width: 28px !important;
+        height: 28px !important;
+    }
     .search-btn {
-        margin-right: 10px;
+        width: 38px;
+        height: 38px;
+        margin-right: 6px;
+    }
+    /* search bar narrower at this zoom */
+    .navbar-search-bar.search-open {
+        flex: 0 0 160px !important;
+        max-width: 160px !important;
+    }
+    .navbar-search-inner {
+        width: 160px !important;
+    }
+    /* search-active: compress pill to fit */
+    .search-active .nav-links-wrapper {
+        padding: 6px 4px !important;
+    }
+    .search-active .navbar-nav .nav-link {
+        padding: 8px 5px !important;
+        font-size: 11px !important;
+    }
+}
+
+/* At 150% zoom (~960px on 1440px screen): minimal sizes */
+@media (min-width: 992px) and (max-width: 1050px) {
+    .main-navbar .nav-links-wrapper {
+        margin-left: 16px !important;
+        margin-right: auto !important;
+    }
+    .main-navbar .nav-actions {
+        margin-left: 8px !important;
+    }
+    .brand-logo {
+        max-height: 50px !important;
+    }
+    .nav-links-wrapper {
+        padding: 6px 4px !important;
+    }
+    .navbar-nav .nav-link {
+        padding: 8px 5px !important;
+        font-size: 11px !important;
+    }
+    .nav-actions .btn-primary-custom {
+        padding: 0px 6px 0px 10px !important;
+        font-size: 12px !important;
+    }
+    .nav-actions .icon-circle {
+        width: 26px !important;
+        height: 26px !important;
+    }
+    .search-btn {
+        width: 34px;
+        height: 34px;
+        margin-right: 4px;
+    }
+    /* search bar compact at 150% */
+    .navbar-search-bar.search-open {
+        flex: 0 0 130px !important;
+        max-width: 130px !important;
+    }
+    .navbar-search-inner {
+        width: 130px !important;
+    }
+    /* search-active: compress pill to fit search bar + button */
+    .search-active .nav-links-wrapper {
+        padding: 6px 2px !important;
+    }
+    .search-active .navbar-nav .nav-link {
+        padding: 8px 4px !important;
+        font-size: 10.5px !important;
     }
 }
