@@ -1,0 +1,284 @@
+/* pending.css — Account pending/rejected page */
+
+.pending-body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f0f4ff 0%, #e8ecf8 100%);
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ===== WRAPPER ===== */
+.pending-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* ===== HEADER ===== */
+.pending-header {
+    background: #ffffff;
+    padding: 14px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 12px rgba(0, 26, 147, 0.06);
+}
+
+.pending-logo {
+    height: 44px;
+    object-fit: contain;
+}
+
+.pending-logout-btn {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6c757d;
+    border: 1.5px solid #dee2e6;
+    border-radius: 8px;
+    padding: 6px 16px;
+    transition: all 0.25s ease;
+}
+
+.pending-logout-btn:hover {
+    border-color: #001A93;
+    color: #001A93;
+}
+
+/* ===== MAIN ===== */
+.pending-main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 16px;
+}
+
+/* ===== CARD ===== */
+.pending-card {
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 52px 48px;
+    max-width: 560px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 12px 48px rgba(0, 26, 147, 0.10);
+    border-top: 4px solid #001A93;
+}
+
+.pending-card.rejected {
+    border-top-color: #dc3545;
+}
+
+/* ===== ICON ===== */
+.pending-icon-wrap {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e8edff 0%, #d0d9ff 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 28px;
+    animation: pulse-ring 2s infinite ease-in-out;
+}
+
+.pending-icon-wrap.rejected {
+    background: linear-gradient(135deg, #ffe8e8 0%, #ffd0d0 100%);
+    animation: none;
+}
+
+.pending-icon-wrap i {
+    font-size: 36px;
+    color: #001A93;
+}
+
+.pending-icon-wrap.rejected i {
+    color: #dc3545;
+}
+
+@keyframes pulse-ring {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(0, 26, 147, 0.15); }
+    50%       { box-shadow: 0 0 0 14px rgba(0, 26, 147, 0.0); }
+}
+
+/* ===== TYPOGRAPHY ===== */
+.pending-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #001A93;
+    margin-bottom: 8px;
+}
+
+.pending-card.rejected .pending-title {
+    color: #dc3545;
+}
+
+.pending-name {
+    font-size: 15px;
+    color: #4a5568;
+    margin-bottom: 12px;
+}
+
+.pending-message {
+    font-size: 14px;
+    color: #6c757d;
+    line-height: 1.75;
+    margin-bottom: 32px;
+}
+
+.pending-message a {
+    color: #001A93;
+    font-weight: 600;
+}
+
+/* ===== STEPS ===== */
+.pending-steps {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 32px;
+}
+
+.pending-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.step-dot {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: #adb5bd;
+    border: 2px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.pending-step.completed .step-dot {
+    background: #001A93;
+    border-color: #001A93;
+    color: #ffffff;
+}
+
+.pending-step.active .step-dot {
+    background: #ffffff;
+    border-color: #001A93;
+    color: #001A93;
+    animation: step-pulse 1.8s infinite ease-in-out;
+}
+
+@keyframes step-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(0, 26, 147, 0.2); }
+    50%       { box-shadow: 0 0 0 8px rgba(0, 26, 147, 0.0); }
+}
+
+.step-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #adb5bd;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+}
+
+.pending-step.completed .step-label,
+.pending-step.active .step-label {
+    color: #001A93;
+}
+
+.pending-step-line {
+    flex: 1;
+    height: 2px;
+    background: #e2e8f0;
+    min-width: 40px;
+    max-width: 60px;
+    margin-bottom: 22px;
+}
+
+/* ===== NOTE ===== */
+.pending-note {
+    font-size: 12px;
+    color: #adb5bd;
+    margin-bottom: 28px;
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 10px 14px;
+}
+
+.pending-note a {
+    color: #001A93;
+}
+
+/* ===== ACTION BUTTONS ===== */
+.pending-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.pending-refresh-btn {
+    background: #001A93;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 10px 24px;
+    border: 2px solid #001A93;
+    transition: all 0.25s ease;
+}
+
+.pending-refresh-btn:hover {
+    background: #ffffff;
+    color: #001A93;
+}
+
+.pending-logout-card-btn {
+    background: transparent;
+    color: #6c757d;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 10px 24px;
+    border: 2px solid #dee2e6;
+    transition: all 0.25s ease;
+}
+
+.pending-logout-card-btn:hover {
+    border-color: #dc3545;
+    color: #dc3545;
+}
+
+/* ===== FOOTER ===== */
+.pending-footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 12px;
+    color: #adb5bd;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 600px) {
+    .pending-card {
+        padding: 36px 20px;
+    }
+
+    .pending-steps {
+        gap: 0;
+    }
+
+    .pending-step-line {
+        min-width: 24px;
+    }
+}

@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3)",
+      "Bash(python)",
+      "Read(//c/Users/DELL/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/f1484509-23fe-42bb-a0f1-fc28a2889569/b3625cc5-83a5-4e4d-8380-1c5cd2270477/skills/docx/**)",
+      "Bash(python scripts/office/soffice.py --headless --convert-to docx \"C:\\\\Users\\\\DELL\\\\Downloads\\\\Careygo-Price-Calculator.doc\")",
+      "Bash(pandoc \"C:\\\\Users\\\\DELL\\\\Downloads\\\\Careygo-Price-Calculator.doc\" -o - -t markdown)",
+      "Bash(python -c ':*)",
+      "Bash(php -r ':*)",
+      "Bash(C:/xampp/php/php.exe -r ':*)",
+      "Bash(C:/xampp/php/php.exe -r \"echo PHP_VERSION;\")",
+      "Bash(C:/xampp/mysql/bin/mysql.exe --version)",
+      "Bash(C:/xampp/mysql/bin/mysql.exe -u root -e \"USE careygo; SHOW TABLES;\")",
+      "Bash(grep -n \"strtotime\" /c/xampp/htdocs/careygo/admin/*.php /c/xampp/htdocs/careygo/customer/*.php /c/xampp/htdocs/careygo/api/*.php)",
+      "Bash(grep -r \"require\\\\|include\" /c/xampp/htdocs/careygo/api/*.php)",
+      "Bash(grep -n \"tat_\" /c/xampp/htdocs/careygo/api/*.php)",
+      "Bash(grep -rn \"json_response\" /c/xampp/htdocs/careygo/api/*.php)",
+      "Bash(grep -n \"auth_require\\\\|auth_user\" /c/xampp/htdocs/careygo/admin/*.php)",
+      "Bash(grep -n \"auth_require\\\\|auth_user\" /c/xampp/htdocs/careygo/customer/*.php)",
+      "Bash(grep -rn \"\\\\.php\" /c/xampp/htdocs/careygo/*.php)",
+      "Bash(grep -n \"adminRoot\" /c/xampp/htdocs/careygo/admin/*.php)",
+      "Bash(grep -rn \"INSERT INTO\\\\|UPDATE.*SET\" /c/xampp/htdocs/careygo/api/*.php)",
+      "Bash(grep -rn \"password\\\\|secret\\\\|key\" /c/xampp/htdocs/careygo/config/*.php)",
+      "Bash(dir \"C:\\\\xampp\\\\htdocs\\\\careygo\\\\\" /b)"
+    ]
+  }
+}

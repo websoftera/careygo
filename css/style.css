@@ -154,6 +154,13 @@ ul {
 
     .nav-actions {
         margin-top: 15px;
+        justify-content: center;
+        padding-bottom: 12px;
+    }
+
+    /* Stack register link above login button on mobile menu */
+    .nav-register-link {
+        font-size: 13px;
     }
 }
 
@@ -205,6 +212,141 @@ ul {
 .search-btn i {
     font-size: 16px;
 }
+
+/* ===== NAV AUTH ELEMENTS ===== */
+
+/* Register text link */
+.nav-register-link {
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary-blue);
+    text-decoration: none;
+    padding: 4px 2px;
+    transition: opacity .2s;
+    white-space: nowrap;
+}
+.nav-register-link:hover { opacity: .7; color: var(--primary-blue); }
+
+/* Customer Login button (pill, same height as CTA) */
+.nav-login-btn {
+    padding: 0px 6px 0px 18px !important;
+    height: 44px;
+    font-size: 14px;
+}
+
+/* Mobile compact login button */
+.nav-login-btn-sm {
+    display: inline-flex; align-items: center;
+    background: var(--primary-blue);
+    color: #fff; text-decoration: none;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px; font-weight: 600;
+    padding: 6px 14px; border-radius: 50px;
+    gap: 4px;
+    transition: background .2s;
+}
+.nav-login-btn-sm:hover { background: #001270; color: #fff; }
+
+/* Mobile avatar circle */
+.nav-user-avatar-sm {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--primary-blue); color: #fff;
+    font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 14px;
+    text-decoration: none;
+    flex-shrink: 0;
+}
+
+/* Logged-in user pill button */
+.nav-user-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #f0f2fb;
+    border: 1.5px solid #d6dcf5;
+    border-radius: 50px;
+    padding: 5px 14px 5px 5px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px; font-weight: 600;
+    color: var(--primary-blue);
+    transition: background .2s, border-color .2s;
+    white-space: nowrap;
+}
+.nav-user-pill:hover,
+.nav-user-pill.show {
+    background: #e4e9fc;
+    border-color: var(--primary-blue);
+}
+.nav-user-pill::after { display: none; }  /* hide Bootstrap default caret */
+
+.nav-user-pill-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-blue), #3B5BDB);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 13px;
+    flex-shrink: 0;
+}
+
+.nav-user-pill-name {
+    max-width: 100px;
+    overflow: hidden; text-overflow: ellipsis;
+}
+
+.nav-user-pill-chevron {
+    font-size: 11px;
+    opacity: .6;
+    margin-left: 2px;
+}
+
+/* User dropdown menu */
+.nav-user-menu {
+    min-width: 220px;
+    border: 1px solid #e4e7f0;
+    border-radius: 14px;
+    padding: 6px;
+    margin-top: 8px !important;
+    font-family: 'Poppins', sans-serif;
+}
+
+.nav-user-menu-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px 8px;
+}
+
+.nav-user-menu-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-blue), #3B5BDB);
+    color: #fff; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 16px;
+}
+
+.nav-user-menu-name {
+    font-weight: 600; font-size: 13px; color: #1a1a2e;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 140px;
+}
+
+.nav-user-menu-role {
+    font-size: 11px; color: #6b7280;
+}
+
+.nav-user-menu-item {
+    display: flex; align-items: center; gap: 9px;
+    padding: 9px 12px;
+    border-radius: 9px;
+    font-size: 13px; font-weight: 500; color: #374151;
+    transition: background .15s, color .15s;
+}
+.nav-user-menu-item i { font-size: 15px; color: var(--primary-blue); }
+.nav-user-menu-item:hover { background: #f0f2fb; color: var(--primary-blue); }
+
+.nav-user-menu-logout { color: #ef4444; }
+.nav-user-menu-logout i { color: #ef4444; }
+.nav-user-menu-logout:hover { background: #fef2f2; color: #ef4444; }
+
+/* ===================================================== */
 
 /* Connect With Us Button */
 .btn-primary-custom {

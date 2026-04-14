@@ -1,0 +1,169 @@
+<?php
+/**
+ * POST /api/shipments.php  — create new shipment (customer)
+ * GET  /api/shipments.php  — list customer's own shipments
+ */
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../lib/auth.php';
+require_once __DIR__ . '/../lib/helpers.php';
+
+header('Content-Type: application/json');
+
+$user = auth_user();
+if (!$user || $user['role'] !== 'customer') {
+    json_response(['success' => false, 'message' => 'Unauthorized.'], 401);
+}
+$userId = (int) $user['sub'];
+
+// Verify customer is approved
+$stmt = $pdo->prepare('SELECT status FROM users WHERE id = ?');
+$stmt->execute([$userId]);
+$customerStatus = $stmt->fetchColumn();
+if ($customerStatus !== 'approved') {
+    json_response(['success' => false, 'message' => 'Account not approved.'], 403);
+}
+
+$method = $_SERVER['REQUEST_METHOD'];
+
+if ($method === 'GET') {
+    $filter = $_GET['status'] ?? '';
+    $where  = "WHERE customer_id = ?";
+    $params = [$userId];
+    if ($filter) { $where .= " AND status = ?"; $params[] = $filter; }
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM shipments $where ORDER BY created_at DESC");
+        $stmt->execute($params);
+        json_response(['success' => true, 'shipments' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+    } catch (Exception $e) {
+        json_response(['success' => false, 'message' => 'Failed to fetch shipments.'], 500);
+    }
+}
+
+if ($method === 'POST') {
+    $body = json_decode(file_get_contents('php://input'), true) ?? [];
+
+    // ── Extract and sanitize ──
+    $pickup   = $body['pickup']   ?? [];
+    $delivery = $body['delivery'] ?? [];
+
+    $pickupName    = trim($pickup['name']  ?? '');
+    $pickupPhone   = trim($pickup['phone'] ?? '');
+    $pickupAddr1   = trim($pickup['addr1'] ?? '');
+    $pickupAddr2   = trim($pickup['addr2'] ?? '');
+    $pickupCity    = trim($pickup['city']  ?? '');
+    $pickupState   = trim($pickup['state'] ?? '');
+    $pickupPincode = trim($pickup['pincode'] ?? '');
+
+    $delivName    = trim($delivery['name']  ?? '');
+    $delivPhone   = trim($delivery['phone'] ?? '');
+    $delivAddr1   = trim($delivery['addr1'] ?? '');
+    $delivAddr2   = trim($delivery['addr2'] ?? '');
+    $delivCity    = trim($delivery['city']  ?? '');
+    $delivState   = trim($delivery['state'] ?? '');
+    $delivPincode = trim($delivery['pincode'] ?? '');
+
+    $serviceType    = trim($body['service_type']   ?? '');
+    $weight         = (float)  ($body['weight']        ?? 0);
+    $pieces         = (int)    ($body['pieces']        ?? 1);
+    $declaredValue  = (float)  ($body['declared_value'] ?? 0);
+    $description    = trim($body['description']   ?? '');
+    $customerRef    = trim($body['customer_ref']  ?? '');
+    $ewaybillNo     = trim($body['ewaybill_no']   ?? '');
+    $packingMaterial= (int)    ($body['packing_material'] ?? 0);
+    $basePrice      = (float)  ($body['base_price']    ?? 0);
+    $discountPct    = (float)  ($body['discount_pct']  ?? 0);
+    $discountAmt    = round($basePrice * $discountPct / 100, 2);
+    $finalPrice     = (float)  ($body['final_price']   ?? $basePrice);
+    $paymentMethod  = trim($body['payment_method'] ?? 'prepaid');
+    $gstInvoice     = (int)    ($body['gst_invoice']   ?? 0);
+    $gstin          = trim($body['gstin']          ?? '');
+    $panNumber      = trim($body['pan_number']     ?? '');
+
+    // Validation
+    $allowed = ['standard','premium','air_cargo','surface'];
+    if (!in_array($serviceType, $allowed)) {
+        json_response(['success' => false, 'message' => 'Invalid service type.'], 422);
+    }
+    if ($weight <= 0) json_response(['success' => false, 'message' => 'Invalid weight.'], 422);
+    if (!$pickupName || !$pickupPhone || !$pickupAddr1 || !$pickupCity || !$pickupPincode) {
+        json_response(['success' => false, 'message' => 'Pickup address is incomplete.'], 422);
+    }
+    if (!$delivName || !$delivPhone || !$delivAddr1 || !$delivCity || !$delivPincode) {
+        json_response(['success' => false, 'message' => 'Delivery address is incomplete.'], 422);
+    }
+    if (!in_array($paymentMethod, ['prepaid','cod','credit'])) $paymentMethod = 'prepaid';
+
+    // Generate unique tracking number: CGO-YYYYMMDD-XXXXXXXX
+    $tracking = 'CGO' . date('Ymd') . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
+
+    // Estimate delivery date — use tatColumn() helper to fix air_cargo → tat_air mapping
+    $tatCol  = tatColumn($serviceType);
+    $tatStmt = $pdo->prepare("SELECT `{$tatCol}` FROM pincode_tat WHERE pincode = ? LIMIT 1");
+    $tatStmt->execute([$delivPincode]);
+    $tat     = $tatStmt->fetchColumn();
+    $tatDays = ($tat !== false && $tat > 0) ? (int)$tat : 3;
+    $etaDate = addBusinessDays($tatDays);
+
+    $pickupFull   = $pickupAddr1 . ($pickupAddr2 ? ', ' . $pickupAddr2 : '');
+    $delivFull    = $delivAddr1  . ($delivAddr2  ? ', ' . $delivAddr2  : '');
+
+    try {
+        $stmt = $pdo->prepare("
+            INSERT INTO shipments (
+                tracking_no, customer_id,
+                pickup_name, pickup_phone, pickup_address, pickup_city, pickup_state, pickup_pincode,
+                delivery_name, delivery_phone, delivery_address, delivery_city, delivery_state, delivery_pincode,
+                service_type, weight, declared_value, pieces, description, customer_ref,
+                ewaybill_no, packing_material,
+                base_price, discount_pct, discount_amount, final_price,
+                payment_method, gst_invoice, gstin, pan_number,
+                status, estimated_delivery
+            ) VALUES (
+                ?, ?,
+                ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?,
+                ?, ?,
+                ?, ?, ?, ?,
+                ?, ?, ?, ?,
+                'booked', ?
+            )
+        ");
+        $stmt->execute([
+            $tracking, $userId,
+            $pickupName, $pickupPhone, $pickupFull, $pickupCity, $pickupState, $pickupPincode,
+            $delivName, $delivPhone, $delivFull, $delivCity, $delivState, $delivPincode,
+            $serviceType, $weight, $declaredValue, $pieces, $description, $customerRef,
+            $ewaybillNo, $packingMaterial,
+            $basePrice, $discountPct, $discountAmt, $finalPrice,
+            $paymentMethod, $gstInvoice, $gstin, $panNumber,
+            $etaDate,
+        ]);
+
+        // Save new addresses if flagged
+        if (!empty($body['save_pickup_address'])) {
+            $pdo->prepare("INSERT IGNORE INTO addresses (user_id, full_name, phone, address_line1, address_line2, city, state, pincode) VALUES (?,?,?,?,?,?,?,?)")
+                ->execute([$userId, $pickupName, $pickupPhone, $pickupAddr1, $pickupAddr2, $pickupCity, $pickupState, $pickupPincode]);
+        }
+        if (!empty($body['save_delivery_address'])) {
+            $pdo->prepare("INSERT IGNORE INTO addresses (user_id, full_name, phone, address_line1, address_line2, city, state, pincode) VALUES (?,?,?,?,?,?,?,?)")
+                ->execute([$userId, $delivName, $delivPhone, $delivAddr1, $delivAddr2, $delivCity, $delivState, $delivPincode]);
+        }
+
+        json_response([
+            'success'     => true,
+            'tracking_no' => $tracking,
+            'id'          => (int) $pdo->lastInsertId(),
+            'eta'         => $etaDate,
+        ]);
+    } catch (Exception $e) {
+        // Duplicate tracking — retry once
+        if ($e->getCode() == 23000) {
+            $tracking = 'CGO' . date('Ymd') . strtoupper(substr(bin2hex(random_bytes(5)), 0, 8));
+            json_response(['success' => false, 'message' => 'Please try again.'], 500);
+        }
+        json_response(['success' => false, 'message' => 'Failed to create shipment. ' . $e->getMessage()], 500);
+    }
+}
+
+json_response(['success' => false, 'message' => 'Method not allowed.'], 405);
