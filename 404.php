@@ -1,7 +1,7 @@
 <?php
 http_response_code(404);
-// Detect if we're inside a sub-directory request so asset paths work
-$base = '/careygo';
+require_once __DIR__ . '/config/jwt.php';   // provides SITE_URL
+$base = SITE_URL;
 ?>
 <!DOCTYPE html>
 <html lang="en">

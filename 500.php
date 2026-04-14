@@ -1,6 +1,7 @@
 <?php
 http_response_code(500);
-$base = '/careygo';
+require_once __DIR__ . '/config/jwt.php';   // provides SITE_URL
+$base = SITE_URL;
 ?>
 <!DOCTYPE html>
 <html lang="en">

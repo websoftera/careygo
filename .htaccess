@@ -6,9 +6,21 @@ Options -Indexes -MultiViews
 ServerSignature Off
 
 # ── Error documents ──────────────────────────────────────────
-ErrorDocument 404 /careygo/404.php
-ErrorDocument 500 /careygo/500.php
-ErrorDocument 403 /careygo/404.php
+# These paths are relative to the server root. On a subdomain (prod) the app
+# is at /, so use /404.php. On localhost with a subfolder, Apache rewrites
+# ErrorDocument paths relative to the vhost root, so /404.php still works
+# because Apache maps it to the site root. Adjust if your host differs.
+ErrorDocument 404 /404.php
+ErrorDocument 500 /500.php
+ErrorDocument 403 /404.php
+
+# ── Environment overrides (uncomment & set on production) ────
+# SetEnv CGO_SITE_URL    https://careygo.everythingb2c.in
+# SetEnv CGO_JWT_SECRET  your-long-random-secret-here
+# SetEnv CGO_DB_HOST     localhost
+# SetEnv CGO_DB_USER     u141519101_careygo
+# SetEnv CGO_DB_PASS     +DgrP256
+# SetEnv CGO_DB_NAME     u141519101_careygo
 
 # ── Force HTTPS (uncomment on live server) ───────────────────
 # RewriteEngine On
