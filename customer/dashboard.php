@@ -46,7 +46,7 @@ $serviceLabels = ['standard'=>'Standard Express','premium'=>'Premium Express','a
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Deliveries — Careygo</title>
+    <title>My Bookings — Careygo</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -71,7 +71,8 @@ $serviceLabels = ['standard'=>'Standard Express','premium'=>'Premium Express','a
         <ul>
             <li class="cust-nav-label">Navigation</li>
             <li><a href="dashboard.php" class="cust-nav-link active"><i class="bi bi-grid-1x2"></i> Dashboard</a></li>
-            <li><a href="new-delivery.php" class="cust-nav-link"><i class="bi bi-plus-circle"></i> New Delivery</a></li>
+            <li><a href="new-booking.php" class="cust-nav-link"><i class="bi bi-plus-circle"></i> New Booking</a></li>
+            <li><a href="#" class="cust-nav-link" onclick="openRateCalc();return false;"><i class="bi bi-calculator"></i> Rate Calculator</a></li>
             <li class="cust-nav-label mt-2">Account</li>
             <li><a href="profile.php" class="cust-nav-link"><i class="bi bi-person-circle"></i> My Profile</a></li>
             <li><a href="../auth/logout.php" class="cust-nav-link logout-link"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
@@ -84,10 +85,13 @@ $serviceLabels = ['standard'=>'Standard Express','premium'=>'Premium Express','a
 <div class="cust-content-wrap">
     <header class="cust-topbar">
         <button class="cust-toggle-btn d-lg-none" id="custToggle"><i class="bi bi-list"></i></button>
-        <div class="cust-topbar-title">My Deliveries</div>
+        <div class="cust-topbar-title">My Bookings</div>
         <div class="cust-topbar-actions">
-            <a href="new-delivery.php" class="btn-new-delivery">
-                <i class="bi bi-plus-lg"></i> <span>New Delivery</span>
+            <button class="btn-rate-calc" onclick="openRateCalc()">
+                <i class="bi bi-calculator"></i> <span class="d-none d-sm-inline">Rate Calculator</span>
+            </button>
+            <a href="new-booking.php" class="btn-new-delivery">
+                <i class="bi bi-plus-lg"></i> <span>New Booking</span>
             </a>
         </div>
     </header>
@@ -146,10 +150,10 @@ $serviceLabels = ['standard'=>'Standard Express','premium'=>'Premium Express','a
             <?php if (empty($shipments)): ?>
             <div class="cust-empty">
                 <i class="bi bi-box-seam"></i>
-                <h5>No deliveries yet</h5>
-                <p>Book your first delivery to get started</p>
-                <a href="new-delivery.php" class="btn-new-delivery">
-                    <i class="bi bi-plus-lg me-1"></i> New Delivery
+                <h5>No bookings yet</h5>
+                <p>Create your first booking to get started</p>
+                <a href="new-booking.php" class="btn-new-delivery">
+                    <i class="bi bi-plus-lg me-1"></i> New Booking
                 </a>
             </div>
             <?php else: ?>
@@ -193,6 +197,7 @@ $serviceLabels = ['standard'=>'Standard Express','premium'=>'Premium Express','a
     </main>
 </div>
 
+<?php include __DIR__ . '/includes/rate-calc-modal.php'; ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 // Sidebar
@@ -208,6 +213,7 @@ document.getElementById('shipSearch')?.addEventListener('input', function() {
         row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
     });
 });
+function openRateCalc() { new bootstrap.Modal(document.getElementById('rateCalcModal')).show(); }
 </script>
 </body>
 </html>

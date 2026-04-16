@@ -139,8 +139,8 @@ $_navUser = auth_user();   // null = guest, array = logged-in payload
                             </li>
                             <?php if ($_navUser['role'] === 'customer' && $_navUser['status'] === 'approved'): ?>
                             <li>
-                                <a class="dropdown-item nav-user-menu-item" href="customer/new-delivery.php">
-                                    <i class="bi bi-plus-circle"></i> New Delivery
+                                <a class="dropdown-item nav-user-menu-item" href="customer/new-booking.php">
+                                    <i class="bi bi-plus-circle"></i> New Booking
                                 </a>
                             </li>
                             <li>

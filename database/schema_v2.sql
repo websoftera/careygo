@@ -121,6 +121,14 @@ CREATE TABLE IF NOT EXISTS `shipments` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
+-- Add zone column to pricing_slabs (safe migration — skipped if already exists)
+-- ============================================================
+ALTER TABLE `pricing_slabs`
+    ADD COLUMN IF NOT EXISTS `zone`
+        ENUM('within_city','within_state','metro','rest_of_india') DEFAULT NULL
+        AFTER `service_type`;
+
+-- ============================================================
 -- Seed: Pricing slabs
 -- ============================================================
 INSERT IGNORE INTO `pricing_slabs`

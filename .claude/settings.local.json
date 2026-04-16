@@ -22,7 +22,9 @@
       "Bash(grep -n \"adminRoot\" /c/xampp/htdocs/careygo/admin/*.php)",
       "Bash(grep -rn \"INSERT INTO\\\\|UPDATE.*SET\" /c/xampp/htdocs/careygo/api/*.php)",
       "Bash(grep -rn \"password\\\\|secret\\\\|key\" /c/xampp/htdocs/careygo/config/*.php)",
-      "Bash(dir \"C:\\\\xampp\\\\htdocs\\\\careygo\\\\\" /b)"
+      "Bash(dir \"C:\\\\xampp\\\\htdocs\\\\careygo\\\\\" /b)",
+      "Bash(copy \"C:\\\\xampp\\\\htdocs\\\\careygo\\\\customer\\\\new-delivery.php\" \"C:\\\\xampp\\\\htdocs\\\\careygo\\\\customer\\\\new-booking.php\")",
+      "Bash(python \"C:/xampp/htdocs/careygo/database/generate_pincodes_sql.py\")"
     ]
   }
 }

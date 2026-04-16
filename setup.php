@@ -29,9 +29,14 @@ function runSql(PDO $pdo, string $label, string $sql): array {
 
 // ── Run both schema files in order ──
 $schemaFiles = [
-    'schema.sql'   => __DIR__ . '/database/schema.sql',
+    'schema.sql'    => __DIR__ . '/database/schema.sql',
     'schema_v2.sql' => __DIR__ . '/database/schema_v2.sql',
 ];
+
+// Optionally import 15k+ pincodes (pass &pincodes=1 to enable — takes ~10–30 s)
+if (($_GET['pincodes'] ?? '') === '1') {
+    $schemaFiles['pincodes.sql'] = __DIR__ . '/database/pincodes.sql';
+}
 
 foreach ($schemaFiles as $fileLabel => $filePath) {
     $raw = file_get_contents($filePath);
@@ -110,7 +115,11 @@ p { color: #6b7280; font-size: 13px; margin-bottom: 20px; }
 <body>
 <div class="wrap">
     <h1>⚙️ Careygo Database Setup</h1>
-    <p>Running schema.sql + schema_v2.sql migrations…</p>
+    <p>Running schema.sql + schema_v2.sql migrations…
+        <?php if (($_GET['pincodes'] ?? '') === '1'): ?>
+        <strong style="color:#001A93;">+ pincodes.sql (15,453 rows)</strong>
+        <?php endif; ?>
+    </p>
 
     <?php
     $errors = array_filter($results, fn($r) => $r['status'] === 'error');
@@ -146,7 +155,7 @@ p { color: #6b7280; font-size: 13px; margin-bottom: 20px; }
         <ol style="font-size:13px;color:#374151;margin:0;padding-left:18px;line-height:2;">
             <li>✅ Verify all tables are listed above</li>
             <li>Login as admin: <code>admin@careygo.in</code> / <code>Admin@123</code></li>
-            <li>Go to <strong>Admin → Pincodes</strong> to import your Excel pincode TAT data as CSV</li>
+            <li>Import 15,453 pincodes: <a href="setup.php?key=careygo_setup_2026&amp;pincodes=1" style="color:#001A93;font-weight:600;">Run setup with pincodes</a> (takes ~15 sec)</li>
             <li>Go to <strong>Admin → Pricing</strong> to review/edit pricing slabs</li>
             <li><strong>Delete this setup.php file</strong> from the server!</li>
         </ol>

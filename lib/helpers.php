@@ -134,3 +134,45 @@ function statusBadge(string $status): string
         . h(ucwords(str_replace('_', ' ', $status)))
         . '</span>';
 }
+
+/**
+ * Determine the shipping zone from pickup and delivery city + state strings.
+ *
+ * Priority:
+ *   1. Same city  → within_city
+ *   2. Same state → within_state
+ *   3. Either city is a recognised Metro → metro
+ *   4. Anything else → rest_of_india
+ *
+ * @return string  One of: within_city | within_state | metro | rest_of_india
+ */
+function determineZone(string $pickupCity, string $pickupState, string $deliveryCity, string $deliveryState): string
+{
+    $nc = static fn(string $s): string => strtolower(trim(preg_replace('/\s+/', ' ', $s)));
+
+    $pCity  = $nc($pickupCity);
+    $dCity  = $nc($deliveryCity);
+    $pState = $nc($pickupState);
+    $dState = $nc($deliveryState);
+
+    if ($pCity === $dCity && $pState === $dState) {
+        return 'within_city';
+    }
+
+    if ($pState === $dState) {
+        return 'within_state';
+    }
+
+    // Recognised Tier-1 / Metro cities (Indian logistics standard)
+    static $metros = [
+        'delhi', 'new delhi', 'mumbai', 'bombay', 'bangalore', 'bengaluru',
+        'chennai', 'madras', 'kolkata', 'calcutta', 'hyderabad', 'pune',
+        'ahmedabad', 'noida', 'gurugram', 'gurgaon', 'thane', 'navi mumbai',
+    ];
+
+    if (in_array($dCity, $metros, true) || in_array($pCity, $metros, true)) {
+        return 'metro';
+    }
+
+    return 'rest_of_india';
+}

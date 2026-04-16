@@ -56,7 +56,8 @@ $statusLabels  = ['booked'=>'Booked','picked_up'=>'Picked Up','in_transit'=>'In 
         <ul>
             <li class="cust-nav-label">Navigation</li>
             <li><a href="dashboard.php" class="cust-nav-link active"><i class="bi bi-grid-1x2"></i> Dashboard</a></li>
-            <li><a href="new-delivery.php" class="cust-nav-link"><i class="bi bi-plus-circle"></i> New Delivery</a></li>
+            <li><a href="new-booking.php" class="cust-nav-link"><i class="bi bi-plus-circle"></i> New Booking</a></li>
+            <li><a href="#" class="cust-nav-link" onclick="openRateCalc();return false;"><i class="bi bi-calculator"></i> Rate Calculator</a></li>
             <li class="cust-nav-label mt-2">Account</li>
             <li><a href="profile.php" class="cust-nav-link"><i class="bi bi-person-circle"></i> My Profile</a></li>
             <li><a href="../auth/logout.php" class="cust-nav-link logout-link"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
@@ -69,11 +70,14 @@ $statusLabels  = ['booked'=>'Booked','picked_up'=>'Picked Up','in_transit'=>'In 
     <header class="cust-topbar">
         <button class="cust-toggle-btn d-lg-none" id="custToggle"><i class="bi bi-list"></i></button>
         <div class="cust-topbar-title" style="font-size:13px;">
-            <a href="dashboard.php" style="color:var(--muted);text-decoration:none;">My Deliveries</a>
+            <a href="dashboard.php" style="color:var(--muted);text-decoration:none;">My Bookings</a>
             <span style="margin:0 6px;color:var(--muted);">/</span>
             <span style="font-family:'Montserrat',sans-serif;"><?= htmlspecialchars($shipment['tracking_no']) ?></span>
         </div>
         <div class="cust-topbar-actions">
+            <button class="btn-rate-calc" onclick="openRateCalc()">
+                <i class="bi bi-calculator"></i> <span class="d-none d-sm-inline">Rate Calculator</span>
+            </button>
             <a href="dashboard.php" class="btn-outline-admin" style="font-size:12px;padding:7px 14px;text-decoration:none;">
                 <i class="bi bi-arrow-left me-1"></i> Back
             </a>
@@ -211,6 +215,7 @@ $statusLabels  = ['booked'=>'Booked','picked_up'=>'Picked Up','in_transit'=>'In 
     </main>
 </div>
 
+<?php include __DIR__ . '/includes/rate-calc-modal.php'; ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 const custSidebar = document.getElementById('custSidebar');
@@ -218,6 +223,7 @@ const custOverlay = document.getElementById('custOverlay');
 document.getElementById('custToggle')?.addEventListener('click', () => { custSidebar.classList.add('open'); custOverlay.classList.add('show'); });
 document.getElementById('custSidebarClose')?.addEventListener('click', () => { custSidebar.classList.remove('open'); custOverlay.classList.remove('show'); });
 custOverlay?.addEventListener('click', () => { custSidebar.classList.remove('open'); custOverlay.classList.remove('show'); });
+function openRateCalc() { new bootstrap.Modal(document.getElementById('rateCalcModal')).show(); }
 </script>
 </body>
 </html>

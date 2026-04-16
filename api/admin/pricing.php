@@ -21,6 +21,7 @@ if ($method === 'POST') {
 
     $id             = !empty($body['id']) ? (int)$body['id'] : null;
     $serviceType    = trim($body['service_type']    ?? '');
+    $zone           = trim($body['zone']            ?? '');
     $weightFrom     = (float) ($body['weight_from']     ?? 0);
     $weightTo       = isset($body['weight_to']) && $body['weight_to'] !== null && $body['weight_to'] !== '' ? (float)$body['weight_to'] : null;
     $basePrice      = (float) ($body['base_price']       ?? 0);
@@ -28,10 +29,14 @@ if ($method === 'POST') {
     $incrementPerKg = (float) ($body['increment_per_kg'] ?? 0.5);
     $sortOrder      = (int)   ($body['sort_order']       ?? 1);
 
-    $allowed = ['standard','premium','air_cargo','surface'];
-    if (!in_array($serviceType, $allowed)) {
+    $allowedTypes = ['standard','premium','air_cargo','surface'];
+    if (!in_array($serviceType, $allowedTypes)) {
         json_response(['success' => false, 'message' => 'Invalid service type.'], 422);
     }
+
+    $allowedZones = ['within_city','within_state','metro','rest_of_india'];
+    $zoneValue = in_array($zone, $allowedZones) ? $zone : null;
+
     if ($basePrice < 0) {
         json_response(['success' => false, 'message' => 'Base price cannot be negative.'], 422);
     }
@@ -40,15 +45,15 @@ if ($method === 'POST') {
         if ($id) {
             $stmt = $pdo->prepare("
                 UPDATE pricing_slabs SET
-                    service_type = ?, weight_from = ?, weight_to = ?,
+                    service_type = ?, zone = ?, weight_from = ?, weight_to = ?,
                     base_price = ?, increment_price = ?, increment_per_kg = ?, sort_order = ?
                 WHERE id = ?");
-            $stmt->execute([$serviceType, $weightFrom, $weightTo, $basePrice, $incrementPrice, $incrementPerKg, $sortOrder, $id]);
+            $stmt->execute([$serviceType, $zoneValue, $weightFrom, $weightTo, $basePrice, $incrementPrice, $incrementPerKg, $sortOrder, $id]);
         } else {
             $stmt = $pdo->prepare("
-                INSERT INTO pricing_slabs (service_type, weight_from, weight_to, base_price, increment_price, increment_per_kg, sort_order)
-                VALUES (?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$serviceType, $weightFrom, $weightTo, $basePrice, $incrementPrice, $incrementPerKg, $sortOrder]);
+                INSERT INTO pricing_slabs (service_type, zone, weight_from, weight_to, base_price, increment_price, increment_per_kg, sort_order)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$serviceType, $zoneValue, $weightFrom, $weightTo, $basePrice, $incrementPrice, $incrementPerKg, $sortOrder]);
             $id = (int) $pdo->lastInsertId();
         }
         json_response(['success' => true, 'id' => $id]);

@@ -43,7 +43,8 @@ $memberSince = date('M Y', strtotime($user['created_at']));
         <ul>
             <li class="cust-nav-label">Navigation</li>
             <li><a href="dashboard.php" class="cust-nav-link"><i class="bi bi-grid-1x2"></i> Dashboard</a></li>
-            <li><a href="new-delivery.php" class="cust-nav-link"><i class="bi bi-plus-circle"></i> New Delivery</a></li>
+            <li><a href="new-booking.php" class="cust-nav-link"><i class="bi bi-plus-circle"></i> New Booking</a></li>
+            <li><a href="#" class="cust-nav-link" onclick="openRateCalc();return false;"><i class="bi bi-calculator"></i> Rate Calculator</a></li>
             <li class="cust-nav-label mt-2">Account</li>
             <li><a href="profile.php" class="cust-nav-link active"><i class="bi bi-person-circle"></i> My Profile</a></li>
             <li><a href="../auth/logout.php" class="cust-nav-link logout-link"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
@@ -58,8 +59,11 @@ $memberSince = date('M Y', strtotime($user['created_at']));
         <button class="cust-toggle-btn d-lg-none" id="custToggle"><i class="bi bi-list"></i></button>
         <div class="cust-topbar-title">My Profile</div>
         <div class="cust-topbar-actions">
-            <a href="dashboard.php" class="btn-outline-admin" style="font-size:12px;padding:7px 14px;text-decoration:none;">
-                <i class="bi bi-arrow-left me-1"></i> Back
+            <button class="btn-rate-calc" onclick="openRateCalc()">
+                <i class="bi bi-calculator"></i> <span class="d-none d-sm-inline">Rate Calculator</span>
+            </button>
+            <a href="new-booking.php" class="btn-new-delivery" style="font-size:12px;padding:7px 14px;">
+                <i class="bi bi-plus-lg"></i> <span class="d-none d-sm-inline">New Booking</span>
             </a>
         </div>
     </header>
@@ -308,6 +312,10 @@ document.getElementById('passwordForm')?.addEventListener('submit', async functi
         btn.innerHTML = '<i class="bi bi-shield-check me-1"></i> Change Password';
     }
 });
+</script>
+<?php include __DIR__ . '/includes/rate-calc-modal.php'; ?>
+<script>
+function openRateCalc() { new bootstrap.Modal(document.getElementById('rateCalcModal')).show(); }
 </script>
 </body>
 </html>

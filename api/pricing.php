@@ -1,7 +1,12 @@
 <?php
 /**
  * GET /api/pricing.php?weight=1.5&pickup=411001&delivery=600001
- * Returns pricing for all service types with TAT info
+ * Returns pricing for all service types with TAT info and zone.
+ *
+ * Zone resolution order:
+ *   1. Use ?zone= GET param if provided and valid
+ *   2. Auto-detect from pickup + delivery pincode city/state data
+ *   3. Fall back to NULL-zone (global) slabs if neither resolves
  */
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../lib/auth.php';
@@ -17,28 +22,56 @@ if ($weight <= 0) {
     json_response(['success' => false, 'message' => 'Invalid weight.'], 422);
 }
 
-/**
- * Calculate price for a service type using pricing_slabs table
- * Slab logic: iterate by weight_to ASC (NULL last).
- *   - Fixed slab (weight_to IS NOT NULL): if weight <= weight_to → base_price
- *   - Open slab (weight_to IS NULL): base_price + ceil((weight−weight_from) / increment_per_kg) × increment_price
- */
-function calculatePrice(float $weight, string $serviceType, PDO $pdo): float
-{
-    $stmt = $pdo->prepare(
-        "SELECT * FROM pricing_slabs
-         WHERE service_type = ?
-         ORDER BY CASE WHEN weight_to IS NULL THEN 1 ELSE 0 END ASC, weight_to ASC, weight_from ASC"
-    );
-    $stmt->execute([$serviceType]);
-    $slabs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$validZones = ['within_city', 'within_state', 'metro', 'rest_of_india'];
 
+/**
+ * Calculate price for a service type using pricing_slabs table.
+ *
+ * Zone resolution:
+ *   - If $zone is set, first look for slabs WHERE zone = $zone.
+ *     If none found, fall back to slabs WHERE zone IS NULL (global).
+ *   - If $zone is null, use slabs WHERE zone IS NULL only.
+ *
+ * Slab logic:
+ *   - Fixed slab  (weight_to IS NOT NULL): if weight ≤ weight_to → base_price
+ *   - Open slab   (weight_to IS NULL):     base_price + ceil((w − weight_from) / increment_per_kg) × increment_price
+ */
+function calculatePrice(float $weight, string $serviceType, PDO $pdo, ?string $zone = null): float
+{
+    $order = "ORDER BY CASE WHEN weight_to IS NULL THEN 1 ELSE 0 END ASC,
+                       weight_to ASC, weight_from ASC";
+
+    $slabs = [];
+
+    // ── 1. Try zone-specific slabs ───────────────────────────────────────────
+    if ($zone) {
+        $stmt = $pdo->prepare(
+            "SELECT * FROM pricing_slabs
+             WHERE service_type = ? AND zone = ?
+             $order"
+        );
+        $stmt->execute([$serviceType, $zone]);
+        $slabs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // ── 2. Fall back to global slabs (zone IS NULL) ──────────────────────────
+    if (empty($slabs)) {
+        $stmt = $pdo->prepare(
+            "SELECT * FROM pricing_slabs
+             WHERE service_type = ? AND zone IS NULL
+             $order"
+        );
+        $stmt->execute([$serviceType]);
+        $slabs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // ── 3. Apply slab logic ──────────────────────────────────────────────────
     foreach ($slabs as $slab) {
         $from = (float) $slab['weight_from'];
         $to   = $slab['weight_to'];
 
         if ($to !== null) {
-            // Fixed price slab
+            // Fixed-price slab
             if ($weight <= (float) $to) {
                 return (float) $slab['base_price'];
             }
@@ -55,36 +88,59 @@ function calculatePrice(float $weight, string $serviceType, PDO $pdo): float
     return 0.0; // No matching slab
 }
 
-// Get TAT info for delivery pincode
-$tatData = [];
+// ── Look up both pincodes ────────────────────────────────────────────────────
+$pickupRow = null;
+$tatRow    = null;
+
 try {
-    $stmt = $pdo->prepare("SELECT * FROM pincode_tat WHERE pincode = ? LIMIT 1");
-    $stmt->execute([$delivery]);
-    $tatRow = $stmt->fetch(PDO::FETCH_ASSOC);
-    if ($tatRow) {
-        $tatData = [
-            'standard'  => (int) $tatRow['tat_standard'],
-            'premium'   => (int) $tatRow['tat_premium'],
-            'air_cargo' => (int) $tatRow['tat_air'],
-            'surface'   => (int) $tatRow['tat_surface'],
-        ];
+    if ($pickup) {
+        $stmt = $pdo->prepare("SELECT * FROM pincode_tat WHERE pincode = ? LIMIT 1");
+        $stmt->execute([$pickup]);
+        $pickupRow = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+    if ($delivery) {
+        $stmt = $pdo->prepare("SELECT * FROM pincode_tat WHERE pincode = ? LIMIT 1");
+        $stmt->execute([$delivery]);
+        $tatRow = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 } catch (Exception $e) {}
 
-// Default TAT if pincode not found
+// ── Resolve zone ─────────────────────────────────────────────────────────────
+$zoneParam = trim($_GET['zone'] ?? '');
+if ($zoneParam && in_array($zoneParam, $validZones, true)) {
+    $zone = $zoneParam;                                 // caller-supplied override
+} elseif ($pickupRow && $tatRow) {
+    $zone = determineZone(                              // auto-detect from DB data
+        $pickupRow['city'], $pickupRow['state'],
+        $tatRow['city'],    $tatRow['state']
+    );
+} else {
+    $zone = null;                                       // fall back to global slabs
+}
+
+// ── TAT data ─────────────────────────────────────────────────────────────────
+$tatData = [];
+if ($tatRow) {
+    $tatData = [
+        'standard'  => (int) $tatRow['tat_standard'],
+        'premium'   => (int) $tatRow['tat_premium'],
+        'air_cargo' => (int) $tatRow['tat_air'],
+        'surface'   => (int) $tatRow['tat_surface'],
+    ];
+}
 $defaultTat = ['standard' => 3, 'premium' => 1, 'air_cargo' => 2, 'surface' => 5];
 
+// ── Calculate prices ──────────────────────────────────────────────────────────
 $serviceTypes = ['standard', 'premium', 'air_cargo', 'surface'];
 $services = [];
 
 try {
     foreach ($serviceTypes as $type) {
-        $price = calculatePrice($weight, $type, $pdo);
-        if ($price <= 0) continue; // Skip if no pricing defined
+        $price = calculatePrice($weight, $type, $pdo, $zone);
+        if ($price <= 0) continue;
 
-        $tat   = $tatData[$type] ?? $defaultTat[$type];
-        $eta   = addBusinessDays($tat, 'd M Y');
-
+        $tat      = $tatData[$type] ?? $defaultTat[$type];
+        $eta      = addBusinessDays($tat, 'd M Y');
         $tatLabel = $tat === 1 ? '1 day' : "$tat days";
 
         $services[] = [
@@ -96,7 +152,12 @@ try {
         ];
     }
 
-    json_response(['success' => true, 'services' => $services, 'weight' => $weight]);
+    json_response([
+        'success'  => true,
+        'services' => $services,
+        'weight'   => $weight,
+        'zone'     => $zone,
+    ]);
 } catch (Exception $e) {
     json_response(['success' => false, 'message' => 'Pricing calculation failed.'], 500);
 }
