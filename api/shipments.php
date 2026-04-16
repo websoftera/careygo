@@ -6,6 +6,7 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../lib/auth.php';
 require_once __DIR__ . '/../lib/helpers.php';
+require_once __DIR__ . '/../lib/email.php';
 
 header('Content-Type: application/json');
 
@@ -140,6 +141,8 @@ if ($method === 'POST') {
             $etaDate,
         ]);
 
+        $shipmentId = (int) $pdo->lastInsertId();
+
         // Save new addresses if flagged
         if (!empty($body['save_pickup_address'])) {
             $pdo->prepare("INSERT IGNORE INTO addresses (user_id, full_name, phone, address_line1, address_line2, city, state, pincode) VALUES (?,?,?,?,?,?,?,?)")
@@ -150,10 +153,73 @@ if ($method === 'POST') {
                 ->execute([$userId, $delivName, $delivPhone, $delivAddr1, $delivAddr2, $delivCity, $delivState, $delivPincode]);
         }
 
+        // ── Send notification emails ──────────────────────────────
+        try {
+            // Fetch customer details
+            $custStmt = $pdo->prepare("SELECT id, full_name, email FROM users WHERE id = ?");
+            $custStmt->execute([$userId]);
+            $customer = $custStmt->fetch(PDO::FETCH_ASSOC);
+
+            // Build shipment array for email functions
+            $shipmentData = [
+                'id'                  => $shipmentId,
+                'tracking_no'         => $tracking,
+                'pickup_name'         => $pickupName,
+                'pickup_phone'        => $pickupPhone,
+                'pickup_address'      => $pickupFull,
+                'pickup_city'         => $pickupCity,
+                'pickup_state'        => $pickupState,
+                'pickup_pincode'      => $pickupPincode,
+                'delivery_name'       => $delivName,
+                'delivery_phone'      => $delivPhone,
+                'delivery_address'    => $delivFull,
+                'delivery_city'       => $delivCity,
+                'delivery_state'      => $delivState,
+                'delivery_pincode'    => $delivPincode,
+                'service_type'        => $serviceType,
+                'weight'              => $weight,
+                'pieces'              => $pieces,
+                'description'         => $description,
+                'declared_value'      => $declaredValue,
+                'base_price'          => $basePrice,
+                'discount_pct'        => $discountPct,
+                'discount_amount'     => $discountAmt,
+                'final_price'         => $finalPrice,
+                'payment_method'      => $paymentMethod,
+                'created_at'          => date('Y-m-d H:i:s'),
+                'estimated_delivery'  => $etaDate,
+                'delivery_email'      => $body['delivery_email'] ?? null,
+            ];
+
+            $emailService = new EmailService();
+
+            // 1. Send booking confirmation to sender (customer)
+            if ($customer && $customer['email']) {
+                $emailService->sendSenderConfirmation($customer, $shipmentData);
+            }
+
+            // 2. Send AWB receipt to sender
+            if ($customer && $customer['email']) {
+                $emailService->sendAWBReceipt($customer, $shipmentData);
+            }
+
+            // 3. Send notification to receiver (if email provided in body)
+            if (!empty($body['delivery_email'])) {
+                $receiver = [
+                    'name'  => $delivName,
+                    'phone' => $delivPhone,
+                ];
+                $emailService->sendReceiverNotification($receiver, $shipmentData, $customer);
+            }
+        } catch (Exception $e) {
+            // Log email errors but don't fail the booking
+            @error_log('Email sending failed for booking ' . $tracking . ': ' . $e->getMessage());
+        }
+
         json_response([
             'success'     => true,
             'tracking_no' => $tracking,
-            'id'          => (int) $pdo->lastInsertId(),
+            'id'          => $shipmentId,
             'eta'         => $etaDate,
         ]);
     } catch (Exception $e) {

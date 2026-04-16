@@ -195,6 +195,12 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                                 </div>
                             </div>
                             <div class="wizard-form-group">
+                                <label class="wizard-label">Email Address (for AWB notification) <span class="opt">(optional)</span></label>
+                                <input type="email" class="wizard-input" id="delivery_email" placeholder="receiver@example.com">
+                                <div style="font-size:11px;color:#666;margin-top:4px;">📧 Receiver will get a notification with tracking details</div>
+                                <div class="wizard-error" id="err_delivery_email"></div>
+                            </div>
+                            <div class="wizard-form-group">
                                 <label class="wizard-label">Address Line 1 <span class="req">*</span></label>
                                 <input type="text" class="wizard-input" id="delivery_addr1" placeholder="House/Flat no., Street, Area">
                                 <div class="wizard-error" id="err_delivery_addr1"></div>

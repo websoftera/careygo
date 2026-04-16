@@ -24,7 +24,8 @@
       "Bash(grep -rn \"password\\\\|secret\\\\|key\" /c/xampp/htdocs/careygo/config/*.php)",
       "Bash(dir \"C:\\\\xampp\\\\htdocs\\\\careygo\\\\\" /b)",
       "Bash(copy \"C:\\\\xampp\\\\htdocs\\\\careygo\\\\customer\\\\new-delivery.php\" \"C:\\\\xampp\\\\htdocs\\\\careygo\\\\customer\\\\new-booking.php\")",
-      "Bash(python \"C:/xampp/htdocs/careygo/database/generate_pincodes_sql.py\")"
+      "Bash(python \"C:/xampp/htdocs/careygo/database/generate_pincodes_sql.py\")",
+      "Bash(find \"C:\\\\xampp\\\\htdocs\\\\careygo\" -name \"*.php\" -type f -exec grep -l \"shipments.*INSERT\\\\|new booking\\\\|booking.*complete\" {} \\\\;)"
     ]
   }
 }

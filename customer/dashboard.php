@@ -186,7 +186,10 @@ $serviceLabels = ['standard'=>'Standard Express','premium'=>'Premium Express','a
                         <td style="font-size:13px;font-weight:700;">₹<?= number_format($s['final_price'], 0) ?></td>
                         <td><span class="badge-status badge-<?= $s['status'] ?>"><?= ucwords(str_replace('_', ' ', $s['status'])) ?></span></td>
                         <td style="font-size:11px;color:var(--muted)"><?= date('d M Y', strtotime($s['created_at'])) ?></td>
-                        <td><a href="shipment.php?id=<?= $s['id'] ?>" class="btn-new-delivery" style="font-size:11px;padding:5px 10px;"><i class="bi bi-eye"></i></a></td>
+                        <td>
+                            <a href="tracking.php?id=<?= $s['id'] ?>" class="btn-new-delivery" style="font-size:11px;padding:5px 10px;margin-right:6px;"><i class="bi bi-geo-alt"></i> Track</a>
+                            <a href="shipment.php?id=<?= $s['id'] ?>" class="btn-outline-admin" style="font-size:11px;padding:5px 10px;"><i class="bi bi-eye"></i></a>
+                        </td>
                     </tr>
                     <?php endforeach; ?>
                     </tbody>

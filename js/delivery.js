@@ -11,7 +11,7 @@
         step: 1,
         totalSteps: 6,
         pickup: { pincode: '', city: '', state: '', name: '', phone: '', addr1: '', addr2: '' },
-        delivery: { pincode: '', city: '', state: '', name: '', phone: '', addr1: '', addr2: '' },
+        delivery: { pincode: '', city: '', state: '', name: '', phone: '', addr1: '', addr2: '', email: '' },
         weight: 0,
         unit: 'kg',
         pieces: 1,
@@ -235,7 +235,10 @@
 
     /* ── Sync address form fields to state ── */
     ['pickup', 'delivery'].forEach(type => {
-        ['name', 'phone', 'addr1', 'addr2', 'city', 'state'].forEach(field => {
+        const fields = type === 'delivery'
+            ? ['name', 'phone', 'email', 'addr1', 'addr2', 'city', 'state']
+            : ['name', 'phone', 'addr1', 'addr2', 'city', 'state'];
+        fields.forEach(field => {
             const el = document.getElementById(`${type}_${field}`);
             if (el) el.addEventListener('input', () => { state[type][field] = el.value.trim(); });
         });
@@ -429,6 +432,7 @@
         const payload = {
             pickup:           state.pickup,
             delivery:         state.delivery,
+            delivery_email:   state.delivery.email || '',
             weight:           state.weight,
             pieces:           state.pieces,
             declared_value:   state.declaredValue,

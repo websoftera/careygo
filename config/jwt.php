@@ -4,6 +4,22 @@
  * Values can be overridden via environment variables for production.
  */
 
+// ── Load .env file if it exists ───────────────────────────
+if (file_exists(__DIR__ . '/../.env')) {
+    $envLines = file(__DIR__ . '/../.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($envLines as $line) {
+        if (strpos($line, '#') === 0) continue; // Skip comments
+        if (strpos($line, '=') === false) continue; // Skip invalid lines
+        list($key, $value) = explode('=', $line, 2);
+        $key = trim($key);
+        $value = trim($value);
+        if (!empty($key) && !isset($_ENV[$key]) && !getenv($key)) {
+            putenv("$key=$value");
+            $_ENV[$key] = $value;
+        }
+    }
+}
+
 // ── Helper: read env var or fall back to a default ───────────
 if (!function_exists('_cfg')) {
     function _cfg(string $key, string $default): string {

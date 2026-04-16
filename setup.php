@@ -27,10 +27,11 @@ function runSql(PDO $pdo, string $label, string $sql): array {
     }
 }
 
-// ── Run both schema files in order ──
+// ── Run schema files in order ──
 $schemaFiles = [
     'schema.sql'    => __DIR__ . '/database/schema.sql',
     'schema_v2.sql' => __DIR__ . '/database/schema_v2.sql',
+    'schema_v3.sql' => __DIR__ . '/database/schema_v3.sql',
 ];
 
 // Optionally import 15k+ pincodes (pass &pincodes=1 to enable — takes ~10–30 s)
@@ -115,7 +116,7 @@ p { color: #6b7280; font-size: 13px; margin-bottom: 20px; }
 <body>
 <div class="wrap">
     <h1>⚙️ Careygo Database Setup</h1>
-    <p>Running schema.sql + schema_v2.sql migrations…
+    <p>Running schema.sql + schema_v2.sql + schema_v3.sql migrations…
         <?php if (($_GET['pincodes'] ?? '') === '1'): ?>
         <strong style="color:#001A93;">+ pincodes.sql (15,453 rows)</strong>
         <?php endif; ?>

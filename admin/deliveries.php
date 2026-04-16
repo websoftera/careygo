@@ -134,6 +134,7 @@ require_once 'includes/header.php';
                     <td style="font-size:11px;color:var(--muted);"><?= date('d M Y', strtotime($s['created_at'])) ?></td>
                     <td>
                         <button class="btn-action" onclick="viewShipment(<?= $s['id'] ?>)" title="View Details"><i class="bi bi-eye"></i></button>
+                        <button class="btn-action" onclick="trackingModal(<?= $s['id'] ?>, '<?= htmlspecialchars($s['tracking_no']) ?>')" title="Tracking"><i class="bi bi-geo-alt"></i></button>
                     </td>
                 </tr>
                 <?php endforeach; ?>
@@ -152,6 +153,21 @@ require_once 'includes/header.php';
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="shipmentModalBody">
+                <div class="text-center py-4"><span class="spinner-border text-primary"></span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tracking Management Modal -->
+<div class="modal fade admin-modal" id="trackingManagementModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title"><i class="bi bi-geo-alt me-2"></i>Tracking Management</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="trackingModalBody">
                 <div class="text-center py-4"><span class="spinner-border text-primary"></span></div>
             </div>
         </div>
@@ -214,6 +230,142 @@ function viewShipment(id) {
     });
 }
 function escH(s){ return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : '—'; }
+
+function trackingModal(id, trackingNo) {
+    const modal = new bootstrap.Modal(document.getElementById('trackingManagementModal'));
+    document.getElementById('trackingModalBody').innerHTML = '<div class="text-center py-4"><span class="spinner-border text-primary"></span></div>';
+    modal.show();
+
+    fetch(`<?= SITE_URL ?>/api/admin/tracking.php?shipment_id=${id}`, {credentials:'same-origin'})
+    .then(r => r.json())
+    .then(data => {
+        if (!data.success) { document.getElementById('trackingModalBody').innerHTML = '<p class="text-danger">Failed to load tracking data</p>'; return; }
+
+        const ship = data.shipment;
+        const events = data.events || [];
+
+        let html = `
+        <div class="mb-3">
+            <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px;">DTDC AWB Number</label>
+            <div style="display:flex;gap:8px;">
+                <input type="text" id="dtdcAwbInput" value="${escH(ship.dtdc_awb||'')}" placeholder="e.g., ABC123456" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;">
+                <button class="btn-primary-admin" style="padding:8px 16px;font-size:12px;" onclick="saveDtdcAwb(${id})"><i class="bi bi-check-lg me-1"></i> Save</button>
+            </div>
+        </div>
+
+        <hr style="margin:16px 0;">
+
+        <div class="mb-3">
+            <h6 style="font-size:12px;font-weight:700;margin-bottom:12px;">Tracking Events</h6>
+            <div id="trackingEvents" style="max-height:300px;overflow-y:auto;">`;
+
+        if (events.length === 0) {
+            html += '<p style="font-size:12px;color:var(--muted);text-align:center;padding:20px;">No tracking events yet</p>';
+        } else {
+            for (let e of events) {
+                const isMgmt = e.source === 'manual';
+                html += `
+                <div style="padding:10px;background:#f9fafb;border-radius:6px;margin-bottom:8px;border-left:3px solid ${isMgmt ? '#3B5BDB' : '#f59e0b'};">
+                    <div style="display:flex;justify-content:space-between;align-items:start;">
+                        <div style="flex:1;font-size:11px;">
+                            <strong>${escH(e.status)}</strong> <span style="color:var(--muted);">${e.event_time}</span>
+                            ${e.source === 'dtdc' ? '<span style="background:#fef3c7;color:#92400e;padding:2px 6px;border-radius:3px;font-size:9px;margin-left:6px;font-weight:600;">DTDC</span>' : ''}
+                            <div style="color:var(--muted);margin-top:2px;">${escH(e.location||'')}</div>
+                            <div style="color:var(--muted);margin-top:2px;font-size:10px;">${escH(e.description||'')}</div>
+                        </div>
+                        ${isMgmt ? `<button class="btn-action danger" style="margin-left:8px;" onclick="deleteEvent(${e.id}, ${id})"><i class="bi bi-trash"></i></button>` : ''}
+                    </div>
+                </div>`;
+            }
+        }
+
+        html += `</div>
+        </div>
+
+        <hr style="margin:16px 0;">
+
+        <div>
+            <h6 style="font-size:12px;font-weight:700;margin-bottom:12px;">Add Manual Update</h6>
+            <div style="display:grid;gap:10px;">
+                <input type="datetime-local" id="eventTime" placeholder="Date &amp; Time" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;">
+                <input type="text" id="eventLocation" placeholder="Location" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;">
+                <select id="eventStatus" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;">
+                    <option value="">— Select Status —</option>
+                    <option value="Booked">Booked</option>
+                    <option value="Picked Up">Picked Up</option>
+                    <option value="In Transit">In Transit</option>
+                    <option value="Out for Delivery">Out for Delivery</option>
+                    <option value="Delivered">Delivered</option>
+                </select>
+                <textarea id="eventDesc" placeholder="Description (optional)" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;min-height:60px;"></textarea>
+                <button class="btn-primary-admin" onclick="addTrackingEvent(${id})"><i class="bi bi-plus-lg me-1"></i> Add Event</button>
+            </div>
+        </div>`;
+
+        document.getElementById('trackingModalBody').innerHTML = html;
+    })
+    .catch(() => document.getElementById('trackingModalBody').innerHTML = '<p class="text-danger">Network error</p>');
+}
+
+function saveDtdcAwb(id) {
+    const awb = document.getElementById('dtdcAwbInput').value.trim();
+    fetch('<?= SITE_URL ?>/api/admin/tracking.php', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({action:'save_awb', id, dtdc_awb: awb}),
+        credentials: 'same-origin'
+    })
+    .then(r => r.json())
+    .then(data => {
+        showToast(data.message || (data.success ? 'Saved' : 'Error'), data.success ? 'success' : 'error');
+        if (data.success) setTimeout(() => trackingModal(id, ''), 800);
+    })
+    .catch(() => showToast('Network error', 'error'));
+}
+
+function addTrackingEvent(id) {
+    const eventTime = document.getElementById('eventTime').value;
+    const location = document.getElementById('eventLocation').value.trim();
+    const status = document.getElementById('eventStatus').value;
+    const desc = document.getElementById('eventDesc').value.trim();
+
+    if (!eventTime || !status) { showToast('Date/Time and Status are required', 'warning'); return; }
+
+    fetch('<?= SITE_URL ?>/api/admin/tracking.php', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({action:'add_event', shipment_id: id, event_time: eventTime.replace('T',' '), location, status, description: desc}),
+        credentials: 'same-origin'
+    })
+    .then(r => r.json())
+    .then(data => {
+        showToast(data.success ? 'Event added' : 'Error', data.success ? 'success' : 'error');
+        if (data.success) {
+            document.getElementById('eventTime').value = '';
+            document.getElementById('eventLocation').value = '';
+            document.getElementById('eventStatus').value = '';
+            document.getElementById('eventDesc').value = '';
+            trackingModal(id, '');
+        }
+    })
+    .catch(() => showToast('Network error', 'error'));
+}
+
+function deleteEvent(eventId, shipmentId) {
+    if (!confirm('Delete this tracking event?')) return;
+    fetch('<?= SITE_URL ?>/api/admin/tracking.php', {
+        method: 'DELETE',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({event_id: eventId}),
+        credentials: 'same-origin'
+    })
+    .then(r => r.json())
+    .then(data => {
+        showToast(data.success ? 'Deleted' : 'Error', data.success ? 'success' : 'error');
+        if (data.success) trackingModal(shipmentId, '');
+    })
+    .catch(() => showToast('Network error', 'error'));
+}
 </script>
 
 <?php require_once 'includes/footer.php'; ?>
