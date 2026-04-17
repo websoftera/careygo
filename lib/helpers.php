@@ -4,7 +4,7 @@
  */
 
 /**
- * Add N business days (Mon–Fri) to a date and return a formatted string.
+ * Add N business days (Mon–Sat) to a date and return a formatted string.
  */
 function addBusinessDays(int $days, string $format = 'Y-m-d', string $from = 'now'): string
 {
@@ -13,7 +13,7 @@ function addBusinessDays(int $days, string $format = 'Y-m-d', string $from = 'no
     while ($added < $days) {
         $date->modify('+1 day');
         $dow = (int) $date->format('N'); // 1=Mon … 7=Sun
-        if ($dow < 6) $added++;          // Mon–Fri only
+        if ($dow < 7) $added++;          // Mon–Sat only (skip Sunday)
     }
     return $date->format($format);
 }

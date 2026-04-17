@@ -22,10 +22,23 @@ class DtdcClient
 
     public function __construct(array $cfg = [])
     {
-        $this->username     = $cfg['username']      ?? 'PL3537_trk_json';
-        $this->password     = $cfg['password']      ?? 'wafBo';
-        $this->apiKey       = $cfg['api_key']       ?? 'bbb8196c734d8487983936199e880072';
-        $this->customerCode = $cfg['customer_code'] ?? 'PL3537';
+        // Try .env first, then config array, then defaults
+        $this->username     = $cfg['username']
+            ?? ($_ENV['DTDC_USERNAME']      ?? null)
+            ?? 'PL3537_trk_json';
+
+        $this->password     = $cfg['password']
+            ?? ($_ENV['DTDC_PASSWORD']      ?? null)
+            ?? 'wafBo';
+
+        $this->apiKey       = $cfg['api_key']
+            ?? ($_ENV['DTDC_API_KEY']       ?? null)
+            ?? 'bbb8196c734d8487983936199e880072';
+
+        $this->customerCode = $cfg['customer_code']
+            ?? ($_ENV['DTDC_CUSTOMER_CODE'] ?? null)
+            ?? 'PL3537';
+
         $this->timeout      = $cfg['timeout']       ?? 30;
     }
 
