@@ -1,50 +1,54 @@
 <?php
 /**
- * DTDC API Client
- * Handles authentication, token caching, and shipment tracking.
+ * DTDC API Client — Official Implementation
+ * Based on official DTDC API documentation
+ *
+ * Authentication: GET request returns plain text token
+ * Tracking: Uses X-Access-Token header with token
  */
 class DtdcClient
 {
-    // ── API endpoints ─────────────────────────────────────────
     private const BASE_URL       = 'https://blktracksvc.dtdc.com/dtdc-api';
     private const EP_AUTH        = '/api/dtdc/authenticate';
     private const EP_TRACK_JSON  = '/rest/JSONCnTrk/getTrackDetails';
 
-    // ── Credentials ──────────────────────────────────────────
     private string $username;
     private string $password;
     private string $apiKey;
     private string $customerCode;
+    private string $customerPassword;
     private int    $timeout;
-
-    // ── Cached token ─────────────────────────────────────────
-    private const TOKEN_TTL = 3300; // 55 min (tokens typically last 1 h)
+    private ?string $cachedToken = null;
+    private int $tokenExpiry = 0;
+    private const TOKEN_TTL = 3000; // 50 minutes (tokens expire in 1 hour)
 
     public function __construct(array $cfg = [])
     {
-        // Try .env first, then config array, then defaults
-        $this->username     = $cfg['username']
+        $this->username         = $cfg['username']
             ?? ($_ENV['DTDC_USERNAME']      ?? null)
             ?? 'PL3537_trk_json';
 
-        $this->password     = $cfg['password']
+        $this->password         = $cfg['password']
             ?? ($_ENV['DTDC_PASSWORD']      ?? null)
             ?? 'wafBo';
 
-        $this->apiKey       = $cfg['api_key']
+        $this->apiKey           = $cfg['api_key']
             ?? ($_ENV['DTDC_API_KEY']       ?? null)
             ?? 'bbb8196c734d8487983936199e880072';
 
-        $this->customerCode = $cfg['customer_code']
+        $this->customerCode     = $cfg['customer_code']
             ?? ($_ENV['DTDC_CUSTOMER_CODE'] ?? null)
             ?? 'PL3537';
 
-        $this->timeout      = $cfg['timeout']       ?? 30;
+        $this->customerPassword = $cfg['customer_password']
+            ?? ($_ENV['DTDC_CUSTOMER_PASSWORD'] ?? null)
+            ?? 'Abc@123456';
+
+        $this->timeout          = $cfg['timeout'] ?? 30;
     }
 
     // ────────────────────────────────────────────────────────
-    // Public: get tracking events for an AWB
-    // Returns ['success'=>bool, 'events'=>[], 'raw'=>[], 'error'=>string]
+    // Public: Track shipment by AWB
     // ────────────────────────────────────────────────────────
     public function track(string $awb): array
     {
@@ -53,17 +57,18 @@ class DtdcClient
             return $this->fail('AWB number is required.');
         }
 
-        $token = $this->resolveToken();
-        if ($token === null) {
+        // Get authentication token
+        $token = $this->getAuthToken();
+        if (!$token) {
             return $this->fail('DTDC authentication failed — check credentials.');
         }
 
-        $resp = $this->post(self::EP_TRACK_JSON, [
-            'cnno'         => $awb,
-            'customerCode' => $this->customerCode,
-        ], [
-            'Authorization' => 'Bearer ' . $token,
-        ]);
+        // Make tracking request with token
+        $resp = $this->postWithToken(self::EP_TRACK_JSON, [
+            'trkType'    => 'cnno',
+            'strcnno'    => $awb,
+            'addtnlDtl'  => 'Y',
+        ], $token);
 
         if (!$resp['success']) {
             return $this->fail($resp['error'] ?? 'Tracking request failed.');
@@ -79,121 +84,117 @@ class DtdcClient
     }
 
     // ────────────────────────────────────────────────────────
-    // Token management
+    // Get authentication token via GET request
     // ────────────────────────────────────────────────────────
-    private function resolveToken(): ?string
+    private function getAuthToken(): ?string
     {
-        // Check file cache
-        $cache = $this->tokenCacheRead();
-        if ($cache !== null) {
-            return $cache;
+        // Return cached token if still valid
+        if ($this->cachedToken && $this->tokenExpiry > time()) {
+            return $this->cachedToken;
         }
 
-        // Authenticate
-        $resp = $this->post(self::EP_AUTH, [
-            'username' => $this->username,
-            'password' => $this->password,
+        // Build GET URL with query parameters
+        $url = self::BASE_URL . self::EP_AUTH
+            . '?username=' . urlencode($this->username)
+            . '&password=' . urlencode($this->password);
+
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL            => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER     => [
+                'Accept: text/plain',
+                'User-Agent: CareyGo/1.0',
+            ],
+            CURLOPT_TIMEOUT        => $this->timeout,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false,
         ]);
 
-        if (!$resp['success']) {
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+
+        if ($curlError) {
+            error_log('DTDC Auth cURL error: ' . $curlError);
             return null;
         }
 
-        $body  = $resp['body'];
-        $token = $body['token']        // most common
-            ?? $body['access_token']
-            ?? $body['authToken']
-            ?? $body['data']['token']
-            ?? null;
-
-        if (!$token) {
-            return null;
+        if ($httpCode === 200 && !empty(trim($response))) {
+            $token = trim($response);
+            // Cache token for 50 minutes
+            $this->cachedToken = $token;
+            $this->tokenExpiry = time() + self::TOKEN_TTL;
+            error_log('DTDC Auth token obtained successfully');
+            return $token;
         }
 
-        $this->tokenCacheWrite($token);
-        return $token;
-    }
-
-    private function tokenCacheRead(): ?string
-    {
-        $file = $this->tokenCacheFile();
-        if (!file_exists($file)) return null;
-
-        $data = @json_decode(file_get_contents($file), true);
-        if (!$data || ($data['exp'] ?? 0) <= time()) {
-            @unlink($file);
-            return null;
-        }
-        return $data['tok'];
-    }
-
-    private function tokenCacheWrite(string $token): void
-    {
-        @file_put_contents(
-            $this->tokenCacheFile(),
-            json_encode(['tok' => $token, 'exp' => time() + self::TOKEN_TTL]),
-            LOCK_EX
-        );
-    }
-
-    private function tokenCacheFile(): string
-    {
-        return sys_get_temp_dir() . '/dtdc_tok_' . md5($this->username) . '.json';
+        error_log('DTDC Auth failed - HTTP ' . $httpCode . ': ' . $response);
+        return null;
     }
 
     // ────────────────────────────────────────────────────────
-    // HTTP helper
+    // POST with X-Access-Token header
     // ────────────────────────────────────────────────────────
-    private function post(string $endpoint, array $payload, array $extraHeaders = []): array
+    private function postWithToken(string $endpoint, array $payload, string $token): array
     {
         $url = self::BASE_URL . $endpoint;
 
-        $headers = array_merge([
-            'Content-Type' => 'application/json',
-            'X-API-Key'    => $this->apiKey,
-            'Accept'       => 'application/json',
-        ], $extraHeaders);
-
-        $headerStr = implode("\r\n", array_map(
-            fn($k, $v) => "$k: $v",
-            array_keys($headers), array_values($headers)
-        ));
-
-        $ctx = stream_context_create([
-            'http' => [
-                'method'           => 'POST',
-                'header'           => $headerStr,
-                'content'          => json_encode($payload),
-                'timeout'          => $this->timeout,
-                'ignore_errors'    => true,
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL            => $url,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => json_encode($payload),
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'Accept: application/json',
+                'User-Agent: CareyGo/1.0',
+                'X-Access-Token: ' . $token,
             ],
+            CURLOPT_TIMEOUT        => $this->timeout,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false,
         ]);
 
-        $raw  = @file_get_contents($url, false, $ctx);
-        $code = 0;
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
 
-        if (isset($http_response_header[0])) {
-            preg_match('/HTTP\/\S+ (\d+)/', $http_response_header[0], $m);
-            $code = (int)($m[1] ?? 0);
+        if ($curlError) {
+            error_log('DTDC Request cURL error: ' . $curlError);
+            return ['success' => false, 'error' => 'Network error'];
         }
 
-        if ($raw === false) {
-            return ['success' => false, 'error' => 'Network error — could not reach DTDC API.'];
-        }
-
-        $body = json_decode($raw, true);
+        $body = json_decode($response, true);
         if ($body === null) {
-            return ['success' => false, 'error' => 'Invalid JSON from DTDC API.', 'raw' => $raw];
+            error_log('DTDC Response JSON decode error: ' . $response);
+            return ['success' => false, 'error' => 'Invalid JSON response'];
         }
 
-        if ($code >= 400) {
-            $msg = $body['message'] ?? $body['error'] ?? $body['errorMessage'] ?? ("HTTP $code");
-            // Clear cached token on 401 so next call re-authenticates
-            if ($code === 401) @unlink($this->tokenCacheFile());
-            return ['success' => false, 'error' => $msg, 'body' => $body, 'code' => $code];
+        // Check DTDC status code in response
+        $statusCode = $body['statusCode'] ?? 0;
+
+        if ($statusCode !== 200) {
+            $errorMsg = 'HTTP ' . $httpCode;
+
+            // Extract error message from errorDetails
+            if (isset($body['errorDetails']) && is_array($body['errorDetails'])) {
+                foreach ($body['errorDetails'] as $err) {
+                    if (isset($err['name']) && $err['name'] === 'strError' && isset($err['value'])) {
+                        $errorMsg = $err['value'];
+                        break;
+                    }
+                }
+            }
+
+            error_log('DTDC API error (statusCode ' . $statusCode . '): ' . $errorMsg);
+            return ['success' => false, 'error' => $errorMsg];
         }
 
-        return ['success' => true, 'body' => $body, 'code' => $code];
+        return ['success' => true, 'body' => $body];
     }
 
     // ────────────────────────────────────────────────────────
@@ -201,58 +202,36 @@ class DtdcClient
     // ────────────────────────────────────────────────────────
     private function normaliseEvents(array $data): array
     {
-        // DTDC wraps events in different keys depending on API version
-        $list = $data['trackDetailsList']
-            ?? $data['cnTrackList']
-            ?? $data['shipmentTrackingDetails']
-            ?? $data['trackingDetails']
-            ?? [];
-
-        // Some versions return a flat array
-        if (empty($list) && isset($data[0]) && is_array($data[0])) {
-            $list = $data;
-        }
-
         $events = [];
-        foreach ($list as $item) {
-            if (!is_array($item)) continue;
 
-            // Date + time may come combined or separate
-            $date = $item['activityDate'] ?? $item['date'] ?? $item['eventDate'] ?? '';
-            $time = $item['activityTime'] ?? $item['time'] ?? $item['eventTime'] ?? '';
+        // Parse tracking events from DTDC response
+        if (isset($data['trackDetails']) && is_array($data['trackDetails'])) {
+            foreach ($data['trackDetails'] as $event) {
+                // Parse date and time (DDMMYY and HHMM format)
+                $date = $event['strActionDate'] ?? '';
+                $time = $event['strActionTime'] ?? '';
 
-            // Normalise date format — DTDC uses d/m/Y or Y-m-d
-            $dt = $date;
-            if ($time) $dt = trim($date . ' ' . $time);
+                $eventTime = '';
+                if (strlen($date) === 8 && strlen($time) === 4) {
+                    // Convert DDMMYY to YYYY-MM-DD
+                    $day   = substr($date, 0, 2);
+                    $month = substr($date, 2, 2);
+                    $year  = '20' . substr($date, 4, 2);
+                    // Convert HHMM to HH:MM:SS
+                    $hour = substr($time, 0, 2);
+                    $min  = substr($time, 2, 2);
 
-            // Try to parse for uniform storage
-            $ts = strtotime($dt);
-            $eventTime = $ts ? date('Y-m-d H:i:s', $ts) : $dt;
+                    $eventTime = $year . '-' . $month . '-' . $day . ' ' . $hour . ':' . $min . ':00';
+                }
 
-            $status = $item['status']
-                ?? $item['statusCode']
-                ?? $item['activity']
-                ?? $item['scanType']
-                ?? '';
-
-            $description = $item['remarks']
-                ?? $item['description']
-                ?? $item['statusDesc']
-                ?? $item['activity']
-                ?? '';
-
-            $location = $item['location']
-                ?? $item['city']
-                ?? $item['origin']
-                ?? '';
-
-            $events[] = [
-                'event_time'  => $eventTime,
-                'location'    => trim((string)$location),
-                'status'      => trim((string)$status),
-                'description' => trim((string)$description),
-                'source'      => 'dtdc',
-            ];
+                $events[] = [
+                    'event_time'  => $eventTime,
+                    'location'    => trim($event['strOrigin'] ?? ''),
+                    'status'      => trim($event['strAction'] ?? ''),
+                    'description' => trim($event['strAction'] ?? ''),
+                    'source'      => 'dtdc',
+                ];
+            }
         }
 
         // Newest first

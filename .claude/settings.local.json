@@ -28,7 +28,14 @@
       "Bash(find \"C:\\\\xampp\\\\htdocs\\\\careygo\" -name \"*.php\" -type f -exec grep -l \"shipments.*INSERT\\\\|new booking\\\\|booking.*complete\" {} \\\\;)",
       "Bash(grep -l \"pricing_slabs\" config/*.sql)",
       "Bash(ls -la config/schema*.sql)",
-      "Bash(grep -l \"pricing\" database/schema*.sql)"
+      "Bash(grep -l \"pricing\" database/schema*.sql)",
+      "Bash(curl -I https://careygo.everythingb2c.in/admin/system-check.php)",
+      "Bash(php -l api/shipments.php)",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "Read(//c/xampp/apache/logs/**)",
+      "Read(//c/xampp/logs/**)",
+      "Bash(find \"C:\\\\xampp\\\\htdocs\\\\careygo\" -name \"*.php\" -type f -exec grep -l \"dtdc_awb\" {} \\\\;)",
+      "Bash(awk '{print $NF}')"
     ]
   }
 }

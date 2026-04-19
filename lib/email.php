@@ -687,8 +687,3 @@ HTML;
         @file_put_contents($logFile, $logContent, FILE_APPEND);
     }
 }
-
-// Helper function
-function env(string $key, string $default = ''): string {
-    return $_ENV[$key] ?? getenv($key) ?: $default;
-}

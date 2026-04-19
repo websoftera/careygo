@@ -5,9 +5,11 @@
     'use strict';
 
     const SITE_URL = window.SITE_URL || '';
+    const STORAGE_KEY = 'careygo_booking_draft';
+    const STORAGE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
 
     /* ── State ── */
-    const state = {
+    const defaultState = {
         step: 1,
         totalSteps: 6,
         pickup: { pincode: '', city: '', state: '', name: '', phone: '', addr1: '', addr2: '' },
@@ -36,6 +38,66 @@
         useNewPickupAddr: false,
         useNewDeliveryAddr: false,
     };
+
+    /* ── LocalStorage Helper Functions ── */
+    function loadDraftState() {
+        try {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (!stored) return JSON.parse(JSON.stringify(defaultState));
+
+            const data = JSON.parse(stored);
+            const timestamp = data._timestamp || 0;
+            const now = Date.now();
+
+            // Check if draft has expired (24 hours)
+            if (now - timestamp > STORAGE_EXPIRY) {
+                clearDraft();
+                return JSON.parse(JSON.stringify(defaultState));
+            }
+
+            // Restore state, but reset step to 1 (user will see what they filled)
+            const restored = { ...defaultState, ...data };
+            restored.step = 1; // Always start at step 1 on page load
+            return restored;
+        } catch (e) {
+            console.warn('Could not load draft:', e);
+            return JSON.parse(JSON.stringify(defaultState));
+        }
+    }
+
+    function saveDraftState() {
+        try {
+            const toSave = {
+                ...state,
+                _timestamp: Date.now(),
+            };
+            // Don't save empty states
+            const hasData = state.pickup.pincode || state.delivery.pincode || state.weight > 0 || state.serviceType;
+            if (hasData) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+            }
+        } catch (e) {
+            console.warn('Could not save draft:', e);
+        }
+    }
+
+    function clearDraft() {
+        try {
+            localStorage.removeItem(STORAGE_KEY);
+        } catch (e) {
+            console.warn('Could not clear draft:', e);
+        }
+    }
+
+    // Save state periodically (every 5 seconds) and on visibility change
+    let autoSaveInterval = setInterval(saveDraftState, 5000);
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) saveDraftState();
+    });
+    window.addEventListener('beforeunload', saveDraftState);
+
+    // Load state from localStorage or use defaults
+    const state = loadDraftState();
 
     /* ── DOM refs ── */
     const stepItems   = document.querySelectorAll('.wizard-step-item');
@@ -458,6 +520,7 @@
         .then(r => r.json())
         .then(data => {
             if (data.success) {
+                clearDraft(); // Clear saved form data after successful booking
                 goToStep(7); // success screen
                 const trackEl = document.getElementById('final_tracking_no');
                 if (trackEl) trackEl.textContent = data.tracking_no;
@@ -486,7 +549,89 @@
         return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
+    /* ── Restore form fields from state ── */
+    function restoreFormFields() {
+        // Pickup fields
+        ['pincode', 'name', 'phone', 'addr1', 'addr2', 'city', 'state'].forEach(f => {
+            const el = document.getElementById(`pickup_${f}`);
+            if (el && state.pickup[f]) el.value = state.pickup[f];
+        });
+
+        // Delivery fields
+        ['pincode', 'name', 'phone', 'email', 'addr1', 'addr2', 'city', 'state'].forEach(f => {
+            const el = document.getElementById(`delivery_${f}`);
+            if (el && state.delivery[f]) el.value = state.delivery[f];
+        });
+
+        // Shipment details
+        if (state.weight > 0 && weightInput) {
+            const val = state.unit === 'gm' ? state.weight * 1000 : state.weight;
+            weightInput.value = val;
+        }
+        if (state.pieces > 1 && piecesInput) piecesInput.value = state.pieces;
+        if (state.declaredValue > 0 && declaredValueInput) declaredValueInput.value = state.declaredValue;
+        if (state.description && descriptionInput) descriptionInput.value = state.description;
+        if (state.customerRef && customerRefInput) customerRefInput.value = state.customerRef;
+
+        // Unit selection
+        if (state.unit === 'gm' && unitGm) { unitGm.click(); }
+        if (state.unit === 'kg' && unitKg) { unitKg.click(); }
+
+        // E-waybill
+        if (state.ewaybillOpt === 'enter' && state.ewaybillNo && ewaybillNoInput) ewaybillNoInput.value = state.ewaybillNo;
+        const ewaybillBtn = document.querySelector(`[data-ewaybill-opt="${state.ewaybillOpt}"]`);
+        if (ewaybillBtn) ewaybillBtn.click();
+
+        // Packing material
+        if (state.packingMaterial && packingWrap) packingWrap.click();
+
+        // Payment method
+        if (state.paymentMethod) {
+            const paymentBtn = document.querySelector(`[data-payment="${state.paymentMethod}"]`);
+            if (paymentBtn) paymentBtn.click();
+        }
+
+        // GST Invoice
+        if (state.gstInvoice && gstWrap) gstWrap.click();
+        if (state.gstin && gstinInput) gstinInput.value = state.gstin;
+        if (state.pan && panInput) panInput.value = state.pan;
+    }
+
+    /* ── Clear Form Button ── */
+    window.clearBookingForm = function () {
+        if (confirm('Are you sure you want to clear all form data? This cannot be undone.')) {
+            clearDraft();
+            location.reload();
+        }
+    };
+
+    /* ── Add clear button to the page ── */
+    function addClearButton() {
+        const topbar = document.querySelector('.cust-topbar-actions');
+        if (topbar && !document.querySelector('[onclick*="clearBookingForm"]')) {
+            const clearBtn = document.createElement('button');
+            clearBtn.className = 'btn-outline-admin';
+            clearBtn.style.cssText = 'font-size:12px;padding:7px 14px;text-decoration:none;background:#fee2e2;color:#dc2626;border-color:#fecaca;cursor:pointer;border:1px solid;border-radius:6px;margin-right:8px;';
+            clearBtn.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i> Clear Form';
+            clearBtn.onclick = clearBookingForm;
+            topbar.insertBefore(clearBtn, topbar.firstChild);
+        }
+    }
+
     /* ── Init first step ── */
     goToStep(1);
+    restoreFormFields();
+    addClearButton();
+
+    // Show draft indicator if there's saved data
+    if (state.pickup.pincode || state.delivery.pincode || state.weight > 0) {
+        const indicator = document.createElement('div');
+        indicator.style.cssText = 'background:#d1fae5;color:#065f46;padding:8px 12px;border-radius:6px;margin-bottom:12px;font-size:13px;display:flex;align-items:center;gap:8px;';
+        indicator.innerHTML = '<i class="bi bi-info-circle"></i> <strong>Draft recovered:</strong> Your previous form data has been restored.';
+        const mainContent = document.querySelector('.delivery-wizard-wrap');
+        if (mainContent && mainContent.parentNode) {
+            mainContent.parentNode.insertBefore(indicator, mainContent);
+        }
+    }
 
 })();

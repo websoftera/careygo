@@ -205,4 +205,151 @@ require_once 'includes/header.php';
     </div>
 </div>
 
+<!-- ===== DIAGNOSTIC SECTION ===== -->
+<div class="row g-3 mt-4">
+    <div class="col-12">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h6 class="admin-card-title"><i class="bi bi-tools me-2"></i>System Diagnostics</h6>
+            </div>
+            <div class="admin-card-body">
+                <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
+                    Check if all systems are ready for booking operations
+                </p>
+
+                <?php
+                // Run diagnostic checks
+                $diagnostics = [];
+
+                // Check 1: Database
+                try {
+                    $test = $pdo->query("SELECT 1");
+                    $diagnostics[] = ['icon' => '✅', 'status' => 'OK', 'check' => 'Database Connection', 'message' => 'Connected successfully'];
+                } catch (Exception $e) {
+                    $diagnostics[] = ['icon' => '❌', 'status' => 'FAILED', 'check' => 'Database Connection', 'message' => $e->getMessage()];
+                }
+
+                // Check 2: Shipments table
+                try {
+                    $count = $pdo->query("SELECT COUNT(*) as cnt FROM shipments")->fetchColumn();
+                    $diagnostics[] = ['icon' => '✅', 'status' => 'OK', 'check' => 'Shipments Table', 'message' => "Exists with $count records"];
+                } catch (Exception $e) {
+                    $diagnostics[] = ['icon' => '❌', 'status' => 'FAILED', 'check' => 'Shipments Table', 'message' => 'Run /setup.php'];
+                }
+
+                // Check 3: Pricing slabs
+                try {
+                    $count = $pdo->query("SELECT COUNT(*) as cnt FROM pricing_slabs")->fetchColumn();
+                    if ($count > 0) {
+                        $diagnostics[] = ['icon' => '✅', 'status' => 'OK', 'check' => 'Pricing Slabs', 'message' => "$count slabs found"];
+                    } else {
+                        $diagnostics[] = ['icon' => '⚠️', 'status' => 'WARNING', 'check' => 'Pricing Slabs', 'message' => 'No slabs - run /import_pricing.php'];
+                    }
+                } catch (Exception $e) {
+                    $diagnostics[] = ['icon' => '❌', 'status' => 'FAILED', 'check' => 'Pricing Slabs', 'message' => $e->getMessage()];
+                }
+
+                // Check 4: Pincodes
+                try {
+                    $count = $pdo->query("SELECT COUNT(*) as cnt FROM pincode_tat")->fetchColumn();
+                    if ($count > 1000) {
+                        $diagnostics[] = ['icon' => '✅', 'status' => 'OK', 'check' => 'Pincode Data', 'message' => "$count pincodes loaded"];
+                    } else {
+                        $diagnostics[] = ['icon' => '⚠️', 'status' => 'WARNING', 'check' => 'Pincode Data', 'message' => "Only $count - run /setup.php"];
+                    }
+                } catch (Exception $e) {
+                    $diagnostics[] = ['icon' => '❌', 'status' => 'FAILED', 'check' => 'Pincode Data', 'message' => $e->getMessage()];
+                }
+
+                // Check 5: Helper functions
+                try {
+                    require_once __DIR__ . '/../lib/helpers.php';
+                    $date = addBusinessDays(3);
+                    if (strtotime($date) > time()) {
+                        $diagnostics[] = ['icon' => '✅', 'status' => 'OK', 'check' => 'Helper Functions', 'message' => 'All helpers working'];
+                    }
+                } catch (Exception $e) {
+                    $diagnostics[] = ['icon' => '❌', 'status' => 'FAILED', 'check' => 'Helper Functions', 'message' => $e->getMessage()];
+                }
+
+                // Display diagnostics table
+                ?>
+                <table class="admin-table" style="font-size: 13px;">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;">Status</th>
+                            <th>Check</th>
+                            <th>Message</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($diagnostics as $d): ?>
+                        <tr>
+                            <td style="text-align: center; font-size: 16px;"><?= $d['icon'] ?></td>
+                            <td><strong><?= $d['check'] ?></strong></td>
+                            <td style="color: <?= $d['status'] === 'FAILED' ? '#dc2626' : ($d['status'] === 'WARNING' ? '#f59e0b' : '#16a34a') ?>;">
+                                <?= htmlspecialchars($d['message']) ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+
+                <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e4e7f0;">
+                    <form method="POST" action="<?= SITE_URL ?>/admin/dashboard.php" style="display: inline;">
+                        <button type="submit" name="test_booking" value="1" class="btn btn-sm btn-primary">
+                            <i class="bi bi-play-circle me-1"></i> Test Booking Insert
+                        </button>
+                    </form>
+                    <small style="display: block; margin-top: 8px; color: #666;">
+                        Tests if the database can actually create a booking record. Will show error if it fails.
+                    </small>
+                </div>
+
+                <?php
+                // Handle test booking insert
+                if (isset($_POST['test_booking']) && $_POST['test_booking'] == '1') {
+                    try {
+                        require_once __DIR__ . '/../lib/helpers.php';
+                        $tracking = 'TEST' . date('Ymd') . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
+                        $etaDate = addBusinessDays(3);
+
+                        $stmt = $pdo->prepare("
+                            INSERT INTO shipments (
+                                tracking_no, customer_id, pickup_name, pickup_phone, pickup_address,
+                                pickup_city, pickup_state, pickup_pincode, delivery_name, delivery_phone,
+                                delivery_address, delivery_city, delivery_state, delivery_pincode,
+                                service_type, weight, pieces, base_price, discount_pct, discount_amount,
+                                final_price, payment_method, status, estimated_delivery
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ");
+
+                        $stmt->execute([
+                            $tracking, 1, 'Test Sender', '9876543210', 'Test Address',
+                            'Delhi', 'Delhi', '110001', 'Test Receiver', '9876543210',
+                            'Test Address', 'Mumbai', 'Maharashtra', '400001',
+                            'standard', 0.5, 1, 100, 0, 0, 100, 'prepaid', 'booked', $etaDate
+                        ]);
+
+                        $shipmentId = $pdo->lastInsertId();
+                        $pdo->prepare("DELETE FROM shipments WHERE id = ?")->execute([$shipmentId]);
+
+                        echo '<div class="alert alert-success mt-3">';
+                        echo '✅ <strong>Test Successful!</strong> Booking insert works. Tracking: <code>' . $tracking . '</code><br>';
+                        echo '<small>Your booking system is ready. If you are still getting 500 errors, the issue is in the API request.</small>';
+                        echo '</div>';
+                    } catch (Exception $e) {
+                        echo '<div class="alert alert-danger mt-3">';
+                        echo '❌ <strong>Test Failed!</strong><br>';
+                        echo '<code>' . htmlspecialchars($e->getMessage()) . '</code><br>';
+                        echo '<small style="color: #666;">Error Code: ' . $e->getCode() . '</small>';
+                        echo '</div>';
+                    }
+                }
+                ?>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php require_once 'includes/footer.php'; ?>

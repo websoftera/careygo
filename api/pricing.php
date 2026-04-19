@@ -8,6 +8,9 @@
  *   2. Auto-detect from pickup + delivery pincode city/state data
  *   3. Fall back to NULL-zone (global) slabs if neither resolves
  */
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../lib/auth.php';
 require_once __DIR__ . '/../lib/helpers.php';
@@ -159,5 +162,10 @@ try {
         'zone'     => $zone,
     ]);
 } catch (Exception $e) {
-    json_response(['success' => false, 'message' => 'Pricing calculation failed.'], 500);
+    error_log('PRICING_ERROR: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+    json_response([
+        'success' => false,
+        'message' => 'Pricing calculation failed: ' . $e->getMessage(),
+        'error' => $e->getMessage()
+    ], 500);
 }

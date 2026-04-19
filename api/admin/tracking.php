@@ -9,6 +9,8 @@
  */
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../lib/auth.php';
+require_once __DIR__ . '/../../lib/dtdc.php';
+require_once __DIR__ . '/../../lib/helpers.php';
 
 header('Content-Type: application/json');
 
@@ -30,6 +32,54 @@ if ($method === 'GET') {
         $ship = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!$ship) json_response(['success' => false, 'message' => 'Shipment not found.'], 404);
 
+        $events = [];
+
+        // ── Fetch DTDC tracking if AWB is assigned ──────────────────────
+        if (!empty($ship['dtdc_awb'])) {
+            try {
+                $dtdc = new DtdcClient([
+                    'username'     => env('DTDC_USERNAME'),
+                    'password'     => env('DTDC_PASSWORD'),
+                    'apiKey'       => env('DTDC_API_KEY'),
+                    'customerCode' => env('DTDC_CUSTOMER_CODE'),
+                ]);
+
+                $trackResult = $dtdc->track($ship['dtdc_awb']);
+
+                if ($trackResult['success']) {
+                    // Convert DTDC events to our format and store in database
+                    foreach ($trackResult['events'] as $evt) {
+                        // Check if this event already exists (by event_time and location)
+                        $chk = $pdo->prepare(
+                            "SELECT id FROM shipment_tracking_events
+                             WHERE shipment_id = ? AND source = 'dtdc'
+                             AND event_time = ? AND location = ? LIMIT 1"
+                        );
+                        $chk->execute([$sid, $evt['event_time'], $evt['location']]);
+
+                        if (!$chk->fetch()) {
+                            // New event - store it
+                            $pdo->prepare(
+                                "INSERT INTO shipment_tracking_events
+                                 (shipment_id, event_time, location, status, description, source)
+                                 VALUES (?, ?, ?, ?, ?, 'dtdc')"
+                            )->execute([
+                                $sid,
+                                $evt['event_time'],
+                                $evt['location'],
+                                $evt['status'],
+                                $evt['description'],
+                            ]);
+                        }
+                    }
+                }
+            } catch (Exception $e) {
+                // Log DTDC error but continue with database events
+                error_log('DTDC tracking error for AWB ' . $ship['dtdc_awb'] . ': ' . $e->getMessage());
+            }
+        }
+
+        // ── Fetch all events from database (including cached DTDC events) ──
         $eStmt = $pdo->prepare(
             "SELECT id, event_time, location, status, description, source, created_at
              FROM shipment_tracking_events
