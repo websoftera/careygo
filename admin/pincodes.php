@@ -31,6 +31,9 @@ require_once 'includes/header.php';
         <p><?= number_format($total) ?> pincodes in database</p>
     </div>
     <div class="d-flex gap-2">
+        <a href="<?= SITE_URL ?? '' ?>/admin/download_sample_csv.php" class="btn-outline-admin" style="text-decoration:none;">
+            <i class="bi bi-download me-1"></i> Sample CSV
+        </a>
         <button class="btn-outline-admin" onclick="document.getElementById('csvUpload').click()">
             <i class="bi bi-upload me-1"></i> Import CSV
         </button>

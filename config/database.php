@@ -6,7 +6,8 @@
 
 // ── Helper: read env var or fall back to a default ───────────
 if (!function_exists('_cfg')) {
-    function _cfg(string $key, string $default): string {
+    function _cfg(string $key, string $default): string
+    {
         $v = $_ENV[$key] ?? getenv($key);
         return ($v !== false && $v !== '') ? $v : $default;
     }
@@ -34,9 +35,9 @@ try {
         DB_USER,
         DB_PASS,
         [
-            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES   => false,
+            PDO::ATTR_EMULATE_PREPARES => false,
         ]
     );
 } catch (PDOException $e) {

@@ -55,20 +55,24 @@ if ($method === 'POST') {
         $delivery = $body['delivery'] ?? [];
 
         $pickupName    = trim($pickup['name']  ?? '');
+        $pickupCompany = trim($pickup['company'] ?? '');
         $pickupPhone   = trim($pickup['phone'] ?? '');
         $pickupAddr1   = trim($pickup['addr1'] ?? '');
         $pickupAddr2   = trim($pickup['addr2'] ?? '');
         $pickupCity    = trim($pickup['city']  ?? '');
         $pickupState   = trim($pickup['state'] ?? '');
         $pickupPincode = trim($pickup['pincode'] ?? '');
+        $pickupGstin   = trim($pickup['gstin'] ?? '');
 
         $delivName    = trim($delivery['name']  ?? '');
+        $delivCompany = trim($delivery['company'] ?? '');
         $delivPhone   = trim($delivery['phone'] ?? '');
         $delivAddr1   = trim($delivery['addr1'] ?? '');
         $delivAddr2   = trim($delivery['addr2'] ?? '');
         $delivCity    = trim($delivery['city']  ?? '');
         $delivState   = trim($delivery['state'] ?? '');
         $delivPincode = trim($delivery['pincode'] ?? '');
+        $delivGstin   = trim($delivery['gstin'] ?? '');
 
         $serviceType    = trim($body['service_type']   ?? '');
         $weight         = (float)  ($body['weight']        ?? 0);
@@ -78,6 +82,12 @@ if ($method === 'POST') {
         $customerRef    = trim($body['customer_ref']  ?? '');
         $ewaybillNo     = trim($body['ewaybill_no']   ?? '');
         $packingMaterial= (int)    ($body['packing_material'] ?? 0);
+
+        // Dimensions
+        $length         = (float)  ($body['length']        ?? 0);
+        $width          = (float)  ($body['width']         ?? 0);
+        $height         = (float)  ($body['height']        ?? 0);
+        $volWeight      = (float)  ($body['volumetric_weight'] ?? 0);
         $basePrice      = (float)  ($body['base_price']    ?? 0);
         $discountPct    = (float)  ($body['discount_pct']  ?? 0);
         $discountAmt    = round($basePrice * $discountPct / 100, 2);
@@ -86,6 +96,7 @@ if ($method === 'POST') {
         $gstInvoice     = (int)    ($body['gst_invoice']   ?? 0);
         $gstin          = trim($body['gstin']          ?? '');
         $panNumber      = trim($body['pan_number']     ?? '');
+        $riskSurcharge  = trim($body['risk_surcharge'] ?? 'owner');
 
         // Validation
         $allowed = ['standard','premium','air_cargo','surface'];
@@ -118,32 +129,32 @@ if ($method === 'POST') {
         $stmt = $pdo->prepare("
             INSERT INTO shipments (
                 tracking_no, customer_id,
-                pickup_name, pickup_phone, pickup_address, pickup_city, pickup_state, pickup_pincode,
-                delivery_name, delivery_phone, delivery_address, delivery_city, delivery_state, delivery_pincode,
-                service_type, weight, declared_value, pieces, description, customer_ref,
+                pickup_name, pickup_company_name, pickup_phone, pickup_address, pickup_city, pickup_state, pickup_pincode, pickup_gstin,
+                delivery_name, delivery_company_name, delivery_phone, delivery_address, delivery_city, delivery_state, delivery_pincode, delivery_gstin,
+                service_type, weight, volumetric_weight, length, width, height, declared_value, pieces, description, customer_ref,
                 ewaybill_no, packing_material,
                 base_price, discount_pct, discount_amount, final_price,
-                payment_method, gst_invoice, gstin, pan_number,
+                payment_method, risk_surcharge, gst_invoice, gstin, pan_number,
                 status, estimated_delivery
             ) VALUES (
                 ?, ?,
-                ?, ?, ?, ?, ?, ?,
-                ?, ?, ?, ?, ?, ?,
-                ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                 ?, ?,
                 ?, ?, ?, ?,
-                ?, ?, ?, ?,
+                ?, ?, ?, ?, ?,
                 'booked', ?
             )
         ");
         $stmt->execute([
             $tracking, $userId,
-            $pickupName, $pickupPhone, $pickupFull, $pickupCity, $pickupState, $pickupPincode,
-            $delivName, $delivPhone, $delivFull, $delivCity, $delivState, $delivPincode,
-            $serviceType, $weight, $declaredValue, $pieces, $description, $customerRef,
+            $pickupName, $pickupCompany, $pickupPhone, $pickupFull, $pickupCity, $pickupState, $pickupPincode, $pickupGstin,
+            $delivName, $delivCompany, $delivPhone, $delivFull, $delivCity, $delivState, $delivPincode, $delivGstin,
+            $serviceType, $weight, $volWeight, $length, $width, $height, $declaredValue, $pieces, $description, $customerRef,
             $ewaybillNo, $packingMaterial,
             $basePrice, $discountPct, $discountAmt, $finalPrice,
-            $paymentMethod, $gstInvoice, $gstin, $panNumber,
+            $paymentMethod, $riskSurcharge, $gstInvoice, $gstin, $panNumber,
             $etaDate,
         ]);
 
@@ -191,6 +202,10 @@ if ($method === 'POST') {
                 'discount_pct'        => $discountPct,
                 'discount_amount'     => $discountAmt,
                 'final_price'         => $finalPrice,
+                'volumetric_weight'   => $volWeight,
+                'length'              => $length,
+                'width'               => $width,
+                'height'              => $height,
                 'payment_method'      => $paymentMethod,
                 'created_at'          => date('Y-m-d H:i:s'),
                 'estimated_delivery'  => $etaDate,

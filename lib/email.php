@@ -11,6 +11,8 @@ if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
     $usePhpMailer = class_exists('PHPMailer\PHPMailer\PHPMailer');
 }
 
+require_once __DIR__ . '/receipt_pdf.php';
+
 class EmailService
 {
     private $from;
@@ -68,9 +70,16 @@ class EmailService
         $subject = "📄 Your AWB Receipt - {$shipment['tracking_no']}";
         $body    = $this->buildReceiptEmail($customer, $shipment);
 
-        // Note: For now, HTML email with embedded receipt.
-        // Could add PDF attachment if needed with additional library
-        return $this->send($to, $customer['full_name'], $subject, $body);
+        // Generate PDF
+        $pdf = generateReceiptPDF($shipment);
+        $pdfContent = $pdf->Output('S');
+
+        $attachment = [
+            'name' => 'Careygo_Receipt_' . $shipment['tracking_no'] . '.pdf',
+            'data' => $pdfContent
+        ];
+
+        return $this->send($to, $customer['full_name'], $subject, $body, $attachment);
     }
 
     /**
@@ -581,7 +590,7 @@ HTML;
     /**
      * Send email via SMTP (PHPMailer) or PHP mail()
      */
-    private function send(string $to, string $toName, string $subject, string $htmlBody): bool
+    private function send(string $to, string $toName, string $subject, string $htmlBody, array $attachment = null): bool
     {
         // Validate email
         if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
@@ -590,17 +599,17 @@ HTML;
 
         // Try SMTP first if available
         if ($this->usePhpMailer && env('SMTP_ENABLED', '') === '1') {
-            return $this->sendViaSMTP($to, $toName, $subject, $htmlBody);
+            return $this->sendViaSMTP($to, $toName, $subject, $htmlBody, $attachment);
         }
 
         // Fall back to PHP mail()
-        return $this->sendViaPhpMail($to, $toName, $subject, $htmlBody);
+        return $this->sendViaPhpMail($to, $toName, $subject, $htmlBody, $attachment);
     }
 
     /**
      * Send via SMTP (PHPMailer)
      */
-    private function sendViaSMTP(string $to, string $toName, string $subject, string $htmlBody): bool
+    private function sendViaSMTP(string $to, string $toName, string $subject, string $htmlBody, array $attachment = null): bool
     {
         try {
             $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
@@ -624,6 +633,10 @@ HTML;
             $mail->Subject = $subject;
             $mail->Body    = $htmlBody;
 
+            if ($attachment) {
+                $mail->addStringAttachment($attachment['data'], $attachment['name'], 'base64', 'application/pdf');
+            }
+
             // Send
             $result = $mail->send();
 
@@ -643,20 +656,38 @@ HTML;
     /**
      * Send via PHP mail()
      */
-    private function sendViaPhpMail(string $to, string $toName, string $subject, string $htmlBody): bool
+    private function sendViaPhpMail(string $to, string $toName, string $subject, string $htmlBody, array $attachment = null): bool
     {
+        $boundary = md5(time());
+        
         $headers = [
             "MIME-Version: 1.0",
-            "Content-Type: text/html; charset=UTF-8",
             "From: {$this->fromName} <{$this->from}>",
             "Reply-To: {$this->replyTo}",
             "X-Mailer: Careygo/1.0",
         ];
 
+        if ($attachment) {
+            $headers[] = "Content-Type: multipart/mixed; boundary=\"{$boundary}\"";
+            $message = "--{$boundary}\r\n";
+            $message .= "Content-Type: text/html; charset=UTF-8\r\n";
+            $message .= "Content-Transfer-Encoding: base64\r\n\r\n";
+            $message .= chunk_split(base64_encode($htmlBody)) . "\r\n";
+            $message .= "--{$boundary}\r\n";
+            $message .= "Content-Type: application/pdf; name=\"{$attachment['name']}\"\r\n";
+            $message .= "Content-Disposition: attachment; filename=\"{$attachment['name']}\"\r\n";
+            $message .= "Content-Transfer-Encoding: base64\r\n\r\n";
+            $message .= chunk_split(base64_encode($attachment['data'])) . "\r\n";
+            $message .= "--{$boundary}--";
+        } else {
+            $headers[] = "Content-Type: text/html; charset=UTF-8";
+            $message = $htmlBody;
+        }
+
         $headerStr = implode("\r\n", $headers);
 
         // Attempt to send via mail()
-        $result = @mail($to, $subject, $htmlBody, $headerStr);
+        $result = @mail($to, $subject, $message, $headerStr);
 
         // Log attempt
         $this->logEmail($to, $subject, $htmlBody, 'PHP-Mail', $result);

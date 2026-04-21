@@ -127,9 +127,19 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                                     <div class="wizard-error" id="err_pickup_name"></div>
                                 </div>
                                 <div class="wizard-form-group">
+                                    <label class="wizard-label">Company Name <span class="opt">(optional)</span></label>
+                                    <input type="text" class="wizard-input" id="pickup_company" placeholder="Company Name">
+                                </div>
+                            </div>
+                            <div class="form-grid-2">
+                                <div class="wizard-form-group">
                                     <label class="wizard-label">Mobile Number <span class="req">*</span></label>
                                     <input type="tel" class="wizard-input" id="pickup_phone" placeholder="+91 XXXXX XXXXX">
                                     <div class="wizard-error" id="err_pickup_phone"></div>
+                                </div>
+                                <div class="wizard-form-group">
+                                    <label class="wizard-label">Sender's GSTIN <span class="opt">(optional)</span></label>
+                                    <input type="text" class="wizard-input" id="pickup_gstin" placeholder="GSTIN No.">
                                 </div>
                             </div>
                             <div class="wizard-form-group">
@@ -189,9 +199,19 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                                     <div class="wizard-error" id="err_delivery_name"></div>
                                 </div>
                                 <div class="wizard-form-group">
+                                    <label class="wizard-label">Company Name <span class="opt">(optional)</span></label>
+                                    <input type="text" class="wizard-input" id="delivery_company" placeholder="Company Name">
+                                </div>
+                            </div>
+                            <div class="form-grid-2">
+                                <div class="wizard-form-group">
                                     <label class="wizard-label">Mobile Number <span class="req">*</span></label>
                                     <input type="tel" class="wizard-input" id="delivery_phone" placeholder="+91 XXXXX XXXXX">
                                     <div class="wizard-error" id="err_delivery_phone"></div>
+                                </div>
+                                <div class="wizard-form-group">
+                                    <label class="wizard-label">Recipient's GSTIN <span class="opt">(optional)</span></label>
+                                    <input type="text" class="wizard-input" id="delivery_gstin" placeholder="GSTIN No.">
                                 </div>
                             </div>
                             <div class="wizard-form-group">
@@ -253,6 +273,29 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                                 <input type="number" class="wizard-input" id="pieces" min="1" value="1" placeholder="1">
                                 <div class="wizard-error" id="err_pieces"></div>
                             </div>
+                        </div>
+
+                        <div class="wizard-section-label">Dimensions (in CM) <span class="opt">(optional for volumetric calculation)</span></div>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:15px; margin-bottom:20px;">
+                            <div class="wizard-form-group mb-0">
+                                <label class="wizard-label">Length</label>
+                                <input type="number" class="wizard-input" id="dim_l" placeholder="L" min="0">
+                            </div>
+                            <div class="wizard-form-group mb-0">
+                                <label class="wizard-label">Width</label>
+                                <input type="number" class="wizard-input" id="dim_w" placeholder="W" min="0">
+                            </div>
+                            <div class="wizard-form-group mb-0">
+                                <label class="wizard-label">Height</label>
+                                <input type="number" class="wizard-input" id="dim_h" placeholder="H" min="0">
+                            </div>
+                            <div class="wizard-form-group mb-0">
+                                <label class="wizard-label">Vol. Weight</label>
+                                <input type="text" class="wizard-input" id="vol_weight_display" placeholder="0.000 kg" readonly style="background:#f8f9fa;">
+                            </div>
+                        </div>
+
+                        <div class="form-grid-2">
                             <div class="wizard-form-group">
                                 <label class="wizard-label">Declared Value (₹)</label>
                                 <input type="number" class="wizard-input" id="declared_value" min="0" step="0.01" placeholder="0.00">
@@ -323,6 +366,24 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                             <input type="text" class="wizard-input" id="ewaybill_no" placeholder="Enter E-waybill number">
                         </div>
 
+                        <div class="wizard-section-label">Risk Surcharge</div>
+                        <div class="ewaybill-options mb-3">
+                            <div class="ewaybill-opt selected" data-risk-opt="owner">
+                                <div class="ewaybill-opt-radio"></div>
+                                <div>
+                                    <div class="ewaybill-opt-label">Owner's Risk</div>
+                                    <div class="ewaybill-opt-sub">Goods are accepted at sender's risk</div>
+                                </div>
+                            </div>
+                            <div class="ewaybill-opt" data-risk-opt="carrier">
+                                <div class="ewaybill-opt-radio"></div>
+                                <div>
+                                    <div class="ewaybill-opt-label">Carrier's Risk</div>
+                                    <div class="ewaybill-opt-sub">Careygo handles risk coverage (surcharge applies)</div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="wizard-section-label">Value Added Services</div>
                         <label class="cust-checkbox-wrap" id="packing_material_wrap">
                             <input type="checkbox">
@@ -366,6 +427,8 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                                     <div class="detail-row"><span class="detail-label" style="min-width:110px;">Service</span><span class="detail-value" id="summary_service" style="font-weight:600;"></span></div>
                                     <div class="detail-row"><span class="detail-label" style="min-width:110px;">Weight</span><span class="detail-value" id="summary_weight"></span></div>
                                     <div class="detail-row"><span class="detail-label" style="min-width:110px;">Pieces</span><span class="detail-value" id="summary_pieces"></span></div>
+                                    <div class="detail-row"><span class="detail-label" style="min-width:110px;">Dimensions</span><span class="detail-value" id="summary_dimensions"></span></div>
+                                    <div class="detail-row"><span class="detail-label" style="min-width:110px;">Volumetric</span><span class="detail-value" id="summary_volumetric"></span></div>
                                     <div class="detail-row"><span class="detail-label" style="min-width:110px;">Packing</span><span class="detail-value" id="summary_packing"></span></div>
                                 </div>
                             </div>

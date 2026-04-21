@@ -12,8 +12,8 @@
     const defaultState = {
         step: 1,
         totalSteps: 6,
-        pickup: { pincode: '', city: '', state: '', name: '', phone: '', addr1: '', addr2: '' },
-        delivery: { pincode: '', city: '', state: '', name: '', phone: '', addr1: '', addr2: '', email: '' },
+        pickup: { pincode: '', city: '', state: '', name: '', company: '', phone: '', gstin: '', addr1: '', addr2: '' },
+        delivery: { pincode: '', city: '', state: '', name: '', company: '', phone: '', email: '', gstin: '', addr1: '', addr2: '' },
         weight: 0,
         unit: 'kg',
         pieces: 1,
@@ -26,6 +26,7 @@
         serviceTat: '',
         ewaybillOpt: 'skip',
         ewaybillNo: '',
+        riskSurcharge: 'owner',
         packingMaterial: false,
         paymentMethod: 'prepaid',
         gstInvoice: false,
@@ -298,8 +299,8 @@
     /* ── Sync address form fields to state ── */
     ['pickup', 'delivery'].forEach(type => {
         const fields = type === 'delivery'
-            ? ['name', 'phone', 'email', 'addr1', 'addr2', 'city', 'state']
-            : ['name', 'phone', 'addr1', 'addr2', 'city', 'state'];
+            ? ['name', 'company', 'phone', 'email', 'gstin', 'addr1', 'addr2', 'city', 'state']
+            : ['name', 'company', 'phone', 'gstin', 'addr1', 'addr2', 'city', 'state'];
         fields.forEach(field => {
             const el = document.getElementById(`${type}_${field}`);
             if (el) el.addEventListener('input', () => { state[type][field] = el.value.trim(); });
@@ -331,6 +332,35 @@
 
     const customerRefInput = document.getElementById('customer_ref');
     customerRefInput && customerRefInput.addEventListener('input', () => { state.customerRef = customerRefInput.value.trim(); });
+
+    /* ── Dimensions & Volumetric Weight ── */
+    const dimL = document.getElementById('dim_l');
+    const dimW = document.getElementById('dim_w');
+    const dimH = document.getElementById('dim_h');
+    const volDisplay = document.getElementById('vol_weight_display');
+
+    function updateVolumetricWeight() {
+        const l = parseFloat(dimL.value) || 0;
+        const w = parseFloat(dimW.value) || 0;
+        const h = parseFloat(dimH.value) || 0;
+        
+        state.dim_l = l;
+        state.dim_w = w;
+        state.dim_h = h;
+
+        if (l > 0 && w > 0 && h > 0) {
+            const volWt = (l * w * h) / 5000;
+            state.volumetricWeight = volWt;
+            if (volDisplay) volDisplay.value = volWt.toFixed(3) + ' kg';
+        } else {
+            state.volumetricWeight = 0;
+            if (volDisplay) volDisplay.value = '';
+        }
+    }
+
+    [dimL, dimW, dimH].forEach(el => {
+        el && el.addEventListener('input', updateVolumetricWeight);
+    });
 
     /* ── Step 3: Load services when entering ── */
     document.querySelector('[data-step2-next]') && document.querySelector('[data-step2-next]').addEventListener('click', () => {
@@ -397,14 +427,22 @@
         state.serviceTat   = tat;
     };
 
-    /* ── Step 4: E-waybill options ── */
-    document.querySelectorAll('.ewaybill-opt').forEach(opt => {
+    /* ── Step 4: Options ── */
+    document.querySelectorAll('.ewaybill-opt[data-ewaybill-opt]').forEach(opt => {
         opt.addEventListener('click', () => {
-            document.querySelectorAll('.ewaybill-opt').forEach(o => o.classList.remove('selected'));
+            document.querySelectorAll('.ewaybill-opt[data-ewaybill-opt]').forEach(o => o.classList.remove('selected'));
             opt.classList.add('selected');
             state.ewaybillOpt = opt.dataset.ewaybillOpt;
             const inputRow = document.getElementById('ewaybill_input_row');
             if (inputRow) inputRow.style.display = state.ewaybillOpt === 'enter' ? 'block' : 'none';
+        });
+    });
+
+    document.querySelectorAll('.ewaybill-opt[data-risk-opt]').forEach(opt => {
+        opt.addEventListener('click', () => {
+            document.querySelectorAll('.ewaybill-opt[data-risk-opt]').forEach(o => o.classList.remove('selected'));
+            opt.classList.add('selected');
+            state.riskSurcharge = opt.dataset.riskOpt;
         });
     });
 
@@ -451,6 +489,24 @@
 
         const pcsEl = document.getElementById('summary_pieces');
         if (pcsEl) pcsEl.textContent = state.pieces;
+
+        const dimEl = document.getElementById('summary_dimensions');
+        if (dimEl) {
+            if (state.dim_l > 0) {
+                dimEl.textContent = `${state.dim_l} x ${state.dim_w} x ${state.dim_h} cm`;
+            } else {
+                dimEl.textContent = '—';
+            }
+        }
+
+        const volEl = document.getElementById('summary_volumetric');
+        if (volEl) {
+            if (state.volumetricWeight > 0) {
+                volEl.textContent = `${state.volumetricWeight.toFixed(3)} kg`;
+            } else {
+                volEl.textContent = '—';
+            }
+        }
 
         const priceEl = document.getElementById('summary_base_price');
         if (priceEl) priceEl.textContent = `₹${state.servicePrice.toLocaleString('en-IN')}`;
@@ -504,7 +560,12 @@
             base_price:       state.servicePrice,
             final_price:      state.servicePrice,
             ewaybill_no:      state.ewaybillOpt === 'enter' ? state.ewaybillNo : '',
+            risk_surcharge:   state.riskSurcharge,
             packing_material: state.packingMaterial ? 1 : 0,
+            length:           state.dim_l || 0,
+            width:            state.dim_w || 0,
+            height:           state.dim_h || 0,
+            volumetric_weight:state.volumetricWeight || 0,
             payment_method:   state.paymentMethod,
             gst_invoice:      state.gstInvoice ? 1 : 0,
             gstin:            state.gstin,
@@ -552,13 +613,13 @@
     /* ── Restore form fields from state ── */
     function restoreFormFields() {
         // Pickup fields
-        ['pincode', 'name', 'phone', 'addr1', 'addr2', 'city', 'state'].forEach(f => {
+        ['pincode', 'name', 'company', 'phone', 'gstin', 'addr1', 'addr2', 'city', 'state'].forEach(f => {
             const el = document.getElementById(`pickup_${f}`);
             if (el && state.pickup[f]) el.value = state.pickup[f];
         });
 
         // Delivery fields
-        ['pincode', 'name', 'phone', 'email', 'addr1', 'addr2', 'city', 'state'].forEach(f => {
+        ['pincode', 'name', 'company', 'phone', 'email', 'gstin', 'addr1', 'addr2', 'city', 'state'].forEach(f => {
             const el = document.getElementById(`delivery_${f}`);
             if (el && state.delivery[f]) el.value = state.delivery[f];
         });
@@ -581,6 +642,10 @@
         if (state.ewaybillOpt === 'enter' && state.ewaybillNo && ewaybillNoInput) ewaybillNoInput.value = state.ewaybillNo;
         const ewaybillBtn = document.querySelector(`[data-ewaybill-opt="${state.ewaybillOpt}"]`);
         if (ewaybillBtn) ewaybillBtn.click();
+
+        // Risk Surcharge
+        const riskBtn = document.querySelector(`[data-risk-opt="${state.riskSurcharge}"]`);
+        if (riskBtn) riskBtn.click();
 
         // Packing material
         if (state.packingMaterial && packingWrap) packingWrap.click();

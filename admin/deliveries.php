@@ -213,6 +213,7 @@ function viewShipment(id) {
             <div class="col-12"><hr class="my-1"></div>
             <div class="col-md-6">
                 <div class="detail-row"><span class="detail-label">Tracking No</span><span class="detail-value" style="font-weight:700;color:var(--primary)">${escH(s.tracking_no)}</span></div>
+                <div class="mb-2"><a href="../api/download_receipt.php?tracking_no=${encodeURIComponent(s.tracking_no)}" target="_blank" class="btn-outline-admin" style="font-size:11px;padding:4px 8px;text-decoration:none;display:inline-block;"><i class="bi bi-file-earmark-pdf me-1"></i> Download Receipt</a></div>
                 <div class="detail-row"><span class="detail-label">Service</span><span class="detail-value">${escH(svcMap[s.service_type]||s.service_type)}</span></div>
                 <div class="detail-row"><span class="detail-label">Weight</span><span class="detail-value">${parseFloat(s.weight).toFixed(3)} kg</span></div>
                 <div class="detail-row"><span class="detail-label">Pieces</span><span class="detail-value">${s.pieces}</span></div>
