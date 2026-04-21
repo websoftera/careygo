@@ -38,6 +38,9 @@ require_once 'includes/header.php';
             <i class="bi bi-upload me-1"></i> Import CSV
         </button>
         <input type="file" id="csvUpload" accept=".csv" style="display:none" onchange="importCsv(this)">
+        <button id="btnBulkDelete" class="btn-action danger" style="display:none; padding:5px 12px; height:auto; color:white; background:#dc3545;" onclick="confirmBulkDelete()">
+            <i class="bi bi-trash me-1"></i> Delete Selected
+        </button>
         <button class="btn-primary-admin" onclick="openAddPincode()">
             <i class="bi bi-plus-lg"></i> Add Pincode
         </button>
@@ -63,6 +66,7 @@ require_once 'includes/header.php';
         <table class="admin-table" id="pincodesTable">
             <thead>
                 <tr>
+                    <th style="width: 40px; text-align: center;"><input type="checkbox" id="selectAllPincodes" onchange="toggleSelectAll(this)"></th>
                     <th>Pincode</th>
                     <th>City</th>
                     <th>State</th>
@@ -77,10 +81,11 @@ require_once 'includes/header.php';
             </thead>
             <tbody>
                 <?php if (empty($pincodes)): ?>
-                <tr><td colspan="10"><div class="empty-state"><i class="bi bi-geo-alt"></i><p>No pincodes yet. Import a CSV or add manually.</p></div></td></tr>
+                <tr><td colspan="11"><div class="empty-state"><i class="bi bi-geo-alt"></i><p>No pincodes yet. Import a CSV or add manually.</p></div></td></tr>
                 <?php else: ?>
                 <?php foreach ($pincodes as $p): ?>
                 <tr id="pc_<?= $p['id'] ?>">
+                    <td style="text-align: center;"><input type="checkbox" class="pc-checkbox" value="<?= $p['id'] ?>" onchange="toggleDeleteBtn()"></td>
                     <td style="font-size:13px;font-weight:700;"><?= htmlspecialchars($p['pincode']) ?></td>
                     <td style="font-size:13px;"><?= htmlspecialchars($p['city']) ?></td>
                     <td style="font-size:13px;"><?= htmlspecialchars($p['state']) ?></td>
@@ -145,6 +150,42 @@ require_once 'includes/header.php';
 </div>
 
 <script>
+function toggleSelectAll(master) {
+    document.querySelectorAll('.pc-checkbox').forEach(cb => cb.checked = master.checked);
+    toggleDeleteBtn();
+}
+
+function toggleDeleteBtn() {
+    const anyChecked = document.querySelectorAll('.pc-checkbox:checked').length > 0;
+    document.getElementById('btnBulkDelete').style.display = anyChecked ? 'inline-block' : 'none';
+}
+
+function confirmBulkDelete() {
+    const checked = Array.from(document.querySelectorAll('.pc-checkbox:checked')).map(cb => cb.value);
+    if (!checked.length) return;
+    
+    confirmAction(`Delete ${checked.length} selected pincodes?`, () => {
+        fetch('<?= SITE_URL ?>/api/admin/pincodes.php', {
+            method: 'DELETE', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ids: checked}), credentials: 'same-origin'
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) { 
+                showToast('Deleted successfully', 'success'); 
+                checked.forEach(id => {
+                    const row = document.getElementById(`pc_${id}`);
+                    if (row) row.remove();
+                });
+                document.getElementById('selectAllPincodes').checked = false;
+                toggleDeleteBtn();
+            } else {
+                showToast(data.message || 'Delete failed', 'error');
+            }
+        });
+    });
+}
+
 function openAddPincode() {
     document.getElementById('pc_id').value = '';
     document.getElementById('pincodeModalTitle').innerHTML = '<i class="bi bi-geo-alt me-2"></i>Add Pincode';

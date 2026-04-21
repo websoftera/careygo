@@ -118,10 +118,18 @@ if ($method === 'POST') {
 
 if ($method === 'DELETE') {
     $body = json_decode(file_get_contents('php://input'), true) ?? [];
-    $id   = (int) ($body['id'] ?? 0);
-    if (!$id) json_response(['success' => false, 'message' => 'Invalid ID.'], 422);
+    $ids = [];
+    if (!empty($body['ids']) && is_array($body['ids'])) {
+        $ids = array_map('intval', $body['ids']);
+    } elseif (!empty($body['id'])) {
+        $ids = [(int)$body['id']];
+    }
+
+    if (empty($ids)) json_response(['success' => false, 'message' => 'Invalid ID(s).'], 422);
+
     try {
-        $pdo->prepare("DELETE FROM pincode_tat WHERE id = ?")->execute([$id]);
+        $in = str_repeat('?,', count($ids) - 1) . '?';
+        $pdo->prepare("DELETE FROM pincode_tat WHERE id IN ($in)")->execute($ids);
         json_response(['success' => true]);
     } catch (Exception $e) {
         json_response(['success' => false, 'message' => 'Delete failed.'], 500);
