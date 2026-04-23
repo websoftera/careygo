@@ -153,22 +153,15 @@ try {
             continue;  // Service not available for this weight
         }
 
-        // 2. Check Air Cargo rate availability - only show if admin added zone-specific rates
+        // 2. Check Air Cargo rate availability - only show if admin has added ANY rates
         if ($type === 'air_cargo') {
-            if ($zone) {
-                // Only check for zone-specific rates (not global)
-                $rateStmt = $pdo->prepare(
-                    "SELECT COUNT(*) FROM pricing_slabs WHERE service_type = ? AND zone = ? AND zone IS NOT NULL"
-                );
-                $rateStmt->execute([$type, $zone]);
-                $rateCount = $rateStmt->fetchColumn() ?: 0;
-
-                if ($rateCount === 0) {
-                    continue;  // No zone-specific rates - hide Air Cargo
-                }
-            } else {
-                // No zone detected - skip Air Cargo
-                continue;
+            $rateStmt = $pdo->prepare(
+                "SELECT COUNT(*) FROM pricing_slabs WHERE service_type = 'air_cargo'"
+            );
+            $rateStmt->execute();
+            $rateCount = $rateStmt->fetchColumn() ?: 0;
+            if ($rateCount === 0) {
+                continue;  // Admin hasn't added Air Cargo rates - hide it
             }
         }
 

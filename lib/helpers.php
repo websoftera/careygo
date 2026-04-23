@@ -163,15 +163,15 @@ function determineZone(string $pickupCity, string $pickupState, string $delivery
         return 'within_state';
     }
 
-    // Recognised Tier-1 / Metro cities (Indian logistics standard)
+    // Metro zone: BOTH pickup AND delivery must be metro cities
     static $metros = [
         'delhi', 'new delhi', 'mumbai', 'bombay', 'bangalore', 'bengaluru',
         'chennai', 'madras', 'kolkata', 'calcutta', 'hyderabad', 'pune',
         'ahmedabad', 'noida', 'gurugram', 'gurgaon', 'thane', 'navi mumbai',
     ];
 
-    if (in_array($dCity, $metros, true) || in_array($pCity, $metros, true)) {
-        return 'metro';
+    if (in_array($pCity, $metros, true) && in_array($dCity, $metros, true)) {
+        return 'metro';  // Metro-to-Metro: both cities must be metro
     }
 
     return 'rest_of_india';

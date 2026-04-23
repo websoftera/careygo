@@ -149,6 +149,10 @@ try {
     $slabOutput = ob_get_clean();
     echo $slabOutput;
 
+    // Remove any Air Cargo global slabs — admin must add rates manually
+    $pdo->exec("DELETE FROM pricing_slabs WHERE service_type = 'air_cargo'");
+    echo "<span class='success'>✓ Air Cargo slabs removed (admin must configure via admin panel)</span>\n";
+
     echo "\n\n";
 
     // ════════════════════════════════════════════════════════════════════════════

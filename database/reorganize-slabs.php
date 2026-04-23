@@ -110,7 +110,8 @@ try {
     ");
 
     $inserted = 0;
-    $services = ['standard', 'premium', 'air_cargo', 'surface'];
+    // NOTE: air_cargo excluded intentionally — admin must add rates manually in the admin panel
+    $services = ['standard', 'premium', 'surface'];
 
     foreach ($services as $serviceIndex => $stype) {
         foreach ($standardTiers as $tierIndex => $tier) {
