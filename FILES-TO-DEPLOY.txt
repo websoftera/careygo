@@ -1,0 +1,109 @@
+════════════════════════════════════════════════════════════════════════════
+CAREYGO PRODUCTION DEPLOYMENT - FILES TO UPLOAD
+════════════════════════════════════════════════════════════════════════════
+
+✅ All code is ready. These are the ONLY files you need to upload:
+
+────────────────────────────────────────────────────────────────────────────
+STEP 1: UPLOAD THESE 3 FILES (via FTP or File Manager)
+────────────────────────────────────────────────────────────────────────────
+
+1. LOCAL PATH: C:\xampp\htdocs\careygo\api\pricing.php
+   UPLOAD TO: /public_html/careygo/api/pricing.php
+   WHY: Contains Air Cargo filtering & weight constraints
+
+2. LOCAL PATH: C:\xampp\htdocs\careygo\api\shipments.php
+   UPLOAD TO: /public_html/careygo/api/shipments.php
+   WHY: Contains weight validation for bookings
+
+3. LOCAL PATH: C:\xampp\htdocs\careygo\setup-production.php
+   UPLOAD TO: /public_html/careygo/setup-production.php
+   WHY: Automated setup script (run once, then delete)
+
+────────────────────────────────────────────────────────────────────────────
+STEP 2: RUN SETUP SCRIPT (One-click in browser)
+────────────────────────────────────────────────────────────────────────────
+
+Open in your browser:
+https://your-domain.com/careygo/setup-production.php?run=yes
+
+Replace "your-domain.com" with your actual domain
+
+Wait for: "SETUP COMPLETED SUCCESSFULLY!" message
+
+Then: DELETE the setup-production.php file from your server
+
+────────────────────────────────────────────────────────────────────────────
+STEP 3: TEST & VERIFY
+────────────────────────────────────────────────────────────────────────────
+
+Test URL 1 (3kg - Air Cargo should be HIDDEN):
+https://your-domain.com/careygo/api/pricing.php?weight=3&pickup=110001&delivery=122105
+Expected: premium, surface (NO air_cargo)
+
+Test URL 2 (1.5kg - All services should show):
+https://your-domain.com/careygo/api/pricing.php?weight=1.5&pickup=110001&delivery=122105
+Expected: standard, premium, surface (NO air_cargo)
+
+────────────────────────────────────────────────────────────────────────────
+OPTIONAL FILES (Already correct on production)
+────────────────────────────────────────────────────────────────────────────
+
+These are already correct and don't need to be uploaded:
+✓ config/database.php - Database config is correct
+✓ database/import-dtdc-master.php - Included in setup script
+✓ database/reorganize-slabs.php - Included in setup script
+
+════════════════════════════════════════════════════════════════════════════
+SUMMARY
+════════════════════════════════════════════════════════════════════════════
+
+Upload Files:         3 files
+Setup Time:           ~5 minutes
+Database Backup:      Should have one before starting
+Cleanup Required:     DELETE setup-production.php after running
+
+════════════════════════════════════════════════════════════════════════════
+WHAT WILL HAPPEN
+════════════════════════════════════════════════════════════════════════════
+
+✓ 15,452 pincodes imported
+✓ 24 weight slabs created (6 per service type)
+✓ Air Cargo hidden (no zone-specific rates)
+✓ Weight constraints enforced:
+  - Standard Express: Max 2kg
+  - Premium Express: Max 5kg
+  - Air Cargo: Max 10kg
+  - Surface Cargo: Max 25kg
+
+════════════════════════════════════════════════════════════════════════════
+IMPORTANT NOTES
+════════════════════════════════════════════════════════════════════════════
+
+1. MUST DELETE setup-production.php after running it
+   (It's a temporary script, not needed after setup)
+
+2. Clear browser cache if you see old prices:
+   Ctrl+Shift+Delete (Windows) or Cmd+Shift+Delete (Mac)
+
+3. If Air Cargo still shows after setup:
+   - Verify pricing.php was uploaded correctly
+   - Check that lines 156-173 exist in pricing.php
+   - Clear browser cache completely
+   - Restart your browser
+
+4. Rollback available via backup tables:
+   - pincode_tat_backup_YYYYMMDDHHMMSS
+   - pricing_slabs_backup_YYYYMMDDHHMMSS
+
+════════════════════════════════════════════════════════════════════════════
+QUESTIONS?
+════════════════════════════════════════════════════════════════════════════
+
+See: DEPLOYMENT-READY.md for complete documentation
+See: README-PRODUCTION.md for overview
+See: PRODUCTION-DEPLOYMENT.md for detailed steps
+
+════════════════════════════════════════════════════════════════════════════
+READY TO DEPLOY ✅
+════════════════════════════════════════════════════════════════════════════
