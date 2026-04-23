@@ -46,7 +46,9 @@ function calculatePrice(float $weight, string $serviceType, PDO $pdo, ?string $z
 
     $slabs = [];
 
-    // ── 1. Try zone-specific slabs ───────────────────────────────────────────
+    // ── 1. Strict Zone Check ────────────────────────────────────────────────
+    // If a zone is resolved, we ONLY look for pricing in that specific zone.
+    // We NO LONGER fall back to NULL zones if the user has specified a location.
     if ($zone) {
         $stmt = $pdo->prepare(
             "SELECT * FROM pricing_slabs
@@ -55,10 +57,10 @@ function calculatePrice(float $weight, string $serviceType, PDO $pdo, ?string $z
         );
         $stmt->execute([$serviceType, $zone]);
         $slabs = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    // ── 2. Fall back to global slabs only if zone is completely unknown ──────
-    if (empty($slabs) && !$zone) {
+    } 
+    // ── 2. Fallback only for unknown locations ─────────────────────────────
+    else {
+        // If pincodes are missing or zone is unknown, we check for 'rest_of_india' or NULL slabs
         $stmt = $pdo->prepare(
             "SELECT * FROM pricing_slabs
              WHERE service_type = ? AND (zone IS NULL OR zone = 'rest_of_india')
@@ -121,16 +123,13 @@ $dState = $tatRow['state'] ?? $frontendDeliveryState;
 // ── Resolve zone ─────────────────────────────────────────────────────────────
 $zoneParam = trim($_GET['zone'] ?? '');
 if ($zoneParam && in_array($zoneParam, $validZones, true)) {
-    $zone = $zoneParam;                                 // caller-supplied override
+    $zone = $zoneParam;                                 
 } elseif ($pickup !== '' && $pickup === $delivery) {
-    $zone = 'within_city';                              // identical pincodes are in the same city
+    $zone = 'within_city';                              
 } elseif ($pCity !== '' && $dCity !== '' && $pState !== '' && $dState !== '') {
-    $zone = determineZone(                              // auto-detect from DB data or frontend
-        $pCity, $pState,
-        $dCity, $dState
-    );
+    $zone = determineZone($pCity, $pState, $dCity, $dState);
 } else {
-    $zone = null;                                       // fall back to global slabs
+    $zone = null;                                       
 }
 
 // ── TAT data ─────────────────────────────────────────────────────────────────
@@ -150,33 +149,31 @@ $serviceTypes = ['standard', 'premium', 'air_cargo', 'surface'];
 $services = [];
 
 try {
-    // Service weight constraints (production-ready logistics)
     $serviceConstraints = [
-        'standard'  => 2.000,   // Standard Express: max 2kg
-        'premium'   => 5.000,   // Premium Express: max 5kg
-        'air_cargo' => 10.000,  // Air Cargo: max 10kg
-        'surface'   => 25.000,  // Surface: max 25kg
+        'standard'  => 2.000,
+        'premium'   => 5.000,
+        'air_cargo' => 10.000,
+        'surface'   => 25.000,
     ];
 
     foreach ($serviceTypes as $type) {
-        // 1. Check weight constraint
+        // 1. Weight constraint check
         $maxWeight = $serviceConstraints[$type] ?? PHP_FLOAT_MAX;
-        if ($weight > $maxWeight) {
-            continue;  // Service not available for this weight
+        if ($weight > $maxWeight) continue;
+
+        // 2. Strict existence check: Does this service have ANY rates for the resolved zone?
+        // If a zone is resolved, we only show it if a rate exists for that zone specifically.
+        $checkStmt = $pdo->prepare(
+            "SELECT COUNT(*) FROM pricing_slabs 
+             WHERE service_type = ? AND " . ($zone ? "zone = ?" : "(zone IS NULL OR zone = 'rest_of_india')")
+        );
+        $checkParams = $zone ? [$type, $zone] : [$type];
+        $checkStmt->execute($checkParams);
+        if (($checkStmt->fetchColumn() ?: 0) == 0) {
+            continue; // No pricing added for this service in this zone
         }
 
-        // 2. Check Air Cargo rate availability - only show if admin has explicitly added rates
-        if ($type === 'air_cargo') {
-            $rateStmt = $pdo->prepare(
-                "SELECT COUNT(*) FROM pricing_slabs WHERE service_type = 'air_cargo' AND zone IS NOT NULL"
-            );
-            $rateStmt->execute();
-            $rateCount = $rateStmt->fetchColumn() ?: 0;
-            if ($rateCount === 0) {
-                continue;  // Admin hasn't explicitly added Air Cargo rates - hide it
-            }
-        }
-
+        // 3. Calculate actual price
         $price = calculatePrice($weight, $type, $pdo, $zone);
         if ($price <= 0) continue;
 
@@ -198,6 +195,10 @@ try {
         'services' => $services,
         'weight'   => $weight,
         'zone'     => $zone,
+        'debug'    => [
+            'resolved_zone' => $zone,
+            'service_count' => count($services)
+        ]
     ]);
 } catch (Exception $e) {
     error_log('PRICING_ERROR: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
