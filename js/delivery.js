@@ -375,16 +375,18 @@
 
         container.innerHTML = `<div class="price-loading"><span class="spinner-border spinner-border-sm me-2"></span> Calculating prices...</div>`;
 
-        fetch(`${SITE_URL}/api/pricing.php?weight=${wt}&pickup=${encodeURIComponent(state.pickup.pincode)}&delivery=${encodeURIComponent(state.delivery.pincode)}`)
+        const fetchUrl = `${SITE_URL}/api/pricing.php?weight=${wt}&pickup=${encodeURIComponent(state.pickup.pincode)}&delivery=${encodeURIComponent(state.delivery.pincode)}&pickup_city=${encodeURIComponent(state.pickup.city)}&pickup_state=${encodeURIComponent(state.pickup.state)}&delivery_city=${encodeURIComponent(state.delivery.city)}&delivery_state=${encodeURIComponent(state.delivery.state)}`;
+
+        fetch(fetchUrl)
             .then(r => r.json())
             .then(data => {
-                if (data.success) renderServices(data.services);
+                if (data.success) renderServices(data.services, data.zone);
                 else container.innerHTML = `<div class="alert alert-warning">Could not load pricing. Please try again.</div>`;
             })
             .catch(() => { container.innerHTML = `<div class="alert alert-danger">Network error. Please try again.</div>`; });
     }
 
-    function renderServices(services) {
+    function renderServices(services, zone) {
         const container = document.getElementById('services_container');
         if (!container) return;
 
@@ -394,6 +396,14 @@
             air_cargo: { icon: 'bi-airplane',       label: 'Air Cargo',         code: 'AIR-CGO' },
             surface:   { icon: 'bi-boxes',          label: 'Surface Cargo',     code: 'SRF-CGO' },
         };
+
+        const zoneLabels = {
+            'within_city': 'Within City',
+            'within_state': 'Within State',
+            'metro': 'Metro City',
+            'rest_of_india': 'Rest of India'
+        };
+        const zoneLabel = zone && zoneLabels[zone] ? zoneLabels[zone] : 'Standard Rate';
 
         container.innerHTML = services.map(svc => {
             const meta = serviceMap[svc.type] || { icon: 'bi-box', label: svc.type, code: '' };
@@ -407,7 +417,7 @@
                     </div>
                     <div style="text-align:right">
                         <div class="service-card-price">₹${svc.price.toLocaleString('en-IN')}</div>
-                        <div class="service-card-price-label">Estimated</div>
+                        <div class="service-card-price-label">${escHtml(zoneLabel)}</div>
                     </div>
                 </div>
                 <div class="service-card-meta">

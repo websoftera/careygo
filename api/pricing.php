@@ -108,14 +108,26 @@ try {
     }
 } catch (Exception $e) {}
 
+$frontendPickupCity = trim($_GET['pickup_city'] ?? '');
+$frontendPickupState = trim($_GET['pickup_state'] ?? '');
+$frontendDeliveryCity = trim($_GET['delivery_city'] ?? '');
+$frontendDeliveryState = trim($_GET['delivery_state'] ?? '');
+
+$pCity = $pickupRow['city'] ?? $frontendPickupCity;
+$pState = $pickupRow['state'] ?? $frontendPickupState;
+$dCity = $tatRow['city'] ?? $frontendDeliveryCity;
+$dState = $tatRow['state'] ?? $frontendDeliveryState;
+
 // ── Resolve zone ─────────────────────────────────────────────────────────────
 $zoneParam = trim($_GET['zone'] ?? '');
 if ($zoneParam && in_array($zoneParam, $validZones, true)) {
     $zone = $zoneParam;                                 // caller-supplied override
-} elseif ($pickupRow && $tatRow) {
-    $zone = determineZone(                              // auto-detect from DB data
-        $pickupRow['city'], $pickupRow['state'],
-        $tatRow['city'],    $tatRow['state']
+} elseif ($pickup !== '' && $pickup === $delivery) {
+    $zone = 'within_city';                              // identical pincodes are in the same city
+} elseif ($pCity !== '' && $dCity !== '' && $pState !== '' && $dState !== '') {
+    $zone = determineZone(                              // auto-detect from DB data or frontend
+        $pCity, $pState,
+        $dCity, $dState
     );
 } else {
     $zone = null;                                       // fall back to global slabs
