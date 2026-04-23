@@ -57,11 +57,11 @@ function calculatePrice(float $weight, string $serviceType, PDO $pdo, ?string $z
         $slabs = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // ── 2. Fall back to global slabs (zone IS NULL) ──────────────────────────
-    if (empty($slabs)) {
+    // ── 2. Fall back to global slabs only if zone is completely unknown ──────
+    if (empty($slabs) && !$zone) {
         $stmt = $pdo->prepare(
             "SELECT * FROM pricing_slabs
-             WHERE service_type = ? AND zone IS NULL
+             WHERE service_type = ? AND (zone IS NULL OR zone = 'rest_of_india')
              $order"
         );
         $stmt->execute([$serviceType]);
@@ -165,15 +165,15 @@ try {
             continue;  // Service not available for this weight
         }
 
-        // 2. Check Air Cargo rate availability - only show if admin has added ANY rates
+        // 2. Check Air Cargo rate availability - only show if admin has explicitly added rates
         if ($type === 'air_cargo') {
             $rateStmt = $pdo->prepare(
-                "SELECT COUNT(*) FROM pricing_slabs WHERE service_type = 'air_cargo'"
+                "SELECT COUNT(*) FROM pricing_slabs WHERE service_type = 'air_cargo' AND zone IS NOT NULL"
             );
             $rateStmt->execute();
             $rateCount = $rateStmt->fetchColumn() ?: 0;
             if ($rateCount === 0) {
-                continue;  // Admin hasn't added Air Cargo rates - hide it
+                continue;  // Admin hasn't explicitly added Air Cargo rates - hide it
             }
         }
 
