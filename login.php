@@ -2,6 +2,7 @@
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/lib/auth.php';
 
+
 // Already logged in — redirect appropriately
 $user = auth_user();
 if ($user) {
