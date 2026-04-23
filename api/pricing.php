@@ -155,9 +155,11 @@ try {
 
         // 2. Check Air Cargo rate availability
         if ($type === 'air_cargo' && $zone) {
-            $rateCount = $pdo->prepare(
+            $rateStmt = $pdo->prepare(
                 "SELECT COUNT(*) FROM pricing_slabs WHERE service_type = ? AND zone = ?"
-            )->execute([$type, $zone])->fetchColumn() ?: 0;
+            );
+            $rateStmt->execute([$type, $zone]);
+            $rateCount = $rateStmt->fetchColumn() ?: 0;
 
             if ($rateCount === 0) {
                 continue;  // No rates available for this zone
