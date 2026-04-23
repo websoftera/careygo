@@ -24,10 +24,10 @@ define('DB_PASS', _cfg('CGO_DB_PASS', '+DgrP256'));
 define('DB_NAME', _cfg('CGO_DB_NAME', 'u141519101_careygo'));
 
 // ── Production credentials (set via env vars instead) ────────
-// CGO_DB_HOST=localhost
-// CGO_DB_USER=u141519101_careygo
-// CGO_DB_PASS=+DgrP256
-// CGO_DB_NAME=u141519101_careygo
+CGO_DB_HOST=localhost
+CGO_DB_USER=u141519101_careygo
+CGO_DB_PASS=+DgrP256
+CGO_DB_NAME=u141519101_careygo
 
 try {
     $pdo = new PDO(

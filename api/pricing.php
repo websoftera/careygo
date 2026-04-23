@@ -138,7 +138,32 @@ $serviceTypes = ['standard', 'premium', 'air_cargo', 'surface'];
 $services = [];
 
 try {
+    // Service weight constraints (production-ready logistics)
+    $serviceConstraints = [
+        'standard'  => 2.000,   // Standard Express: max 2kg
+        'premium'   => 5.000,   // Premium Express: max 5kg
+        'air_cargo' => 10.000,  // Air Cargo: max 10kg
+        'surface'   => 25.000,  // Surface: max 25kg
+    ];
+
     foreach ($serviceTypes as $type) {
+        // 1. Check weight constraint
+        $maxWeight = $serviceConstraints[$type] ?? PHP_FLOAT_MAX;
+        if ($weight > $maxWeight) {
+            continue;  // Service not available for this weight
+        }
+
+        // 2. Check Air Cargo rate availability
+        if ($type === 'air_cargo' && $zone) {
+            $rateCount = $pdo->prepare(
+                "SELECT COUNT(*) FROM pricing_slabs WHERE service_type = ? AND zone = ?"
+            )->execute([$type, $zone])->fetchColumn() ?: 0;
+
+            if ($rateCount === 0) {
+                continue;  // No rates available for this zone
+            }
+        }
+
         $price = calculatePrice($weight, $type, $pdo, $zone);
         if ($price <= 0) continue;
 

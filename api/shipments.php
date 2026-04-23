@@ -104,6 +104,21 @@ if ($method === 'POST') {
             json_response(['success' => false, 'message' => 'Invalid service type.'], 422);
         }
         if ($weight <= 0) json_response(['success' => false, 'message' => 'Invalid weight.'], 422);
+
+        // Service weight constraints (production-ready)
+        $serviceConstraints = [
+            'standard'  => 2.000,   // Standard Express: max 2kg
+            'premium'   => 5.000,   // Premium Express: max 5kg
+            'air_cargo' => 10.000,  // Air Cargo: max 10kg
+            'surface'   => 25.000,  // Surface: max 25kg
+        ];
+        $maxWeight = $serviceConstraints[$serviceType] ?? PHP_FLOAT_MAX;
+        if ($weight > $maxWeight) {
+            json_response([
+                'success' => false,
+                'message' => "Weight exceeds limit for $serviceType service. Maximum: {$maxWeight} kg"
+            ], 422);
+        }
         if (!$pickupName || !$pickupPhone || !$pickupAddr1 || !$pickupCity || !$pickupPincode) {
             json_response(['success' => false, 'message' => 'Pickup address is incomplete.'], 422);
         }

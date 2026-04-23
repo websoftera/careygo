@@ -35,7 +35,18 @@
       "Read(//c/xampp/apache/logs/**)",
       "Read(//c/xampp/logs/**)",
       "Bash(find \"C:\\\\xampp\\\\htdocs\\\\careygo\" -name \"*.php\" -type f -exec grep -l \"dtdc_awb\" {} \\\\;)",
-      "Bash(awk '{print $NF}')"
+      "Bash(awk '{print $NF}')",
+      "Bash(php -r ' *)",
+      "Bash(/c/xampp/php/php.exe \"C:\\\\xampp\\\\htdocs\\\\careygo\\\\database\\\\import-dtdc-master.php\")",
+      "Bash(tasklist)",
+      "Bash(net start *)",
+      "Bash(sc query *)",
+      "Bash(./mysqld.exe --port=3306)",
+      "Bash(/c/xampp/php/php.exe -r ' *)",
+      "Bash(/c/xampp/php/php.exe \"C:\\\\xampp\\\\htdocs\\\\careygo\\\\database\\\\diagnose-excel.php\")",
+      "Bash(/c/xampp/php/php.exe \"C:\\\\xampp\\\\htdocs\\\\careygo\\\\database\\\\audit-weight-slabs.php\")",
+      "Bash(/c/xampp/php/php.exe \"C:\\\\xampp\\\\htdocs\\\\careygo\\\\database\\\\reorganize-slabs.php\")",
+      "Bash(/c/xampp/php/php.exe test-production-constraints.php)"
     ]
   }
 }

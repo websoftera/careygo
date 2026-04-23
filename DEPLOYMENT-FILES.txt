@@ -1,0 +1,244 @@
+================================================================================
+CAREYGO PRODUCTION DEPLOYMENT - FILES SUMMARY
+================================================================================
+
+WHAT YOU NEED TO RUN ON PRODUCTION
+================================================================================
+
+📁 DATABASE SCRIPTS (Phase 1 & 3)
+─────────────────────────────────────────────────────────────────────────────
+
+1. database/import-dtdc-master.php
+   ├─ Purpose: Import 15,452 pincodes from DTDC Excel
+   ├─ Command: php database/import-dtdc-master.php
+   ├─ Time: ~2-3 minutes
+   ├─ Creates: Backup table pincode_tat_backup_YYYYMMDDHHMMSS
+   └─ File Location: Already created in /database/
+
+2. database/reorganize-slabs.php
+   ├─ Purpose: Create 6-tier weight slab system
+   ├─ Command: php database/reorganize-slabs.php
+   ├─ Time: ~1 minute
+   ├─ Creates: Backup table pricing_slabs_backup_YYYYMMDDHHMMSS
+   ├─ Result: 24 weight slabs (6 per service)
+   └─ File Location: Already created in /database/
+
+
+📝 CODE FILES TO UPDATE MANUALLY (Phase 2)
+─────────────────────────────────────────────────────────────────────────────
+
+1. config/database.php
+   ├─ Lines to change: 21-24
+   ├─ Current code (WRONG):
+   │  define('DB_USER', _cfg('CGO_DB_USER', 'u141519101_careygo'));
+   │  define('DB_PASS', _cfg('CGO_DB_PASS', '+DgrP256'));
+   │  define('DB_NAME', _cfg('CGO_DB_NAME', 'u141519101_careygo'));
+   │
+   ├─ New code (CORRECT):
+   │  define('DB_USER', _cfg('CGO_DB_USER', 'root'));
+   │  define('DB_PASS', _cfg('CGO_DB_PASS', ''));
+   │  define('DB_NAME', _cfg('CGO_DB_NAME', 'careygo'));
+   └─ Impact: Fix database connection
+
+2. api/pricing.php
+   ├─ Lines to add: After line 140 (before the foreach loop)
+   ├─ Code to add: (See PRODUCTION-DEPLOYMENT.md for exact code)
+   │
+   ├─ What it does:
+   │  - Enforces service weight limits (Standard: 2kg, Premium: 5kg, etc)
+   │  - Hides Air Cargo if no rates exist for zone
+   │
+   └─ Lines affected: ~25 lines added
+
+3. api/shipments.php
+   ├─ Lines to add: After line 106 (in validation section)
+   ├─ Code to add: (See PRODUCTION-DEPLOYMENT.md for exact code)
+   │
+   ├─ What it does:
+   │  - Validates weight limits when creating booking
+   │  - Prevents oversized shipments
+   │
+   └─ Lines affected: ~17 lines added
+
+
+🚀 FASTEST WAY: USE AUTOMATION SCRIPTS
+─────────────────────────────────────────────────────────────────────────────
+
+Linux/Unix/Mac:
+  1. Copy PRODUCTION-QUICK-START.sh to production
+  2. chmod +x PRODUCTION-QUICK-START.sh
+  3. ./PRODUCTION-QUICK-START.sh
+  4. Script runs Phases 1 & 3 automatically
+  5. You manually apply Phase 2 code changes
+
+Windows:
+  1. Copy PRODUCTION-QUICK-START.bat to production
+  2. Double-click PRODUCTION-QUICK-START.bat
+  3. Script runs Phases 1 & 3 automatically
+  4. You manually apply Phase 2 code changes
+
+
+📚 DOCUMENTATION
+─────────────────────────────────────────────────────────────────────────────
+
+Start Here:
+  ✓ README-PRODUCTION.md (Overview & Quick Reference)
+
+Detailed Instructions:
+  ✓ PRODUCTION-DEPLOYMENT.md (Step-by-step with all code)
+
+This File:
+  ✓ DEPLOYMENT-FILES.txt (You are here)
+
+
+================================================================================
+QUICK DEPLOYMENT STEPS
+================================================================================
+
+STEP 1: PREPARE
+  □ Backup your production database
+  □ Download Excel file: DTDC_Pincode_TAT_Details_Master_V0_09 April 2026.xlsx
+  □ Copy to production server /database/ folder
+
+STEP 2: RUN PHASE 1 (Pincode Import)
+  cd /home/user/careygo
+  php database/import-dtdc-master.php
+
+  Expected output: "Import completed successfully!"
+  Time: 2-3 minutes
+
+STEP 3: UPDATE CODE (Phase 2)
+  Option A: Use script and apply changes manually
+  Option B: Edit files and apply changes from PRODUCTION-DEPLOYMENT.md
+
+  Files to update: 3 files
+    - config/database.php (lines 21-24)
+    - api/pricing.php (add ~25 lines after line 140)
+    - api/shipments.php (add ~17 lines after line 106)
+
+STEP 4: RUN PHASE 3 (Weight Slabs)
+  php database/reorganize-slabs.php
+
+  Expected output: "Weight slab reorganization completed successfully!"
+  Time: 1 minute
+
+STEP 5: VERIFY
+  mysql -u root -p careygo -e "SELECT COUNT(*) FROM pincode_tat;"
+  Expected: 15,452
+
+  mysql -u root -p careygo -e "SELECT COUNT(*) FROM pricing_slabs;"
+  Expected: 24
+
+STEP 6: TEST
+  curl "https://your-domain.com/api/pricing.php?weight=1.5&pickup=110001&delivery=110002"
+  Should return: All 4 services with prices
+
+STEP 7: MONITOR
+  Watch error logs for 24 hours
+  Test booking flow end-to-end
+
+
+================================================================================
+WHAT GETS DEPLOYED
+================================================================================
+
+PHASE 1 OUTPUT:
+  ✓ 15,452 pincodes imported
+  ✓ 34 states covered
+  ✓ 1,927 cities imported
+  ✓ TAT values: Metro pincodes = fast TAT, Non-Metro = standard TAT
+  ✓ Backup table created: pincode_tat_backup_YYYYMMDDHHMMSS
+
+PHASE 2 CHANGES:
+  ✓ Database config fallback fixed
+  ✓ Pricing API enforces weight limits
+  ✓ Booking API validates weights
+  ✓ Air Cargo filtering added
+
+PHASE 3 OUTPUT:
+  ✓ 24 weight slabs created (6 per service)
+  ✓ Standard 6-tier system: 0-0.25kg, 0.25-0.5kg, 0.5-1kg, 1-2kg, 2-5kg, 5kg+
+  ✓ Backup table created: pricing_slabs_backup_YYYYMMDDHHMMSS
+
+RESULT:
+  ✓ Standard Express: Limited to 2kg max
+  ✓ Premium Express: Limited to 5kg max
+  ✓ Air Cargo: Limited to 10kg max
+  ✓ Surface Cargo: Limited to 25kg max
+
+
+================================================================================
+IMPORTANT FILES TO INCLUDE
+================================================================================
+
+Make sure these files are in your production /careygo/ directory:
+
+SCRIPTS:
+  database/import-dtdc-master.php    ✓ Already created
+  database/reorganize-slabs.php      ✓ Already created
+  PRODUCTION-QUICK-START.sh          ✓ Already created (Linux/Unix)
+  PRODUCTION-QUICK-START.bat         ✓ Already created (Windows)
+
+DATA:
+  DTDC_Pincode_TAT_Details_Master_V0_09 April 2026.xlsx
+  (Download from your Downloads folder and copy to /database/)
+
+DOCUMENTATION:
+  README-PRODUCTION.md               ✓ Already created
+  PRODUCTION-DEPLOYMENT.md           ✓ Already created
+  DEPLOYMENT-FILES.txt               ✓ Already created (this file)
+
+
+================================================================================
+IF SOMETHING GOES WRONG
+================================================================================
+
+PROBLEM: Import script failed
+SOLUTION: Check Excel file location, run again
+
+PROBLEM: Weight slab script failed
+SOLUTION: Check backup table was created, restore from backup
+
+PROBLEM: Pricing API not working
+SOLUTION: Apply Phase 2 code changes, restart PHP-FPM
+
+PROBLEM: Weight limits not enforced
+SOLUTION: Verify code changes were applied correctly
+
+ROLLBACK:
+  Restore from backup tables (see PRODUCTION-DEPLOYMENT.md)
+  OR restore entire database from backup
+
+
+================================================================================
+SUCCESS CHECKLIST
+================================================================================
+
+After deployment, verify:
+
+  □ All 15,452 pincodes imported (SQL: SELECT COUNT(*) FROM pincode_tat;)
+  □ All 24 weight slabs created (SQL: SELECT COUNT(*) FROM pricing_slabs;)
+  □ Standard Express limited to 2kg (Test with weight=2.5kg)
+  □ Premium Express limited to 5kg (Test with weight=5.5kg)
+  □ Zone determination working (Delhi→Delhi=within_city, Delhi→Mumbai=metro)
+  □ Pricing API returns correct services per weight
+  □ Booking API validates weight limits
+  □ Customer emails sending correctly
+  □ No errors in application logs
+  □ Test bookings work end-to-end
+
+
+================================================================================
+NEED HELP?
+================================================================================
+
+1. Read README-PRODUCTION.md (overview)
+2. Read PRODUCTION-DEPLOYMENT.md (detailed steps)
+3. Check error messages from scripts
+4. Review application logs
+5. Restore from backup if needed
+
+
+DEPLOYMENT VERSION: 1.0
+STATUS: READY FOR PRODUCTION
+CREATED: April 23, 2026
