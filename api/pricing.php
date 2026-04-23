@@ -148,16 +148,25 @@ try {
         $maxWeight = $serviceConstraints[$type] ?? PHP_FLOAT_MAX;
         if ($weight > $maxWeight) continue;
 
-        // 2. Strict Existence Check: ONLY show if pricing is explicitly added for the resolved zone
-        $checkStmt = $pdo->prepare(
-            "SELECT COUNT(*) FROM pricing_slabs WHERE service_type = ? AND zone = ?"
-        );
-        $checkStmt->execute([$type, $zone]);
-        if (($checkStmt->fetchColumn() ?: 0) == 0) {
+        // 2. Debug: Fetch all slabs for this service to see what's actually in the DB
+        $debugStmt = $pdo->prepare("SELECT id, zone, base_price FROM pricing_slabs WHERE service_type = ?");
+        $debugStmt->execute([$type]);
+        $allServiceSlabs = $debugStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // 3. Strict Existence Check: ONLY show if pricing is explicitly added for the resolved zone
+        $hasZonePricing = false;
+        foreach ($allServiceSlabs as $s) {
+            if ($s['zone'] === $zone) {
+                $hasZonePricing = true;
+                break;
+            }
+        }
+        
+        if (!$hasZonePricing) {
             continue; 
         }
 
-        // 3. Calculate actual price (strictly for this zone)
+        // 4. Calculate actual price (strictly for this zone)
         $price = calculatePrice($weight, $type, $pdo, $zone);
         if ($price <= 0) continue;
 
@@ -171,6 +180,7 @@ try {
             'tat'       => $tat,
             'tat_label' => $tatLabel,
             'eta'       => $eta,
+            'debug_slabs' => $allServiceSlabs
         ];
     }
 
@@ -181,7 +191,8 @@ try {
         'zone'     => $zone,
         'debug'    => [
             'resolved_zone' => $zone,
-            'service_count' => count($services)
+            'service_count' => count($services),
+            'pincodes' => ['from' => $pickup, 'to' => $delivery]
         ]
     ]);
 } catch (Exception $e) {
