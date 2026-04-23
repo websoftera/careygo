@@ -375,7 +375,7 @@
 
         container.innerHTML = `<div class="price-loading"><span class="spinner-border spinner-border-sm me-2"></span> Calculating prices...</div>`;
 
-        const fetchUrl = `${SITE_URL}/api/pricing.php?weight=${wt}&pickup=${encodeURIComponent(state.pickup.pincode)}&delivery=${encodeURIComponent(state.delivery.pincode)}&pickup_city=${encodeURIComponent(state.pickup.city)}&pickup_state=${encodeURIComponent(state.pickup.state)}&delivery_city=${encodeURIComponent(state.delivery.city)}&delivery_state=${encodeURIComponent(state.delivery.state)}`;
+        const fetchUrl = `${SITE_URL}/api/pricing.php?weight=${wt}&pickup=${encodeURIComponent(state.pickup.pincode)}&delivery=${encodeURIComponent(state.delivery.pincode)}&pickup_city=${encodeURIComponent(state.pickup.city)}&pickup_state=${encodeURIComponent(state.pickup.state)}&delivery_city=${encodeURIComponent(state.delivery.city)}&delivery_state=${encodeURIComponent(state.delivery.state)}&t=${Date.now()}`;
 
         fetch(fetchUrl)
             .then(r => r.json())

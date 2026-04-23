@@ -44,33 +44,20 @@ function calculatePrice(float $weight, string $serviceType, PDO $pdo, ?string $z
     $order = "ORDER BY CASE WHEN weight_to IS NULL THEN 1 ELSE 0 END ASC,
                        weight_to ASC, weight_from ASC";
 
-    $slabs = [];
+    // Strictly ONLY look for pricing in the specific zone.
+    // We ignore NULL zones entirely because they are often legacy dummy data.
+    // If no zone is provided, we default to 'rest_of_india'.
+    $targetZone = $zone ?: 'rest_of_india';
 
-    // ── 1. Strict Zone Check ────────────────────────────────────────────────
-    // If a zone is resolved, we ONLY look for pricing in that specific zone.
-    // We NO LONGER fall back to NULL zones if the user has specified a location.
-    if ($zone) {
-        $stmt = $pdo->prepare(
-            "SELECT * FROM pricing_slabs
-             WHERE service_type = ? AND zone = ?
-             $order"
-        );
-        $stmt->execute([$serviceType, $zone]);
-        $slabs = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } 
-    // ── 2. Fallback only for unknown locations ─────────────────────────────
-    else {
-        // If pincodes are missing or zone is unknown, we check for 'rest_of_india' or NULL slabs
-        $stmt = $pdo->prepare(
-            "SELECT * FROM pricing_slabs
-             WHERE service_type = ? AND (zone IS NULL OR zone = 'rest_of_india')
-             $order"
-        );
-        $stmt->execute([$serviceType]);
-        $slabs = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
+    $stmt = $pdo->prepare(
+        "SELECT * FROM pricing_slabs
+            WHERE service_type = ? AND zone = ?
+            $order"
+    );
+    $stmt->execute([$serviceType, $targetZone]);
+    $slabs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // ── 3. Apply slab logic ──────────────────────────────────────────────────
+    // ── Apply slab logic ──────────────────────────────────────────────────
     foreach ($slabs as $slab) {
         $from = (float) $slab['weight_from'];
         $to   = $slab['weight_to'];
@@ -129,7 +116,7 @@ if ($zoneParam && in_array($zoneParam, $validZones, true)) {
 } elseif ($pCity !== '' && $dCity !== '' && $pState !== '' && $dState !== '') {
     $zone = determineZone($pCity, $pState, $dCity, $dState);
 } else {
-    $zone = null;                                       
+    $zone = 'rest_of_india'; // Fallback to rest_of_india instead of NULL
 }
 
 // ── TAT data ─────────────────────────────────────────────────────────────────
@@ -161,19 +148,16 @@ try {
         $maxWeight = $serviceConstraints[$type] ?? PHP_FLOAT_MAX;
         if ($weight > $maxWeight) continue;
 
-        // 2. Strict existence check: Does this service have ANY rates for the resolved zone?
-        // If a zone is resolved, we only show it if a rate exists for that zone specifically.
+        // 2. Strict Existence Check: ONLY show if pricing is explicitly added for the resolved zone
         $checkStmt = $pdo->prepare(
-            "SELECT COUNT(*) FROM pricing_slabs 
-             WHERE service_type = ? AND " . ($zone ? "zone = ?" : "(zone IS NULL OR zone = 'rest_of_india')")
+            "SELECT COUNT(*) FROM pricing_slabs WHERE service_type = ? AND zone = ?"
         );
-        $checkParams = $zone ? [$type, $zone] : [$type];
-        $checkStmt->execute($checkParams);
+        $checkStmt->execute([$type, $zone]);
         if (($checkStmt->fetchColumn() ?: 0) == 0) {
-            continue; // No pricing added for this service in this zone
+            continue; 
         }
 
-        // 3. Calculate actual price
+        // 3. Calculate actual price (strictly for this zone)
         $price = calculatePrice($weight, $type, $pdo, $zone);
         if ($price <= 0) continue;
 
