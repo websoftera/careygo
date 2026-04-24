@@ -171,7 +171,7 @@ try {
         if ($price <= 0) continue;
 
         $tat      = $tatData[$type] ?? $defaultTat[$type];
-        $eta      = addBusinessDays($tat, 'd M Y');
+        $eta      = addBusinessDays($tat, 'D, d M Y');
         $tatLabel = $tat === 1 ? '1 day' : "$tat days";
 
         $services[] = [

@@ -8,12 +8,20 @@
     const STORAGE_KEY = 'careygo_booking_draft';
     const STORAGE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
 
+    // Weight / dimension limits
+    const MAX_PIECE_WEIGHT_KG = 60;
+    const MAX_DIM_L = 130; // cm
+    const MAX_DIM_W = 60;  // cm
+    const MAX_DIM_H = 60;  // cm
+
     /* ── State ── */
     const defaultState = {
         step: 1,
         totalSteps: 6,
         pickup: { pincode: '', city: '', state: '', name: '', company: '', phone: '', gstin: '', addr1: '', addr2: '' },
         delivery: { pincode: '', city: '', state: '', name: '', company: '', phone: '', email: '', gstin: '', addr1: '', addr2: '' },
+        pickupPincodeVerified: false,
+        deliveryPincodeVerified: false,
         weight: 0,
         unit: 'kg',
         pieces: 1,
@@ -28,10 +36,18 @@
         ewaybillNo: '',
         riskSurcharge: 'owner',
         packingMaterial: false,
+        packingCharge: 0,
         paymentMethod: 'prepaid',
         gstInvoice: false,
         gstin: '',
         pan: '',
+        dim_l: 0,
+        dim_w: 0,
+        dim_h: 0,
+        volumetricWeight: 0,
+        chargeableWeight: 0,
+        photoAddressId: '',
+        photoParcelId: '',
         savedPickupAddresses: [],
         savedDeliveryAddresses: [],
         selectedPickupAddrId: null,
@@ -50,15 +66,13 @@
             const timestamp = data._timestamp || 0;
             const now = Date.now();
 
-            // Check if draft has expired (24 hours)
             if (now - timestamp > STORAGE_EXPIRY) {
                 clearDraft();
                 return JSON.parse(JSON.stringify(defaultState));
             }
 
-            // Restore state, but reset step to 1 (user will see what they filled)
             const restored = { ...defaultState, ...data };
-            restored.step = 1; // Always start at step 1 on page load
+            restored.step = 1;
             return restored;
         } catch (e) {
             console.warn('Could not load draft:', e);
@@ -68,36 +82,22 @@
 
     function saveDraftState() {
         try {
-            const toSave = {
-                ...state,
-                _timestamp: Date.now(),
-            };
-            // Don't save empty states
+            const toSave = { ...state, _timestamp: Date.now() };
             const hasData = state.pickup.pincode || state.delivery.pincode || state.weight > 0 || state.serviceType;
-            if (hasData) {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
-            }
+            if (hasData) localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
         } catch (e) {
             console.warn('Could not save draft:', e);
         }
     }
 
     function clearDraft() {
-        try {
-            localStorage.removeItem(STORAGE_KEY);
-        } catch (e) {
-            console.warn('Could not clear draft:', e);
-        }
+        try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
     }
 
-    // Save state periodically (every 5 seconds) and on visibility change
     let autoSaveInterval = setInterval(saveDraftState, 5000);
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) saveDraftState();
-    });
+    document.addEventListener('visibilitychange', () => { if (document.hidden) saveDraftState(); });
     window.addEventListener('beforeunload', saveDraftState);
 
-    // Load state from localStorage or use defaults
     const state = loadDraftState();
 
     /* ── DOM refs ── */
@@ -116,7 +116,6 @@
         });
         if (progressBar) progressBar.style.width = `${((n - 1) / (state.totalSteps - 1)) * 100}%`;
         window.scrollTo({ top: 0, behavior: 'smooth' });
-
         if (n === 5) buildSummary();
     }
 
@@ -124,31 +123,83 @@
     function validateStep(n) {
         clearErrors();
         let ok = true;
-        if (n === 1) {
-            if (!state.pickup.pincode) { showErr('pickup_pincode', 'Enter pickup pincode'); ok = false; }
-            if (!state.pickup.name)    { showErr('pickup_name',    'Enter full name');      ok = false; }
-            if (!state.pickup.phone)   { showErr('pickup_phone',   'Enter mobile number'); ok = false; }
-            if (!state.pickup.addr1)   { showErr('pickup_addr1',   'Enter address line 1'); ok = false; }
-            if (!state.pickup.city)    { showErr('pickup_city',    'Enter city');           ok = false; }
-            if (!state.pickup.state)   { showErr('pickup_state',   'Enter state');          ok = false; }
 
-            if (!state.delivery.pincode) { showErr('delivery_pincode', 'Enter delivery pincode'); ok = false; }
-            if (!state.delivery.name)    { showErr('delivery_name',    'Enter full name');         ok = false; }
-            if (!state.delivery.phone)   { showErr('delivery_phone',   'Enter mobile number');    ok = false; }
-            if (!state.delivery.addr1)   { showErr('delivery_addr1',   'Enter address line 1');   ok = false; }
-            if (!state.delivery.city)    { showErr('delivery_city',    'Enter city');              ok = false; }
-            if (!state.delivery.state)   { showErr('delivery_state',   'Enter state');             ok = false; }
+        if (n === 1) {
+            // Pickup pincode verified
+            if (!state.pickup.pincode) {
+                showErr('pickup_pincode', 'Enter pickup pincode'); ok = false;
+            } else if (state.pickup.pincode.length < 6) {
+                showErr('pickup_pincode', 'Please enter 6 digit pincode'); ok = false;
+            } else if (!state.pickupPincodeVerified) {
+                showErr('pickup_pincode', 'Please verify pincode by clicking Check'); ok = false;
+            }
+
+            if (!state.pickup.name)    { showErr('pickup_name',    'Enter full name');       ok = false; }
+            if (!state.pickup.phone)   { showErr('pickup_phone',   'Enter mobile number');   ok = false; }
+            if (!state.pickup.addr1)   { showErr('pickup_addr1',   'Enter address line 1'); ok = false; }
+            if (!state.pickup.city)    { showErr('pickup_city',    'Enter city');            ok = false; }
+            if (!state.pickup.state)   { showErr('pickup_state',   'Enter state');           ok = false; }
+
+            // Delivery pincode verified
+            if (!state.delivery.pincode) {
+                showErr('delivery_pincode', 'Enter delivery pincode'); ok = false;
+            } else if (state.delivery.pincode.length < 6) {
+                showErr('delivery_pincode', 'Please enter 6 digit pincode'); ok = false;
+            } else if (!state.deliveryPincodeVerified) {
+                showErr('delivery_pincode', 'Please verify pincode by clicking Check'); ok = false;
+            }
+
+            if (!state.delivery.name)    { showErr('delivery_name',    'Enter full name');       ok = false; }
+            if (!state.delivery.phone)   { showErr('delivery_phone',   'Enter mobile number');   ok = false; }
+            if (!state.delivery.addr1)   { showErr('delivery_addr1',   'Enter address line 1'); ok = false; }
+            if (!state.delivery.city)    { showErr('delivery_city',    'Enter city');            ok = false; }
+            if (!state.delivery.state)   { showErr('delivery_state',   'Enter state');           ok = false; }
         }
+
         if (n === 2) {
-            if (!state.weight || state.weight <= 0) { showErr('weight', 'Enter a valid weight'); ok = false; }
-            if (!state.pieces || state.pieces < 1)  { showErr('pieces', 'Min 1 piece required'); ok = false; }
+            const wt = getWeightInKg();
+            if (!wt || wt <= 0) {
+                showErr('weight', 'Enter a valid weight'); ok = false;
+            } else if (wt > MAX_PIECE_WEIGHT_KG) {
+                showWeightAlert(wt);
+                showErr('weight', `Maximum ${MAX_PIECE_WEIGHT_KG} kg per piece allowed`); ok = false;
+            }
+
+            if (!state.pieces || state.pieces < 1) { showErr('pieces', 'Min 1 piece required'); ok = false; }
+
+            // Dimension limits (only if dimensions are entered)
+            if (state.dim_l > 0 || state.dim_w > 0 || state.dim_h > 0) {
+                if (state.dim_l > MAX_DIM_L) { showErr('dim_l', `Max length is ${MAX_DIM_L} cm`); ok = false; }
+                if (state.dim_w > MAX_DIM_W) { showErr('dim_w', `Max width is ${MAX_DIM_W} cm`);  ok = false; }
+                if (state.dim_h > MAX_DIM_H) { showErr('dim_h', `Max height is ${MAX_DIM_H} cm`); ok = false; }
+            }
         }
+
         if (n === 3) {
             if (!state.serviceType) { showErr('service_error', 'Please select a service type'); ok = false; }
         }
+
+        if (n === 4) {
+            // E-waybill number required if "Enter E-waybill" is selected
+            if (state.ewaybillOpt === 'enter' && !state.ewaybillNo.trim()) {
+                showErr('ewaybill_no', 'E-waybill number is required when you select "Enter E-waybill Number"');
+                ok = false;
+            }
+            // Photo uploads mandatory
+            if (!state.photoAddressId) {
+                showPhotoError('photo_address_error', 'Address photo is required before proceeding');
+                ok = false;
+            }
+            if (!state.photoParcelId) {
+                showPhotoError('photo_parcel_error', 'Parcel photo is required before proceeding');
+                ok = false;
+            }
+        }
+
         if (n === 6) {
             if (!state.paymentMethod) { showErr('payment_error', 'Select a payment method'); ok = false; }
         }
+
         return ok;
     }
 
@@ -159,9 +210,42 @@
         if (inp) inp.classList.add('is-error');
     }
 
+    function showPhotoError(id, msg) {
+        const el = document.getElementById(id);
+        if (el) { el.textContent = msg; el.style.display = 'block'; el.style.color = '#dc2626'; el.style.fontSize = '12px'; el.style.marginTop = '4px'; }
+    }
+
     function clearErrors() {
         document.querySelectorAll('.wizard-error').forEach(e => { e.classList.remove('show'); e.textContent = ''; });
         document.querySelectorAll('.wizard-input.is-error, .wizard-select.is-error').forEach(e => e.classList.remove('is-error'));
+        document.querySelectorAll('[id$="_error"]').forEach(e => { e.textContent = ''; e.style.display = 'none'; });
+    }
+
+    /* ── Weight alert popup ── */
+    function showWeightAlert(wt) {
+        // Create or reuse alert modal
+        let modal = document.getElementById('weightAlertModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'weightAlertModal';
+            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+            modal.innerHTML = `
+                <div style="background:#fff;border-radius:16px;padding:28px;max-width:420px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                    <div style="font-size:48px;margin-bottom:12px;">⚠️</div>
+                    <h5 style="color:#dc2626;margin-bottom:8px;">Weight Limit Exceeded</h5>
+                    <p style="font-size:14px;color:#555;margin-bottom:6px;">
+                        Maximum allowable weight per piece is <strong>${MAX_PIECE_WEIGHT_KG} kg</strong>.
+                    </p>
+                    <p style="font-size:13px;color:#777;margin-bottom:20px;">
+                        Your entered weight is <strong>${wt.toFixed(3)} kg</strong>. Please split your shipment into multiple pieces or contact us for heavy cargo options.
+                    </p>
+                    <button onclick="document.getElementById('weightAlertModal').remove()"
+                            style="background:#001a93;color:#fff;border:none;border-radius:8px;padding:10px 28px;font-size:14px;font-weight:600;cursor:pointer;">
+                        OK, I'll Fix It
+                    </button>
+                </div>`;
+            document.body.appendChild(modal);
+        }
     }
 
     /* ── Next / Back ── */
@@ -179,7 +263,16 @@
     function lookupPincode(pincode, type) {
         const resultEl = document.getElementById(`${type}_pincode_result`);
         const btn = document.getElementById(`${type}_lookup_btn`);
-        if (!pincode || pincode.length < 6) return;
+
+        // Validate 6 digits
+        if (!pincode) return;
+        if (pincode.length < 6) {
+            if (resultEl) {
+                resultEl.innerHTML = `<i class="bi bi-exclamation-triangle text-danger"></i> Please enter 6 digit pincode`;
+                resultEl.classList.add('show');
+            }
+            return;
+        }
 
         btn && (btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>');
         fetch(`${SITE_URL}/api/pincode.php?pincode=${encodeURIComponent(pincode)}`)
@@ -190,18 +283,23 @@
                     const info = data.data;
                     state[type].city  = info.city;
                     state[type].state = info.state;
+                    state[`${type}PincodeVerified`] = true;  // ✓ Mark as verified
+
                     if (resultEl) {
-                        resultEl.innerHTML = `<i class="bi bi-geo-alt-fill"></i> <strong>${info.city}</strong>, ${info.state}`;
+                        resultEl.innerHTML = `<i class="bi bi-check-circle-fill text-success"></i> <strong>${info.city}</strong>, ${info.state} — Serviceable`;
                         resultEl.classList.add('show');
                     }
-                    // auto-fill city/state fields
                     const cityEl  = document.getElementById(`${type}_city`);
                     const stateEl = document.getElementById(`${type}_state`);
                     if (cityEl)  { cityEl.value  = info.city;  state[type].city  = info.city; }
                     if (stateEl) { stateEl.value = info.state; state[type].state = info.state; }
                     loadSavedAddresses(type, pincode);
                 } else {
-                    if (resultEl) { resultEl.innerHTML = `<i class="bi bi-exclamation-triangle text-danger"></i> Pincode not found or not serviceable`; resultEl.classList.add('show'); }
+                    state[`${type}PincodeVerified`] = false;
+                    if (resultEl) {
+                        resultEl.innerHTML = `<i class="bi bi-exclamation-triangle text-danger"></i> Pincode not found or not serviceable`;
+                        resultEl.classList.add('show');
+                    }
                 }
             })
             .catch(() => { btn && (btn.innerHTML = '<i class="bi bi-search"></i> Check'); });
@@ -216,6 +314,20 @@
     });
 
     document.querySelectorAll('[data-pincode-input]').forEach(inp => {
+        // Enforce max 6 digits
+        inp.addEventListener('keypress', e => {
+            if (!/[0-9]/.test(e.key)) e.preventDefault();
+        });
+        inp.addEventListener('input', () => {
+            // Clamp to 6 digits
+            if (inp.value.length > 6) inp.value = inp.value.slice(0, 6);
+            const type = inp.dataset.pincodeInput;
+            state[type].pincode = inp.value.trim();
+            // Reset verification when user changes the pincode
+            state[`${type}PincodeVerified`] = false;
+            // Auto-lookup when 6 digits entered
+            if (inp.value.length === 6) lookupPincode(inp.value.trim(), type);
+        });
         inp.addEventListener('keydown', e => {
             if (e.key === 'Enter') {
                 const type = inp.dataset.pincodeInput;
@@ -223,7 +335,6 @@
                 lookupPincode(inp.value.trim(), type);
             }
         });
-        inp.addEventListener('input', () => { state[inp.dataset.pincodeInput].pincode = inp.value.trim(); });
     });
 
     /* ── Load saved addresses ── */
@@ -256,7 +367,6 @@
             </div>`).join('');
 
         wrap.classList.add('show');
-        // Auto-select first
         if (addresses.length > 0) selectSavedAddr(type, addresses[0].id);
     }
 
@@ -277,6 +387,7 @@
         state[type].city  = addr.city;
         state[type].state = addr.state;
         state[type].pincode = addr.pincode;
+        state[`${type}PincodeVerified`] = true; // Saved address = already verified
         state[`useNew${type.charAt(0).toUpperCase() + type.slice(1)}Addr`] = false;
 
         const newForm = document.getElementById(`${type}_new_form`);
@@ -319,7 +430,10 @@
 
     unitKg && unitKg.addEventListener('click', () => { state.unit = 'kg'; unitKg.classList.add('active'); unitGm && unitGm.classList.remove('active'); });
     unitGm && unitGm.addEventListener('click', () => { state.unit = 'gm'; unitGm.classList.add('active'); unitKg && unitKg.classList.remove('active'); });
-    weightInput && weightInput.addEventListener('input', () => { state.weight = getWeightInKg(); });
+    weightInput && weightInput.addEventListener('input', () => {
+        state.weight = getWeightInKg();
+        updateChargeableWeight();
+    });
 
     const piecesInput = document.getElementById('pieces');
     piecesInput && piecesInput.addEventListener('input', () => { state.pieces = parseInt(piecesInput.value) || 1; });
@@ -340,13 +454,18 @@
     const volDisplay = document.getElementById('vol_weight_display');
 
     function updateVolumetricWeight() {
-        const l = parseFloat(dimL.value) || 0;
-        const w = parseFloat(dimW.value) || 0;
-        const h = parseFloat(dimH.value) || 0;
-        
+        const l = parseFloat(dimL ? dimL.value : 0) || 0;
+        const w = parseFloat(dimW ? dimW.value : 0) || 0;
+        const h = parseFloat(dimH ? dimH.value : 0) || 0;
+
         state.dim_l = l;
         state.dim_w = w;
         state.dim_h = h;
+
+        // Show dimension warnings inline
+        showDimWarning('dim_l', l, MAX_DIM_L, 'cm');
+        showDimWarning('dim_w', w, MAX_DIM_W, 'cm');
+        showDimWarning('dim_h', h, MAX_DIM_H, 'cm');
 
         if (l > 0 && w > 0 && h > 0) {
             const volWt = (l * w * h) / 5000;
@@ -355,6 +474,37 @@
         } else {
             state.volumetricWeight = 0;
             if (volDisplay) volDisplay.value = '';
+        }
+        updateChargeableWeight();
+    }
+
+    function showDimWarning(id, val, max, unit) {
+        const inp = document.getElementById(id);
+        const errEl = document.getElementById(`err_${id}`);
+        if (!inp) return;
+        if (val > max) {
+            inp.style.borderColor = '#ef4444';
+            if (errEl) { errEl.textContent = `Max ${max} ${unit}`; errEl.classList.add('show'); }
+        } else {
+            inp.style.borderColor = '';
+            if (errEl) { errEl.textContent = ''; errEl.classList.remove('show'); }
+        }
+    }
+
+    function updateChargeableWeight() {
+        const actual = state.weight || 0;
+        const vol    = state.volumetricWeight || 0;
+        state.chargeableWeight = Math.max(actual, vol);
+
+        // Update chargeable weight display in step 2 if it exists
+        const cwEl = document.getElementById('chargeable_weight_display');
+        if (cwEl) {
+            if (state.chargeableWeight > 0) {
+                cwEl.value = state.chargeableWeight.toFixed(3) + ' kg';
+                cwEl.style.background = state.chargeableWeight > actual ? '#fef3c7' : '#f0fdf4';
+            } else {
+                cwEl.value = '';
+            }
         }
     }
 
@@ -372,6 +522,7 @@
         if (!container) return;
         const wt = getWeightInKg();
         state.weight = wt;
+        updateChargeableWeight();
 
         container.innerHTML = `<div class="price-loading"><span class="spinner-border spinner-border-sm me-2"></span> Calculating prices...</div>`;
 
@@ -390,6 +541,8 @@
         const container = document.getElementById('services_container');
         if (!container) return;
 
+        const chargeableWeight = state.chargeableWeight || state.weight;
+
         const serviceMap = {
             standard:  { icon: 'bi-truck',         label: 'Standard Express', code: 'STD-EXP' },
             premium:   { icon: 'bi-lightning-fill', label: 'Premium Express',  code: 'PRM-EXP' },
@@ -405,8 +558,33 @@
         };
         const zoneLabel = zone && zoneLabels[zone] ? zoneLabels[zone] : 'Standard Rate';
 
-        container.innerHTML = services.map(svc => {
+        // Chargeable weight notice
+        const volWt = state.volumetricWeight || 0;
+        let weightNotice = '';
+        if (volWt > state.weight) {
+            weightNotice = `
+                <div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#92400e;">
+                    <i class="bi bi-info-circle me-1"></i>
+                    <strong>Volumetric weight (${volWt.toFixed(3)} kg) exceeds actual weight (${state.weight.toFixed(3)} kg).</strong>
+                    Pricing is based on chargeable weight: <strong>${chargeableWeight.toFixed(3)} kg</strong>
+                </div>`;
+        }
+
+        container.innerHTML = weightNotice + services.map(svc => {
             const meta = serviceMap[svc.type] || { icon: 'bi-box', label: svc.type, code: '' };
+
+            // Color-code ETA/timeline by speed
+            let tatColor, tatBg, tatIcon;
+            if (svc.tat <= 1) {
+                tatColor = '#166534'; tatBg = '#dcfce7'; tatIcon = 'bi-lightning-fill';
+            } else if (svc.tat <= 2) {
+                tatColor = '#1e40af'; tatBg = '#dbeafe'; tatIcon = 'bi-clock-fill';
+            } else if (svc.tat <= 4) {
+                tatColor = '#92400e'; tatBg = '#fef3c7'; tatIcon = 'bi-clock';
+            } else {
+                tatColor = '#374151'; tatBg = '#f3f4f6'; tatIcon = 'bi-truck';
+            }
+
             return `
             <div class="service-card" data-service="${svc.type}" onclick="selectService('${svc.type}', ${svc.price}, '${escHtml(meta.label)}', '${escHtml(svc.tat_label)}')">
                 <div class="service-card-check"><i class="bi bi-check-lg"></i></div>
@@ -421,12 +599,22 @@
                     </div>
                 </div>
                 <div class="service-card-meta">
-                    <div class="service-card-meta-item"><i class="bi bi-clock"></i> ${escHtml(svc.tat_label)}</div>
-                    <div class="service-card-meta-item"><i class="bi bi-calendar3"></i> Est. ${escHtml(svc.eta)}</div>
-                    <div class="service-card-meta-item"><i class="bi bi-weight"></i> ${state.weight.toFixed(3)} kg</div>
+                    <div class="service-card-meta-item" style="background:${tatBg};color:${tatColor};border-radius:6px;padding:4px 10px;font-weight:600;">
+                        <i class="bi ${tatIcon}"></i> ${escHtml(svc.tat_label)}
+                    </div>
+                    <div class="service-card-meta-item" style="background:${tatBg};color:${tatColor};border-radius:6px;padding:4px 10px;">
+                        <i class="bi bi-calendar3"></i> Est. <strong>${escHtml(svc.eta)}</strong>
+                    </div>
+                    <div class="service-card-meta-item">
+                        <i class="bi bi-weight"></i> Chargeable: <strong>${chargeableWeight.toFixed(3)} kg</strong>
+                    </div>
                 </div>
             </div>`;
         }).join('');
+
+        if (services.length === 0) {
+            container.innerHTML = `<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>No services available for this route/weight combination. Please contact us.</div>`;
+        }
     }
 
     window.selectService = function (type, price, label, tat) {
@@ -459,12 +647,145 @@
     const ewaybillNoInput = document.getElementById('ewaybill_no');
     ewaybillNoInput && ewaybillNoInput.addEventListener('input', () => { state.ewaybillNo = ewaybillNoInput.value.trim(); });
 
-    /* Packing material */
+    /* ── Packing material — show charges popup ── */
     const packingWrap = document.getElementById('packing_material_wrap');
-    packingWrap && packingWrap.addEventListener('click', () => {
-        state.packingMaterial = !state.packingMaterial;
-        packingWrap.classList.toggle('checked', state.packingMaterial);
+    packingWrap && packingWrap.addEventListener('click', e => {
+        e.preventDefault(); // Don't toggle yet — show popup first
+        if (!state.packingMaterial) {
+            showPackingChargePopup();
+        } else {
+            // Already selected — unselect
+            state.packingMaterial = false;
+            state.packingCharge   = 0;
+            packingWrap.classList.remove('checked');
+        }
     });
+
+    function showPackingChargePopup() {
+        // Fetch current packing charge from server
+        fetch(`${SITE_URL}/api/settings.php?key=packing_charge`)
+            .then(r => r.json())
+            .then(data => {
+                const charge = parseFloat(data.value || 50);
+                displayPackingModal(charge);
+            })
+            .catch(() => displayPackingModal(50)); // fallback
+    }
+
+    function displayPackingModal(charge) {
+        let modal = document.getElementById('packingChargeModal');
+        if (modal) modal.remove();
+
+        modal = document.createElement('div');
+        modal.id = 'packingChargeModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+        modal.innerHTML = `
+            <div style="background:#fff;border-radius:16px;padding:28px;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                    <div style="background:#e0e7ff;border-radius:12px;padding:12px;"><i class="bi bi-box2-heart" style="font-size:24px;color:#4338ca;"></i></div>
+                    <div>
+                        <h6 style="margin:0;font-weight:700;">Packing Material</h6>
+                        <p style="margin:0;font-size:12px;color:#6b7280;">Professional packaging for your shipment</p>
+                    </div>
+                </div>
+                <div style="background:#f0fdf4;border-radius:10px;padding:14px;margin-bottom:16px;text-align:center;">
+                    <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">Additional Charge</div>
+                    <div style="font-size:28px;font-weight:800;color:#166534;">₹${charge.toLocaleString('en-IN')}</div>
+                    <div style="font-size:11px;color:#6b7280;">per shipment (incl. GST)</div>
+                </div>
+                <p style="font-size:13px;color:#374151;margin-bottom:20px;">
+                    Our team will professionally pack your shipment using high-quality materials to ensure safe delivery.
+                </p>
+                <div style="display:flex;gap:10px;">
+                    <button onclick="confirmPackingMaterial(${charge})"
+                            style="flex:1;background:#001a93;color:#fff;border:none;border-radius:8px;padding:10px;font-size:14px;font-weight:600;cursor:pointer;">
+                        <i class="bi bi-check-circle me-1"></i> Add Packing (₹${charge})
+                    </button>
+                    <button onclick="document.getElementById('packingChargeModal').remove()"
+                            style="flex:0;background:#f3f4f6;color:#374151;border:none;border-radius:8px;padding:10px 16px;font-size:14px;cursor:pointer;">
+                        Cancel
+                    </button>
+                </div>
+            </div>`;
+        document.body.appendChild(modal);
+    }
+
+    window.confirmPackingMaterial = function(charge) {
+        state.packingMaterial = true;
+        state.packingCharge   = charge;
+        packingWrap && packingWrap.classList.add('checked');
+        document.getElementById('packingChargeModal')?.remove();
+    };
+
+    /* ── Photo uploads (Step 4) ── */
+    function initPhotoUpload(inputId, type, statusId, errorId) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+
+        input.addEventListener('change', () => {
+            const file = input.files[0];
+            if (!file) return;
+
+            // Client-side validation
+            const maxSize = 5 * 1024 * 1024;
+            if (file.size > maxSize) {
+                showPhotoError(errorId, 'File must be under 5 MB');
+                input.value = '';
+                return;
+            }
+            if (!file.type.startsWith('image/')) {
+                showPhotoError(errorId, 'Please select an image file (JPG, PNG, etc.)');
+                input.value = '';
+                return;
+            }
+
+            const statusEl = document.getElementById(statusId);
+            if (statusEl) {
+                statusEl.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Uploading...';
+                statusEl.style.color = '#6b7280';
+                statusEl.style.display = 'flex';
+                statusEl.style.alignItems = 'center';
+            }
+
+            const formData = new FormData();
+            formData.append('photo', file);
+            formData.append('type', type);
+
+            fetch(`${SITE_URL}/api/upload-photo.php`, {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin',
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    if (type === 'address') state.photoAddressId = data.file_id;
+                    if (type === 'parcel')  state.photoParcelId  = data.file_id;
+
+                    if (statusEl) {
+                        statusEl.innerHTML = `<i class="bi bi-check-circle-fill text-success me-1"></i> ${escHtml(file.name)} uploaded`;
+                        statusEl.style.color = '#16a34a';
+                    }
+                    // Clear any previous error
+                    const errEl = document.getElementById(errorId);
+                    if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
+                } else {
+                    showPhotoError(errorId, data.message || 'Upload failed. Please try again.');
+                    input.value = '';
+                    if (statusEl) { statusEl.innerHTML = ''; statusEl.style.display = 'none'; }
+                }
+            })
+            .catch(() => {
+                showPhotoError(errorId, 'Network error. Please try again.');
+                input.value = '';
+                if (statusEl) { statusEl.innerHTML = ''; statusEl.style.display = 'none'; }
+            });
+        });
+    }
+
+    // Initialize photo uploads
+    initPhotoUpload('photo_address_input', 'address', 'photo_address_status', 'photo_address_error');
+    initPhotoUpload('photo_parcel_input',  'parcel',  'photo_parcel_status',  'photo_parcel_error');
 
     /* ── Step 5: Build summary ── */
     function buildSummary() {
@@ -494,38 +815,55 @@
         const servEl = document.getElementById('summary_service');
         if (servEl) servEl.textContent = `${state.serviceLabel} · ${state.serviceTat}`;
 
+        // Actual weight
         const wEl = document.getElementById('summary_weight');
         if (wEl) wEl.textContent = `${state.weight.toFixed(3)} kg`;
+
+        // Chargeable weight
+        const chargeableWeight = state.chargeableWeight || state.weight;
+        const cwEl = document.getElementById('summary_chargeable_weight');
+        if (cwEl) {
+            cwEl.textContent = `${chargeableWeight.toFixed(3)} kg`;
+            if (chargeableWeight > state.weight) {
+                cwEl.style.color = '#d97706';
+                cwEl.style.fontWeight = '600';
+            }
+        }
 
         const pcsEl = document.getElementById('summary_pieces');
         if (pcsEl) pcsEl.textContent = state.pieces;
 
         const dimEl = document.getElementById('summary_dimensions');
         if (dimEl) {
-            if (state.dim_l > 0) {
-                dimEl.textContent = `${state.dim_l} x ${state.dim_w} x ${state.dim_h} cm`;
-            } else {
-                dimEl.textContent = '—';
-            }
+            dimEl.textContent = state.dim_l > 0
+                ? `${state.dim_l} × ${state.dim_w} × ${state.dim_h} cm`
+                : '—';
         }
 
         const volEl = document.getElementById('summary_volumetric');
         if (volEl) {
-            if (state.volumetricWeight > 0) {
-                volEl.textContent = `${state.volumetricWeight.toFixed(3)} kg`;
-            } else {
-                volEl.textContent = '—';
-            }
+            volEl.textContent = state.volumetricWeight > 0
+                ? `${state.volumetricWeight.toFixed(3)} kg`
+                : '—';
         }
+
+        // Pricing (no discount)
+        const totalPrice = state.servicePrice + (state.packingMaterial ? state.packingCharge : 0);
 
         const priceEl = document.getElementById('summary_base_price');
         if (priceEl) priceEl.textContent = `₹${state.servicePrice.toLocaleString('en-IN')}`;
 
+        const packPriceEl = document.getElementById('summary_packing_price');
+        if (packPriceEl) packPriceEl.textContent = state.packingMaterial ? `₹${state.packingCharge.toLocaleString('en-IN')}` : '—';
+
         const finalEl = document.getElementById('summary_final_price');
-        if (finalEl) finalEl.textContent = `₹${state.servicePrice.toLocaleString('en-IN')}`;
+        if (finalEl) finalEl.textContent = `₹${totalPrice.toLocaleString('en-IN')}`;
+
+        // Store final price in state
+        state.finalPrice = totalPrice;
 
         const packEl = document.getElementById('summary_packing');
-        if (packEl) packEl.textContent = state.packingMaterial ? 'Yes' : 'No';
+        if (packEl) packEl.textContent = state.packingMaterial ? `Yes (+₹${state.packingCharge})` : 'No';
     }
 
     /* ── Step 6: Payment options ── */
@@ -557,29 +895,35 @@
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Booking...';
 
+        const totalPrice = state.servicePrice + (state.packingMaterial ? state.packingCharge : 0);
+
         const payload = {
-            pickup:           state.pickup,
-            delivery:         state.delivery,
-            delivery_email:   state.delivery.email || '',
-            weight:           state.weight,
-            pieces:           state.pieces,
-            declared_value:   state.declaredValue,
-            description:      state.description,
-            customer_ref:     state.customerRef,
-            service_type:     state.serviceType,
-            base_price:       state.servicePrice,
-            final_price:      state.servicePrice,
-            ewaybill_no:      state.ewaybillOpt === 'enter' ? state.ewaybillNo : '',
-            risk_surcharge:   state.riskSurcharge,
-            packing_material: state.packingMaterial ? 1 : 0,
-            length:           state.dim_l || 0,
-            width:            state.dim_w || 0,
-            height:           state.dim_h || 0,
-            volumetric_weight:state.volumetricWeight || 0,
-            payment_method:   state.paymentMethod,
-            gst_invoice:      state.gstInvoice ? 1 : 0,
-            gstin:            state.gstin,
-            pan_number:       state.pan,
+            pickup:             state.pickup,
+            delivery:           state.delivery,
+            delivery_email:     state.delivery.email || '',
+            weight:             state.weight,
+            chargeable_weight:  state.chargeableWeight || state.weight,
+            pieces:             state.pieces,
+            declared_value:     state.declaredValue,
+            description:        state.description,
+            customer_ref:       state.customerRef,
+            service_type:       state.serviceType,
+            base_price:         state.servicePrice,
+            packing_material:   state.packingMaterial ? 1 : 0,
+            packing_charge:     state.packingMaterial ? state.packingCharge : 0,
+            final_price:        totalPrice,
+            ewaybill_no:        state.ewaybillOpt === 'enter' ? state.ewaybillNo : '',
+            risk_surcharge:     state.riskSurcharge,
+            length:             state.dim_l || 0,
+            width:              state.dim_w || 0,
+            height:             state.dim_h || 0,
+            volumetric_weight:  state.volumetricWeight || 0,
+            payment_method:     state.paymentMethod,
+            gst_invoice:        state.gstInvoice ? 1 : 0,
+            gstin:              state.gstin,
+            pan_number:         state.pan,
+            photo_address:      state.photoAddressId || '',
+            photo_parcel:       state.photoParcelId  || '',
         };
 
         fetch(`${SITE_URL}/api/shipments.php`, {
@@ -591,8 +935,8 @@
         .then(r => r.json())
         .then(data => {
             if (data.success) {
-                clearDraft(); // Clear saved form data after successful booking
-                goToStep(7); // success screen
+                clearDraft();
+                goToStep(7);
                 const trackEl = document.getElementById('final_tracking_no');
                 if (trackEl) trackEl.textContent = data.tracking_no;
             } else {
@@ -622,19 +966,27 @@
 
     /* ── Restore form fields from state ── */
     function restoreFormFields() {
-        // Pickup fields
         ['pincode', 'name', 'company', 'phone', 'gstin', 'addr1', 'addr2', 'city', 'state'].forEach(f => {
             const el = document.getElementById(`pickup_${f}`);
             if (el && state.pickup[f]) el.value = state.pickup[f];
         });
 
-        // Delivery fields
         ['pincode', 'name', 'company', 'phone', 'email', 'gstin', 'addr1', 'addr2', 'city', 'state'].forEach(f => {
             const el = document.getElementById(`delivery_${f}`);
             if (el && state.delivery[f]) el.value = state.delivery[f];
         });
 
-        // Shipment details
+        // Show pincode results if verified
+        ['pickup', 'delivery'].forEach(type => {
+            if (state[`${type}PincodeVerified`] && state[type].city) {
+                const resultEl = document.getElementById(`${type}_pincode_result`);
+                if (resultEl) {
+                    resultEl.innerHTML = `<i class="bi bi-check-circle-fill text-success"></i> <strong>${escHtml(state[type].city)}</strong>, ${escHtml(state[type].state)} — Serviceable`;
+                    resultEl.classList.add('show');
+                }
+            }
+        });
+
         if (state.weight > 0 && weightInput) {
             const val = state.unit === 'gm' ? state.weight * 1000 : state.weight;
             weightInput.value = val;
@@ -644,38 +996,66 @@
         if (state.description && descriptionInput) descriptionInput.value = state.description;
         if (state.customerRef && customerRefInput) customerRefInput.value = state.customerRef;
 
-        // Unit selection
+        // Dimensions
+        if (state.dim_l > 0 && dimL) dimL.value = state.dim_l;
+        if (state.dim_w > 0 && dimW) dimW.value = state.dim_w;
+        if (state.dim_h > 0 && dimH) dimH.value = state.dim_h;
+        if (state.dim_l > 0) updateVolumetricWeight();
+
         if (state.unit === 'gm' && unitGm) { unitGm.click(); }
         if (state.unit === 'kg' && unitKg) { unitKg.click(); }
 
-        // E-waybill
         if (state.ewaybillOpt === 'enter' && state.ewaybillNo && ewaybillNoInput) ewaybillNoInput.value = state.ewaybillNo;
         const ewaybillBtn = document.querySelector(`[data-ewaybill-opt="${state.ewaybillOpt}"]`);
         if (ewaybillBtn) ewaybillBtn.click();
 
-        // Risk Surcharge
         const riskBtn = document.querySelector(`[data-risk-opt="${state.riskSurcharge}"]`);
         if (riskBtn) riskBtn.click();
 
-        // Packing material
-        if (state.packingMaterial && packingWrap) packingWrap.click();
+        if (state.packingMaterial && packingWrap) {
+            state.packingMaterial = false; // reset so click logic works
+            packingWrap.classList.add('checked');
+            state.packingMaterial = true;
+        }
 
-        // Payment method
         if (state.paymentMethod) {
             const paymentBtn = document.querySelector(`[data-payment="${state.paymentMethod}"]`);
             if (paymentBtn) paymentBtn.click();
         }
 
-        // GST Invoice
         if (state.gstInvoice && gstWrap) gstWrap.click();
         if (state.gstin && gstinInput) gstinInput.value = state.gstin;
         if (state.pan && panInput) panInput.value = state.pan;
+
+        // Restore photo upload status
+        if (state.photoAddressId) {
+            const statusEl = document.getElementById('photo_address_status');
+            if (statusEl) {
+                statusEl.innerHTML = '<i class="bi bi-check-circle-fill text-success me-1"></i> Address photo uploaded';
+                statusEl.style.color = '#16a34a';
+                statusEl.style.display = 'flex';
+            }
+        }
+        if (state.photoParcelId) {
+            const statusEl = document.getElementById('photo_parcel_status');
+            if (statusEl) {
+                statusEl.innerHTML = '<i class="bi bi-check-circle-fill text-success me-1"></i> Parcel photo uploaded';
+                statusEl.style.color = '#16a34a';
+                statusEl.style.display = 'flex';
+            }
+        }
     }
 
     /* ── Clear Form Button ── */
     window.clearBookingForm = function () {
         if (confirm('Are you sure you want to clear all form data? This cannot be undone.')) {
             clearDraft();
+            // Explicitly clear all inputs
+            document.querySelectorAll('.wizard-input, .wizard-textarea').forEach(el => {
+                if (!el.readOnly) el.value = '';
+            });
+            // Reset state to defaults
+            Object.assign(state, JSON.parse(JSON.stringify(defaultState)));
             location.reload();
         }
     };
@@ -686,19 +1066,18 @@
         if (topbar && !document.querySelector('[onclick*="clearBookingForm"]')) {
             const clearBtn = document.createElement('button');
             clearBtn.className = 'btn-outline-admin';
-            clearBtn.style.cssText = 'font-size:12px;padding:7px 14px;text-decoration:none;background:#fee2e2;color:#dc2626;border-color:#fecaca;cursor:pointer;border:1px solid;border-radius:6px;margin-right:8px;';
+            clearBtn.style.cssText = 'font-size:12px;padding:7px 14px;background:#fee2e2;color:#dc2626;border-color:#fecaca;cursor:pointer;border:1px solid;border-radius:6px;margin-right:8px;';
             clearBtn.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i> Clear Form';
             clearBtn.onclick = clearBookingForm;
             topbar.insertBefore(clearBtn, topbar.firstChild);
         }
     }
 
-    /* ── Init first step ── */
+    /* ── Init ── */
     goToStep(1);
     restoreFormFields();
     addClearButton();
 
-    // Show draft indicator if there's saved data
     if (state.pickup.pincode || state.delivery.pincode || state.weight > 0) {
         const indicator = document.createElement('div');
         indicator.style.cssText = 'background:#d1fae5;color:#065f46;padding:8px 12px;border-radius:6px;margin-bottom:12px;font-size:13px;display:flex;align-items:center;gap:8px;';

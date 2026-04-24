@@ -1,9 +1,11 @@
 <?php
 /**
  * Admin API — Pincode TAT Management
- * POST            — create/update pincode
- * DELETE          — delete pincode
- * POST ?action=import — bulk import from CSV
+ * GET                    — paginated / searchable list
+ * GET ?action=states     — distinct states list
+ * POST                   — create/update pincode
+ * DELETE                 — delete pincode
+ * POST ?action=import    — bulk import from CSV
  */
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../lib/auth.php';
@@ -17,6 +19,75 @@ if (!$user || $user['role'] !== 'admin') {
 
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
+
+// ── GET: list pincodes (paginated + searchable) ──────────────────────────────
+if ($method === 'GET') {
+
+    // Distinct states list
+    if ($action === 'states') {
+        try {
+            $states = $pdo->query(
+                "SELECT DISTINCT state, COUNT(*) as cnt
+                 FROM pincode_tat
+                 GROUP BY state
+                 ORDER BY state ASC"
+            )->fetchAll(PDO::FETCH_ASSOC);
+            json_response(['success' => true, 'states' => $states]);
+        } catch (Exception $e) {
+            json_response(['success' => false, 'message' => 'DB error.'], 500);
+        }
+    }
+
+    // Paginated list
+    $q      = trim($_GET['q']     ?? '');
+    $stateF = trim($_GET['state'] ?? '');
+    $page   = max(1, (int)($_GET['page']     ?? 1));
+    $limit  = 40;
+    $offset = ($page - 1) * $limit;
+
+    $where  = 'WHERE 1=1';
+    $params = [];
+
+    if ($q !== '') {
+        $where   .= ' AND (pincode LIKE ? OR city LIKE ? OR state LIKE ? OR zone LIKE ?)';
+        $like     = '%' . $q . '%';
+        $params[] = $like;
+        $params[] = $like;
+        $params[] = $like;
+        $params[] = $like;
+    }
+    if ($stateF !== '') {
+        $where   .= ' AND state = ?';
+        $params[] = $stateF;
+    }
+
+    try {
+        $countStmt = $pdo->prepare("SELECT COUNT(*) FROM pincode_tat $where");
+        $countStmt->execute($params);
+        $total = (int) $countStmt->fetchColumn();
+
+        $dataStmt = $pdo->prepare(
+            "SELECT * FROM pincode_tat $where
+             ORDER BY state ASC, city ASC, pincode ASC
+             LIMIT $limit OFFSET $offset"
+        );
+        $dataStmt->execute($params);
+        $rows = $dataStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        json_response([
+            'success'  => true,
+            'data'     => $rows,
+            'total'    => $total,
+            'page'     => $page,
+            'pages'    => (int) ceil($total / $limit),
+            'per_page' => $limit,
+            'q'        => $q,
+            'state'    => $stateF,
+        ]);
+    } catch (Exception $e) {
+        json_response(['success' => false, 'message' => 'DB error: ' . $e->getMessage()], 500);
+    }
+}
 
 // ── CSV Import ──
 if ($method === 'POST' && $action === 'import') {

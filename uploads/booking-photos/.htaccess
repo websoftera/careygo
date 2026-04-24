@@ -1,0 +1,4 @@
+# Prevent PHP/script execution in upload directory
+Options -ExecCGI
+AddHandler cgi-script .php .php3 .php4 .php5 .phtml .pl .py .cgi
+php_flag engine off

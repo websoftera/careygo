@@ -74,29 +74,51 @@ if ($method === 'POST') {
         $delivPincode = trim($delivery['pincode'] ?? '');
         $delivGstin   = trim($delivery['gstin'] ?? '');
 
-        $serviceType    = trim($body['service_type']   ?? '');
-        $weight         = (float)  ($body['weight']        ?? 0);
-        $pieces         = (int)    ($body['pieces']        ?? 1);
-        $declaredValue  = (float)  ($body['declared_value'] ?? 0);
-        $description    = trim($body['description']   ?? '');
-        $customerRef    = trim($body['customer_ref']  ?? '');
-        $ewaybillNo     = trim($body['ewaybill_no']   ?? '');
-        $packingMaterial= (int)    ($body['packing_material'] ?? 0);
+        $serviceType      = trim($body['service_type']      ?? '');
+        $weight           = (float)  ($body['weight']           ?? 0);
+        $chargeableWeight = (float)  ($body['chargeable_weight'] ?? $weight);
+        $pieces           = (int)    ($body['pieces']           ?? 1);
+        $declaredValue    = (float)  ($body['declared_value']   ?? 0);
+        $description      = trim($body['description']      ?? '');
+        $customerRef      = trim($body['customer_ref']     ?? '');
+        $ewaybillNo       = trim($body['ewaybill_no']      ?? '');
+        $packingMaterial  = (int)    ($body['packing_material']  ?? 0);
+        $packingCharge    = (float)  ($body['packing_charge']   ?? 0);
+        $photoAddress     = trim($body['photo_address']    ?? '');
+        $photoParcel      = trim($body['photo_parcel']     ?? '');
 
         // Dimensions
-        $length         = (float)  ($body['length']        ?? 0);
-        $width          = (float)  ($body['width']         ?? 0);
-        $height         = (float)  ($body['height']        ?? 0);
-        $volWeight      = (float)  ($body['volumetric_weight'] ?? 0);
-        $basePrice      = (float)  ($body['base_price']    ?? 0);
-        $discountPct    = (float)  ($body['discount_pct']  ?? 0);
-        $discountAmt    = round($basePrice * $discountPct / 100, 2);
-        $finalPrice     = (float)  ($body['final_price']   ?? $basePrice);
-        $paymentMethod  = trim($body['payment_method'] ?? 'prepaid');
-        $gstInvoice     = (int)    ($body['gst_invoice']   ?? 0);
-        $gstin          = trim($body['gstin']          ?? '');
-        $panNumber      = trim($body['pan_number']     ?? '');
-        $riskSurcharge  = trim($body['risk_surcharge'] ?? 'owner');
+        $length           = (float)  ($body['length']           ?? 0);
+        $width            = (float)  ($body['width']            ?? 0);
+        $height           = (float)  ($body['height']           ?? 0);
+        $volWeight        = (float)  ($body['volumetric_weight'] ?? 0);
+        $basePrice        = (float)  ($body['base_price']       ?? 0);
+        $finalPrice       = (float)  ($body['final_price']      ?? $basePrice);
+        $discountPct      = 0;  // Discount removed
+        $discountAmt      = 0;
+        $paymentMethod    = trim($body['payment_method']   ?? 'prepaid');
+        $gstInvoice       = (int)    ($body['gst_invoice']      ?? 0);
+        $gstin            = trim($body['gstin']            ?? '');
+        $panNumber        = trim($body['pan_number']       ?? '');
+        $riskSurcharge    = trim($body['risk_surcharge']   ?? 'owner');
+
+        // ── Auto-migrate: add new columns if they don't exist ──
+        static $migrated = false;
+        if (!$migrated) {
+            $newCols = [
+                'chargeable_weight' => 'DECIMAL(8,3) DEFAULT 0',
+                'packing_charge'    => 'DECIMAL(10,2) DEFAULT 0',
+                'photo_address'     => 'VARCHAR(255) DEFAULT NULL',
+                'photo_parcel'      => 'VARCHAR(255) DEFAULT NULL',
+            ];
+            $existingCols = $pdo->query("SHOW COLUMNS FROM shipments")->fetchAll(PDO::FETCH_COLUMN);
+            foreach ($newCols as $col => $def) {
+                if (!in_array($col, $existingCols, true)) {
+                    try { $pdo->exec("ALTER TABLE shipments ADD COLUMN `$col` $def"); } catch (\Exception $ae) {}
+                }
+            }
+            $migrated = true;
+        }
 
         // Validation
         $allowed = ['standard','premium','air_cargo','surface'];
@@ -146,8 +168,8 @@ if ($method === 'POST') {
                 tracking_no, customer_id,
                 pickup_name, pickup_company_name, pickup_phone, pickup_address, pickup_city, pickup_state, pickup_pincode, pickup_gstin,
                 delivery_name, delivery_company_name, delivery_phone, delivery_address, delivery_city, delivery_state, delivery_pincode, delivery_gstin,
-                service_type, weight, volumetric_weight, length, width, height, declared_value, pieces, description, customer_ref,
-                ewaybill_no, packing_material,
+                service_type, weight, chargeable_weight, volumetric_weight, length, width, height, declared_value, pieces, description, customer_ref,
+                ewaybill_no, packing_material, packing_charge, photo_address, photo_parcel,
                 base_price, discount_pct, discount_amount, final_price,
                 payment_method, risk_surcharge, gst_invoice, gstin, pan_number,
                 status, estimated_delivery
@@ -155,8 +177,8 @@ if ($method === 'POST') {
                 ?, ?,
                 ?, ?, ?, ?, ?, ?, ?, ?,
                 ?, ?, ?, ?, ?, ?, ?, ?,
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                ?, ?,
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?,
                 ?, ?, ?, ?,
                 ?, ?, ?, ?, ?,
                 'booked', ?
@@ -166,8 +188,8 @@ if ($method === 'POST') {
             $tracking, $userId,
             $pickupName, $pickupCompany, $pickupPhone, $pickupFull, $pickupCity, $pickupState, $pickupPincode, $pickupGstin,
             $delivName, $delivCompany, $delivPhone, $delivFull, $delivCity, $delivState, $delivPincode, $delivGstin,
-            $serviceType, $weight, $volWeight, $length, $width, $height, $declaredValue, $pieces, $description, $customerRef,
-            $ewaybillNo, $packingMaterial,
+            $serviceType, $weight, $chargeableWeight, $volWeight, $length, $width, $height, $declaredValue, $pieces, $description, $customerRef,
+            $ewaybillNo, $packingMaterial, $packingCharge, $photoAddress ?: null, $photoParcel ?: null,
             $basePrice, $discountPct, $discountAmt, $finalPrice,
             $paymentMethod, $riskSurcharge, $gstInvoice, $gstin, $panNumber,
             $etaDate,

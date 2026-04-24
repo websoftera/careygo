@@ -99,7 +99,7 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                         <div class="pincode-row">
                             <div class="form-group">
                                 <label class="wizard-label">Pickup Pincode <span class="req">*</span></label>
-                                <input type="text" class="wizard-input" id="pickup_pincode" data-pincode-input="pickup" maxlength="10" placeholder="Enter 6-digit pincode">
+                                <input type="text" class="wizard-input" id="pickup_pincode" data-pincode-input="pickup" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" placeholder="Enter 6-digit pincode">
                                 <div class="wizard-error" id="err_pickup_pincode"></div>
                             </div>
                             <button class="btn-lookup" id="pickup_lookup_btn" data-pincode-lookup data-pincode-type="pickup">
@@ -173,7 +173,7 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                         <div class="pincode-row">
                             <div class="form-group">
                                 <label class="wizard-label">Delivery Pincode <span class="req">*</span></label>
-                                <input type="text" class="wizard-input" id="delivery_pincode" data-pincode-input="delivery" maxlength="10" placeholder="Enter 6-digit pincode">
+                                <input type="text" class="wizard-input" id="delivery_pincode" data-pincode-input="delivery" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" placeholder="Enter 6-digit pincode">
                                 <div class="wizard-error" id="err_delivery_pincode"></div>
                             </div>
                             <button class="btn-lookup" id="delivery_lookup_btn" data-pincode-lookup data-pincode-type="delivery">
@@ -275,25 +275,33 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                             </div>
                         </div>
 
-                        <div class="wizard-section-label">Dimensions (in CM) <span class="opt">(optional for volumetric calculation)</span></div>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:15px; margin-bottom:20px;">
+                        <div class="wizard-section-label">Dimensions (in CM) <span class="opt">(optional — max: L 130 × W 60 × H 60)</span></div>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap:12px; margin-bottom:8px;">
                             <div class="wizard-form-group mb-0">
                                 <label class="wizard-label">Length</label>
-                                <input type="number" class="wizard-input" id="dim_l" placeholder="L" min="0">
+                                <input type="number" class="wizard-input" id="dim_l" placeholder="L" min="0" max="130">
+                                <div class="wizard-error" id="err_dim_l"></div>
                             </div>
                             <div class="wizard-form-group mb-0">
                                 <label class="wizard-label">Width</label>
-                                <input type="number" class="wizard-input" id="dim_w" placeholder="W" min="0">
+                                <input type="number" class="wizard-input" id="dim_w" placeholder="W" min="0" max="60">
+                                <div class="wizard-error" id="err_dim_w"></div>
                             </div>
                             <div class="wizard-form-group mb-0">
                                 <label class="wizard-label">Height</label>
-                                <input type="number" class="wizard-input" id="dim_h" placeholder="H" min="0">
+                                <input type="number" class="wizard-input" id="dim_h" placeholder="H" min="0" max="60">
+                                <div class="wizard-error" id="err_dim_h"></div>
                             </div>
                             <div class="wizard-form-group mb-0">
                                 <label class="wizard-label">Vol. Weight</label>
                                 <input type="text" class="wizard-input" id="vol_weight_display" placeholder="0.000 kg" readonly style="background:#f8f9fa;">
                             </div>
+                            <div class="wizard-form-group mb-0">
+                                <label class="wizard-label" style="color:#d97706;font-weight:600;">Chargeable Wt.</label>
+                                <input type="text" class="wizard-input" id="chargeable_weight_display" placeholder="0.000 kg" readonly style="background:#fef3c7;font-weight:600;">
+                            </div>
                         </div>
+                        <p style="font-size:11px;color:#6b7280;margin-bottom:16px;">Chargeable weight = max(Actual weight, Volumetric weight). Pricing is based on chargeable weight.</p>
 
                         <div class="form-grid-2">
                             <div class="wizard-form-group">
@@ -362,8 +370,9 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                             </div>
                         </div>
                         <div id="ewaybill_input_row" style="display:none;" class="mb-4">
-                            <label class="wizard-label">E-waybill Number</label>
+                            <label class="wizard-label">E-waybill Number <span class="req">*</span></label>
                             <input type="text" class="wizard-input" id="ewaybill_no" placeholder="Enter E-waybill number">
+                            <div class="wizard-error" id="err_ewaybill_no"></div>
                         </div>
 
                         <div class="wizard-section-label">Risk Surcharge</div>
@@ -385,14 +394,50 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                         </div>
 
                         <div class="wizard-section-label">Value Added Services</div>
-                        <label class="cust-checkbox-wrap" id="packing_material_wrap">
-                            <input type="checkbox">
+                        <label class="cust-checkbox-wrap" id="packing_material_wrap" style="cursor:pointer;">
+                            <input type="checkbox" style="display:none;">
                             <div class="cust-checkbox-box"><i class="bi bi-check-lg"></i></div>
                             <div>
-                                <div style="font-size:13px;font-weight:600;">Packing Material</div>
+                                <div style="font-size:13px;font-weight:600;">Packing Material <span style="font-size:11px;color:#6b7280;">(click to see charges)</span></div>
                                 <div style="font-size:12px;color:var(--muted);">Include professional packing material for your shipment</div>
                             </div>
                         </label>
+
+                        <hr style="margin:20px 0;">
+
+                        <!-- Photo Uploads — MANDATORY -->
+                        <div class="wizard-section-label">
+                            <i class="bi bi-camera me-1"></i> Photo Uploads <span class="req">*</span>
+                            <span style="font-size:11px;font-weight:400;color:#6b7280;margin-left:8px;">Both photos are mandatory before booking</span>
+                        </div>
+
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+                            <!-- Address Photo -->
+                            <div style="border:2px dashed var(--border);border-radius:12px;padding:16px;text-align:center;transition:border-color .2s;" id="photo_address_box">
+                                <i class="bi bi-house-check" style="font-size:28px;color:#4338ca;margin-bottom:8px;display:block;"></i>
+                                <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Address Photo</div>
+                                <div style="font-size:11px;color:#6b7280;margin-bottom:12px;">Photo of pickup/delivery address label or door</div>
+                                <label for="photo_address_input" style="display:inline-block;background:#e0e7ff;color:#4338ca;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;">
+                                    <i class="bi bi-upload me-1"></i> Choose Photo
+                                </label>
+                                <input type="file" id="photo_address_input" accept="image/*" capture="environment" style="display:none;">
+                                <div id="photo_address_status" style="margin-top:8px;font-size:12px;display:none;align-items:center;justify-content:center;gap:4px;"></div>
+                                <div id="photo_address_error" style="display:none;color:#dc2626;font-size:12px;margin-top:4px;"></div>
+                            </div>
+
+                            <!-- Parcel Photo -->
+                            <div style="border:2px dashed var(--border);border-radius:12px;padding:16px;text-align:center;transition:border-color .2s;" id="photo_parcel_box">
+                                <i class="bi bi-box-seam" style="font-size:28px;color:#0891b2;margin-bottom:8px;display:block;"></i>
+                                <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Parcel Photo</div>
+                                <div style="font-size:11px;color:#6b7280;margin-bottom:12px;">Photo of the packed parcel/item to be shipped</div>
+                                <label for="photo_parcel_input" style="display:inline-block;background:#e0f2fe;color:#0369a1;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;">
+                                    <i class="bi bi-upload me-1"></i> Choose Photo
+                                </label>
+                                <input type="file" id="photo_parcel_input" accept="image/*" capture="environment" style="display:none;">
+                                <div id="photo_parcel_status" style="margin-top:8px;font-size:12px;display:none;align-items:center;justify-content:center;gap:4px;"></div>
+                                <div id="photo_parcel_error" style="display:none;color:#dc2626;font-size:12px;margin-top:4px;"></div>
+                            </div>
+                        </div>
 
                         <div class="wizard-nav">
                             <button class="btn-wizard-back" data-wizard-back><i class="bi bi-arrow-left me-1"></i> Back</button>
@@ -424,19 +469,23 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                             <div class="col-md-6">
                                 <div style="background:var(--bg);border-radius:12px;padding:14px;">
                                     <div class="summary-section-title mb-2">Shipment Details</div>
-                                    <div class="detail-row"><span class="detail-label" style="min-width:110px;">Service</span><span class="detail-value" id="summary_service" style="font-weight:600;"></span></div>
-                                    <div class="detail-row"><span class="detail-label" style="min-width:110px;">Weight</span><span class="detail-value" id="summary_weight"></span></div>
-                                    <div class="detail-row"><span class="detail-label" style="min-width:110px;">Pieces</span><span class="detail-value" id="summary_pieces"></span></div>
-                                    <div class="detail-row"><span class="detail-label" style="min-width:110px;">Dimensions</span><span class="detail-value" id="summary_dimensions"></span></div>
-                                    <div class="detail-row"><span class="detail-label" style="min-width:110px;">Volumetric</span><span class="detail-value" id="summary_volumetric"></span></div>
-                                    <div class="detail-row"><span class="detail-label" style="min-width:110px;">Packing</span><span class="detail-value" id="summary_packing"></span></div>
+                                    <div class="detail-row"><span class="detail-label" style="min-width:130px;">Service</span><span class="detail-value" id="summary_service" style="font-weight:600;"></span></div>
+                                    <div class="detail-row"><span class="detail-label" style="min-width:130px;">Actual Weight</span><span class="detail-value" id="summary_weight"></span></div>
+                                    <div class="detail-row" style="background:#fef3c7;border-radius:6px;padding:4px 6px;">
+                                        <span class="detail-label" style="min-width:130px;color:#d97706;font-weight:600;">Chargeable Weight</span>
+                                        <span class="detail-value" id="summary_chargeable_weight" style="font-weight:700;"></span>
+                                    </div>
+                                    <div class="detail-row"><span class="detail-label" style="min-width:130px;">Pieces</span><span class="detail-value" id="summary_pieces"></span></div>
+                                    <div class="detail-row"><span class="detail-label" style="min-width:130px;">Dimensions</span><span class="detail-value" id="summary_dimensions"></span></div>
+                                    <div class="detail-row"><span class="detail-label" style="min-width:130px;">Volumetric Wt.</span><span class="detail-value" id="summary_volumetric"></span></div>
+                                    <div class="detail-row"><span class="detail-label" style="min-width:130px;">Packing Material</span><span class="detail-value" id="summary_packing"></span></div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="summary-section-title mb-2">Pricing</div>
                                 <div class="summary-pricing">
-                                    <div class="pricing-row"><span>Base Price</span><span id="summary_base_price">—</span></div>
-                                    <div class="pricing-row"><span>Discount</span><span style="color:var(--success)">₹0</span></div>
+                                    <div class="pricing-row"><span>Base Freight</span><span id="summary_base_price">—</span></div>
+                                    <div class="pricing-row"><span>Packing Charges</span><span id="summary_packing_price">—</span></div>
                                     <div class="pricing-row total"><span>Total Amount</span><span id="summary_final_price">—</span></div>
                                 </div>
                             </div>

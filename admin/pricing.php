@@ -52,6 +52,30 @@ require_once 'includes/header.php';
     </button>
 </div>
 
+<!-- Packing Material Charge Card -->
+<div class="admin-card mb-4">
+    <div class="admin-card-header">
+        <h6 class="admin-card-title"><i class="bi bi-box2-heart me-2"></i>Packing Material Charge</h6>
+    </div>
+    <div class="admin-card-body">
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:200px;">
+                <label class="admin-form-label">Charge per Shipment (₹)</label>
+                <input type="number" class="admin-form-control" id="packing_charge_input"
+                       step="0.01" min="0" placeholder="e.g. 50.00" style="max-width:200px;">
+                <div style="font-size:12px;color:#6b7280;margin-top:4px;">
+                    This charge is shown to customers when they select "Packing Material" during booking.
+                </div>
+            </div>
+            <div>
+                <button class="btn-primary-admin" onclick="savePackingCharge()" id="savePackingBtn">
+                    <i class="bi bi-check-lg me-1"></i> Save Charge
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Info box -->
 <div class="alert d-flex gap-2 mb-4" style="font-size:13px;border-radius:12px;border:none;background:rgba(59,130,246,0.08);color:#1d4ed8;padding:14px 18px;">
     <i class="bi bi-info-circle-fill mt-1 flex-shrink-0"></i>
@@ -314,6 +338,45 @@ require_once 'includes/header.php';
 </style>
 
 <script>
+// ── Packing charge ──
+(function loadPackingCharge() {
+    fetch('<?= SITE_URL ?>/api/admin/settings.php?key=packing_charge', { credentials: 'same-origin' })
+        .then(r => r.json())
+        .then(data => {
+            const inp = document.getElementById('packing_charge_input');
+            if (inp && data.value !== null && data.value !== undefined) inp.value = data.value;
+        })
+        .catch(() => {});
+})();
+
+function savePackingCharge() {
+    const btn = document.getElementById('savePackingBtn');
+    const val = document.getElementById('packing_charge_input').value;
+    if (!val || isNaN(parseFloat(val))) { showToast('Enter a valid charge amount', 'warning'); return; }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving…';
+
+    fetch('<?= SITE_URL ?>/api/admin/settings.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'packing_charge', value: val }),
+        credentials: 'same-origin'
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Save Charge';
+        if (data.success) showToast(`Packing charge set to ₹${parseFloat(val).toFixed(2)}`, 'success');
+        else showToast(data.message || 'Save failed', 'error');
+    })
+    .catch(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Save Charge';
+        showToast('Network error', 'error');
+    });
+}
+
 let _activeZone = '<?= $zoneKeys[0] ?>';
 function setActiveZone(z) { _activeZone = z; }
 
