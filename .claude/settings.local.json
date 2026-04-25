@@ -48,7 +48,10 @@
       "Bash(/c/xampp/php/php.exe \"C:\\\\xampp\\\\htdocs\\\\careygo\\\\database\\\\reorganize-slabs.php\")",
       "Bash(/c/xampp/php/php.exe test-production-constraints.php)",
       "Bash(curl -s \"http://localhost/careygo/api/pricing.php?weight=2&pickup=110001&delivery=122105\")",
-      "Bash(mysql -u root -e \"SHOW TABLES;\" careygo)"
+      "Bash(mysql -u root -e \"SHOW TABLES;\" careygo)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
     ]
   }
 }

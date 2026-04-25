@@ -127,9 +127,9 @@ if ($method === 'POST') {
 
         // Service weight constraints (production-ready)
         $serviceConstraints = [
-            'standard'  => 2.000,   // Standard Express: max 2kg
-            'premium'   => 5.000,   // Premium Express: max 5kg
-            'air_cargo' => 10.000,  // Air Cargo: max 10kg
+            'standard'  => 5.000,   // Standard Express: max 5kg
+            'premium'   => 10.000,  // Premium Express: max 10kg
+            'air_cargo' => 15.000,  // Air Cargo: max 15kg
             'surface'   => 25.000,  // Surface: max 25kg
         ];
         $maxWeight = $serviceConstraints[$serviceType] ?? PHP_FLOAT_MAX;

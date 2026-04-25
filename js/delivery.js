@@ -80,18 +80,20 @@
         }
     }
 
+    let isClearing = false;
+    function clearDraft() {
+        try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    }
+
     function saveDraftState() {
+        if (isClearing) return;
         try {
             const toSave = { ...state, _timestamp: Date.now() };
-            const hasData = state.pickup.pincode || state.delivery.pincode || state.weight > 0 || state.serviceType;
+            const hasData = (state.pickup && state.pickup.pincode) || (state.delivery && state.delivery.pincode) || state.weight > 0 || state.serviceType;
             if (hasData) localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
         } catch (e) {
             console.warn('Could not save draft:', e);
         }
-    }
-
-    function clearDraft() {
-        try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
     }
 
     let autoSaveInterval = setInterval(saveDraftState, 5000);
@@ -125,11 +127,8 @@
         let ok = true;
 
         if (n === 1) {
-            // Sync pincode values directly from DOM inputs before checking
-            const pickupPinEl   = document.getElementById('pickup_pincode');
-            const deliveryPinEl = document.getElementById('delivery_pincode');
-            if (pickupPinEl)   state.pickup.pincode   = pickupPinEl.value.trim();
-            if (deliveryPinEl) state.delivery.pincode = deliveryPinEl.value.trim();
+            // Sync ALL fields from DOM to state before validating (handles browser autofill)
+            syncStep1FromDOM();
 
             // Pickup pincode verified
             if (!state.pickup.pincode) {
@@ -140,11 +139,11 @@
                 showErr('pickup_pincode', 'Please verify pincode by clicking Check'); ok = false;
             }
 
-            if (!state.pickup.name)    { showErr('pickup_name',    'Enter full name');       ok = false; }
-            if (!state.pickup.phone)   { showErr('pickup_phone',   'Enter mobile number');   ok = false; }
-            if (!state.pickup.addr1)   { showErr('pickup_addr1',   'Enter address line 1'); ok = false; }
-            if (!state.pickup.city)    { showErr('pickup_city',    'Enter city');            ok = false; }
-            if (!state.pickup.state)   { showErr('pickup_state',   'Enter state');           ok = false; }
+            if (!state.pickup.name)    { showErr('pickup_name',    'Enter sender full name');    ok = false; }
+            if (!state.pickup.phone)   { showErr('pickup_phone',   'Enter sender mobile number'); ok = false; }
+            if (!state.pickup.addr1)   { showErr('pickup_addr1',   'Enter pickup address');      ok = false; }
+            if (!state.pickup.city)    { showErr('pickup_city',    'Enter city');                ok = false; }
+            if (!state.pickup.state)   { showErr('pickup_state',   'Enter state');               ok = false; }
 
             // Delivery pincode verified
             if (!state.delivery.pincode) {
@@ -155,20 +154,21 @@
                 showErr('delivery_pincode', 'Please verify pincode by clicking Check'); ok = false;
             }
 
-            if (!state.delivery.name)    { showErr('delivery_name',    'Enter full name');       ok = false; }
-            if (!state.delivery.phone)   { showErr('delivery_phone',   'Enter mobile number');   ok = false; }
-            if (!state.delivery.addr1)   { showErr('delivery_addr1',   'Enter address line 1'); ok = false; }
-            if (!state.delivery.city)    { showErr('delivery_city',    'Enter city');            ok = false; }
-            if (!state.delivery.state)   { showErr('delivery_state',   'Enter state');           ok = false; }
+            if (!state.delivery.name)    { showErr('delivery_name',    'Enter receiver full name');  ok = false; }
+            if (!state.delivery.phone)   { showErr('delivery_phone',   'Enter receiver mobile number'); ok = false; }
+            if (!state.delivery.addr1)   { showErr('delivery_addr1',   'Enter delivery address');    ok = false; }
+            if (!state.delivery.city)    { showErr('delivery_city',    'Enter city');               ok = false; }
+            if (!state.delivery.state)   { showErr('delivery_state',   'Enter state');              ok = false; }
         }
 
         if (n === 2) {
             const wt = getWeightInKg();
+            const absoluteMax = 25.0; // Current maximum limit across all services
             if (!wt || wt <= 0) {
                 showErr('weight', 'Enter a valid weight'); ok = false;
-            } else if (wt > MAX_PIECE_WEIGHT_KG) {
-                showWeightAlert(wt);
-                showErr('weight', `Maximum ${MAX_PIECE_WEIGHT_KG} kg per piece allowed`); ok = false;
+            } else if (wt > absoluteMax) {
+                showWeightAlert(wt, absoluteMax);
+                showErr('weight', `Maximum ${absoluteMax} kg allowed per shipment`); ok = false;
             }
 
             if (!state.pieces || state.pieces < 1) { showErr('pieces', 'Min 1 piece required'); ok = false; }
@@ -234,30 +234,30 @@
     }
 
     /* ── Weight alert popup ── */
-    function showWeightAlert(wt) {
+    function showWeightAlert(wt, max = 25) {
         // Create or reuse alert modal
         let modal = document.getElementById('weightAlertModal');
-        if (!modal) {
-            modal = document.createElement('div');
-            modal.id = 'weightAlertModal';
-            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
-            modal.innerHTML = `
-                <div style="background:#fff;border-radius:16px;padding:28px;max-width:420px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-                    <div style="font-size:48px;margin-bottom:12px;">⚠️</div>
-                    <h5 style="color:#dc2626;margin-bottom:8px;">Weight Limit Exceeded</h5>
-                    <p style="font-size:14px;color:#555;margin-bottom:6px;">
-                        Maximum allowable weight per piece is <strong>${MAX_PIECE_WEIGHT_KG} kg</strong>.
-                    </p>
-                    <p style="font-size:13px;color:#777;margin-bottom:20px;">
-                        Your entered weight is <strong>${wt.toFixed(3)} kg</strong>. Please split your shipment into multiple pieces or contact us for heavy cargo options.
-                    </p>
-                    <button onclick="document.getElementById('weightAlertModal').remove()"
-                            style="background:#001a93;color:#fff;border:none;border-radius:8px;padding:10px 28px;font-size:14px;font-weight:600;cursor:pointer;">
-                        OK, I'll Fix It
-                    </button>
-                </div>`;
-            document.body.appendChild(modal);
-        }
+        if (modal) modal.remove();
+        
+        modal = document.createElement('div');
+        modal.id = 'weightAlertModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+        modal.innerHTML = `
+            <div style="background:#fff;border-radius:16px;padding:28px;max-width:420px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                <div style="font-size:48px;margin-bottom:12px;">⚠️</div>
+                <h5 style="color:#dc2626;margin-bottom:8px;">Weight Limit Exceeded</h5>
+                <p style="font-size:14px;color:#555;margin-bottom:6px;">
+                    Maximum allowable weight for online booking is <strong>${max} kg</strong>.
+                </p>
+                <p style="font-size:13px;color:#777;margin-bottom:20px;">
+                    Your entered weight is <strong>${wt.toFixed(3)} kg</strong>. For heavier shipments, please contact our support team for specialized cargo rates.
+                </p>
+                <button onclick="document.getElementById('weightAlertModal').remove()"
+                        style="background:#001a93;color:#fff;border:none;border-radius:8px;padding:10px 28px;font-size:14px;font-weight:600;cursor:pointer;">
+                    OK, I'll Fix It
+                </button>
+            </div>`;
+        document.body.appendChild(modal);
     }
 
     /* ── Next / Back ── */
@@ -1116,13 +1116,16 @@
     /* ── Clear Form Button ── */
     window.clearBookingForm = function () {
         if (confirm('Are you sure you want to clear all form data? This cannot be undone.')) {
-            // Stop the interval so it can't re-save between now and navigation
+            isClearing = true; // Block any auto-saves
             clearInterval(autoSaveInterval);
-            // Reset state BEFORE navigating — beforeunload fires saveDraftState(),
-            // and if state is already empty, hasData=false so nothing gets written back
-            Object.assign(state, JSON.parse(JSON.stringify(defaultState)));
             clearDraft();
-            // Navigate to a fresh URL (prevents bfcache restoring old field values)
+            // Reset state object
+            Object.keys(state).forEach(key => {
+                if (defaultState.hasOwnProperty(key)) {
+                    state[key] = JSON.parse(JSON.stringify(defaultState[key]));
+                }
+            });
+            // Navigate to a fresh URL
             window.location.href = window.location.pathname + '?fresh=' + Date.now();
         }
     };
@@ -1140,12 +1143,22 @@
         }
     }
 
+    function syncStep1FromDOM() {
+        ['pickup', 'delivery'].forEach(type => {
+            const fields = ['pincode', 'name', 'company', 'phone', 'email', 'gstin', 'addr1', 'addr2', 'city', 'state'];
+            fields.forEach(f => {
+                const el = document.getElementById(`${type}_${f}`);
+                if (el) state[type][f] = el.value.trim();
+            });
+        });
+    }
+
     /* ── Init ── */
     goToStep(1);
     restoreFormFields();
     addClearButton();
 
-    if (state.pickup.pincode || state.delivery.pincode || state.weight > 0) {
+    if ((state.pickup && state.pickup.pincode) || (state.delivery && state.delivery.pincode) || state.weight > 0) {
         const indicator = document.createElement('div');
         indicator.style.cssText = 'background:#d1fae5;color:#065f46;padding:8px 12px;border-radius:6px;margin-bottom:12px;font-size:13px;display:flex;align-items:center;gap:8px;';
         indicator.innerHTML = '<i class="bi bi-info-circle"></i> <strong>Draft recovered:</strong> Your previous form data has been restored.';

@@ -146,9 +146,9 @@ $services = [];
 
 try {
     $serviceConstraints = [
-        'standard'  => 2.000,
-        'premium'   => 5.000,
-        'air_cargo' => 10.000,
+        'standard'  => 5.000,
+        'premium'   => 10.000,
+        'air_cargo' => 15.000,
         'surface'   => 25.000,
     ];
 
@@ -159,6 +159,12 @@ try {
 
         // Calculate price (zone-specific, with NULL-zone fallback)
         $price = calculatePrice($weight, $type, $pdo, $zone);
+        
+        // If no zone-specific price, try falling back to rest_of_india explicitly
+        if ($price <= 0 && $zone !== 'rest_of_india') {
+            $price = calculatePrice($weight, $type, $pdo, 'rest_of_india');
+        }
+
         if ($price <= 0) continue;
 
         $tat      = $tatData[$type] ?? $defaultTat[$type];
