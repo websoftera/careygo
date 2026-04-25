@@ -125,6 +125,12 @@
         let ok = true;
 
         if (n === 1) {
+            // Sync pincode values directly from DOM inputs before checking
+            const pickupPinEl   = document.getElementById('pickup_pincode');
+            const deliveryPinEl = document.getElementById('delivery_pincode');
+            if (pickupPinEl)   state.pickup.pincode   = pickupPinEl.value.trim();
+            if (deliveryPinEl) state.delivery.pincode = deliveryPinEl.value.trim();
+
             // Pickup pincode verified
             if (!state.pickup.pincode) {
                 showErr('pickup_pincode', 'Enter pickup pincode'); ok = false;
@@ -180,9 +186,15 @@
         }
 
         if (n === 4) {
+            // Sync ewaybill from DOM
+            const ewbEl = document.getElementById('ewaybill_no');
+            if (ewbEl) state.ewaybillNo = ewbEl.value.trim();
+
             // E-waybill number required if "Enter E-waybill" is selected
             if (state.ewaybillOpt === 'enter' && !state.ewaybillNo.trim()) {
-                showErr('ewaybill_no', 'E-waybill number is required when you select "Enter E-waybill Number"');
+                showErr('ewaybill_no', 'E-waybill number is required');
+                const inputRow = document.getElementById('ewaybill_input_row');
+                if (inputRow) inputRow.style.display = 'block';
                 ok = false;
             }
             // Photo uploads mandatory
@@ -265,10 +277,14 @@
         const btn = document.getElementById(`${type}_lookup_btn`);
 
         // Validate 6 digits
-        if (!pincode) return;
+        if (!pincode) {
+            showErr(`${type}_pincode`, 'Enter pickup pincode');
+            return;
+        }
         if (pincode.length < 6) {
+            showErr(`${type}_pincode`, 'Please enter 6 digit pincode');
             if (resultEl) {
-                resultEl.innerHTML = `<i class="bi bi-exclamation-triangle text-danger"></i> Please enter 6 digit pincode`;
+                resultEl.innerHTML = `<i class="bi bi-exclamation-triangle text-danger"></i> Please enter a valid 6 digit pincode`;
                 resultEl.classList.add('show');
             }
             return;
@@ -434,6 +450,10 @@
         state.weight = getWeightInKg();
         updateChargeableWeight();
     });
+    weightInput && weightInput.addEventListener('blur', () => {
+        const wt = getWeightInKg();
+        if (wt > MAX_PIECE_WEIGHT_KG) showWeightAlert(wt);
+    });
 
     const piecesInput = document.getElementById('pieces');
     piecesInput && piecesInput.addEventListener('input', () => { state.pieces = parseInt(piecesInput.value) || 1; });
@@ -524,9 +544,12 @@
         state.weight = wt;
         updateChargeableWeight();
 
+        // Price on chargeable weight (max of actual and volumetric)
+        const billingWeight = state.chargeableWeight > 0 ? state.chargeableWeight : wt;
+
         container.innerHTML = `<div class="price-loading"><span class="spinner-border spinner-border-sm me-2"></span> Calculating prices...</div>`;
 
-        const fetchUrl = `${SITE_URL}/api/pricing.php?weight=${wt}&pickup=${encodeURIComponent(state.pickup.pincode)}&delivery=${encodeURIComponent(state.delivery.pincode)}&pickup_city=${encodeURIComponent(state.pickup.city)}&pickup_state=${encodeURIComponent(state.pickup.state)}&delivery_city=${encodeURIComponent(state.delivery.city)}&delivery_state=${encodeURIComponent(state.delivery.state)}&t=${Date.now()}`;
+        const fetchUrl = `${SITE_URL}/api/pricing.php?weight=${billingWeight}&pickup=${encodeURIComponent(state.pickup.pincode)}&delivery=${encodeURIComponent(state.delivery.pincode)}&pickup_city=${encodeURIComponent(state.pickup.city)}&pickup_state=${encodeURIComponent(state.pickup.state)}&delivery_city=${encodeURIComponent(state.delivery.city)}&delivery_state=${encodeURIComponent(state.delivery.state)}&t=${Date.now()}`;
 
         fetch(fetchUrl)
             .then(r => r.json())
@@ -566,31 +589,33 @@
                 <div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#92400e;">
                     <i class="bi bi-info-circle me-1"></i>
                     <strong>Volumetric weight (${volWt.toFixed(3)} kg) exceeds actual weight (${state.weight.toFixed(3)} kg).</strong>
-                    Pricing is based on chargeable weight: <strong>${chargeableWeight.toFixed(3)} kg</strong>
+                    Priced on chargeable weight: <strong>${chargeableWeight.toFixed(3)} kg</strong>
                 </div>`;
         }
 
         container.innerHTML = weightNotice + services.map(svc => {
             const meta = serviceMap[svc.type] || { icon: 'bi-box', label: svc.type, code: '' };
 
-            // Color-code ETA/timeline by speed
-            let tatColor, tatBg, tatIcon;
+            // Color-code by speed — affects card border + badge palette
+            let tatColor, tatBg, tatBorder, tatIcon;
             if (svc.tat <= 1) {
-                tatColor = '#166534'; tatBg = '#dcfce7'; tatIcon = 'bi-lightning-fill';
+                tatColor = '#14532d'; tatBg = '#dcfce7'; tatBorder = '#16a34a'; tatIcon = 'bi-lightning-fill';
             } else if (svc.tat <= 2) {
-                tatColor = '#1e40af'; tatBg = '#dbeafe'; tatIcon = 'bi-clock-fill';
+                tatColor = '#1e3a8a'; tatBg = '#dbeafe'; tatBorder = '#2563eb'; tatIcon = 'bi-send-fill';
             } else if (svc.tat <= 4) {
-                tatColor = '#92400e'; tatBg = '#fef3c7'; tatIcon = 'bi-clock';
+                tatColor = '#78350f'; tatBg = '#fef3c7'; tatBorder = '#d97706'; tatIcon = 'bi-clock-fill';
             } else {
-                tatColor = '#374151'; tatBg = '#f3f4f6'; tatIcon = 'bi-truck';
+                tatColor = '#1f2937'; tatBg = '#f3f4f6'; tatBorder = '#6b7280'; tatIcon = 'bi-truck';
             }
 
             return `
-            <div class="service-card" data-service="${svc.type}" onclick="selectService('${svc.type}', ${svc.price}, '${escHtml(meta.label)}', '${escHtml(svc.tat_label)}')">
+            <div class="service-card" data-service="${svc.type}"
+                 style="border-left:4px solid ${tatBorder};"
+                 onclick="selectService('${svc.type}', ${svc.price}, '${escHtml(meta.label)}', '${escHtml(svc.tat_label)}')">
                 <div class="service-card-check"><i class="bi bi-check-lg"></i></div>
                 <div class="service-card-top">
                     <div>
-                        <div class="service-card-name"><i class="${meta.icon} me-2" style="color:var(--primary)"></i>${meta.label}</div>
+                        <div class="service-card-name"><i class="${meta.icon} me-2" style="color:${tatBorder}"></i>${meta.label}</div>
                         <div class="service-card-code">${meta.code}</div>
                     </div>
                     <div style="text-align:right">
@@ -598,14 +623,20 @@
                         <div class="service-card-price-label">${escHtml(zoneLabel)}</div>
                     </div>
                 </div>
-                <div class="service-card-meta">
-                    <div class="service-card-meta-item" style="background:${tatBg};color:${tatColor};border-radius:6px;padding:4px 10px;font-weight:600;">
+                <!-- Timeline row: duration → delivery day+date -->
+                <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px;padding:10px 12px;
+                            background:${tatBg};border-radius:8px;flex-wrap:wrap;">
+                    <span style="display:inline-flex;align-items:center;gap:5px;font-weight:700;font-size:13px;color:${tatColor};">
                         <i class="bi ${tatIcon}"></i> ${escHtml(svc.tat_label)}
-                    </div>
-                    <div class="service-card-meta-item" style="background:${tatBg};color:${tatColor};border-radius:6px;padding:4px 10px;">
-                        <i class="bi bi-calendar3"></i> Est. <strong>${escHtml(svc.eta)}</strong>
-                    </div>
-                    <div class="service-card-meta-item">
+                    </span>
+                    <span style="color:${tatBorder};font-weight:700;font-size:16px;">→</span>
+                    <span style="display:inline-flex;align-items:center;gap:5px;font-size:13px;color:${tatColor};">
+                        <i class="bi bi-calendar2-check" style="font-size:14px;"></i>
+                        Delivery by <strong>${escHtml(svc.eta)}</strong>
+                    </span>
+                </div>
+                <div class="service-card-meta" style="margin-top:4px;">
+                    <div class="service-card-meta-item" style="font-size:12px;color:#6b7280;">
                         <i class="bi bi-weight"></i> Chargeable: <strong>${chargeableWeight.toFixed(3)} kg</strong>
                     </div>
                 </div>
@@ -762,6 +793,14 @@
                     if (type === 'address') state.photoAddressId = data.file_id;
                     if (type === 'parcel')  state.photoParcelId  = data.file_id;
 
+                    // Show image preview
+                    const previewId = type === 'address' ? 'photo_address_preview' : 'photo_parcel_preview';
+                    const previewEl = document.getElementById(previewId);
+                    if (previewEl) {
+                        previewEl.src = data.file_url || URL.createObjectURL(file);
+                        previewEl.style.display = 'block';
+                    }
+
                     if (statusEl) {
                         statusEl.innerHTML = `<i class="bi bi-check-circle-fill text-success me-1"></i> ${escHtml(file.name)} uploaded`;
                         statusEl.style.color = '#16a34a';
@@ -864,6 +903,26 @@
 
         const packEl = document.getElementById('summary_packing');
         if (packEl) packEl.textContent = state.packingMaterial ? `Yes (+₹${state.packingCharge})` : 'No';
+
+        // Booking photos
+        const photosWrap = document.getElementById('summary_photos_wrap');
+        let anyPhoto = false;
+
+        if (state.photoAddressId) {
+            const wrap = document.getElementById('summary_photo_address_wrap');
+            const img  = document.getElementById('summary_photo_address');
+            if (img)  img.src = `${SITE_URL}/uploads/booking-photos/${encodeURIComponent(state.photoAddressId)}`;
+            if (wrap) wrap.style.display = 'block';
+            anyPhoto = true;
+        }
+        if (state.photoParcelId) {
+            const wrap = document.getElementById('summary_photo_parcel_wrap');
+            const img  = document.getElementById('summary_photo_parcel');
+            if (img)  img.src = `${SITE_URL}/uploads/booking-photos/${encodeURIComponent(state.photoParcelId)}`;
+            if (wrap) wrap.style.display = 'block';
+            anyPhoto = true;
+        }
+        if (photosWrap) photosWrap.style.display = anyPhoto ? 'block' : 'none';
     }
 
     /* ── Step 6: Payment options ── */
@@ -939,6 +998,14 @@
                 goToStep(7);
                 const trackEl = document.getElementById('final_tracking_no');
                 if (trackEl) trackEl.textContent = data.tracking_no;
+                // Show GST invoice download link if requested
+                if (state.gstInvoice && data.id) {
+                    const invoiceLink = document.getElementById('gst_invoice_link');
+                    if (invoiceLink) {
+                        invoiceLink.href = `${SITE_URL}/customer/gst-invoice.php?id=${data.id}`;
+                        invoiceLink.style.display = 'inline-flex';
+                    }
+                }
             } else {
                 showFormError(data.message || 'Booking failed. Please try again.');
                 submitBtn.disabled = false;
@@ -1049,14 +1116,11 @@
     /* ── Clear Form Button ── */
     window.clearBookingForm = function () {
         if (confirm('Are you sure you want to clear all form data? This cannot be undone.')) {
+            // Stop auto-save so it can't re-write the draft before reload
+            clearInterval(autoSaveInterval);
             clearDraft();
-            // Explicitly clear all inputs
-            document.querySelectorAll('.wizard-input, .wizard-textarea').forEach(el => {
-                if (!el.readOnly) el.value = '';
-            });
-            // Reset state to defaults
-            Object.assign(state, JSON.parse(JSON.stringify(defaultState)));
-            location.reload();
+            // Navigate fresh — avoids bfcache restoring form values
+            window.location.href = window.location.pathname + '?fresh=' + Date.now();
         }
     };
 

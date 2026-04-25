@@ -229,7 +229,7 @@ let _currentState = '';
 let _totalPages   = 1;
 let _totalRows    = 0;
 let _searchTimer  = null;
-let _loading      = false;
+let _abortCtrl    = null;
 let _groupByState = false;
 let _selectedIds  = new Set(); // track checked IDs across pages
 
@@ -277,8 +277,9 @@ function clearSearch() {
 
 /* ── Main data loader ── */
 function loadPage(page) {
-    if (_loading) return;
-    _loading = true;
+    // Cancel any in-flight request
+    if (_abortCtrl) _abortCtrl.abort();
+    _abortCtrl = new AbortController();
     _currentPage = page;
 
     const tbody = document.getElementById('pincodesBody');
@@ -293,10 +294,10 @@ function loadPage(page) {
         state: _currentState,
     });
 
-    fetch(`${API_URL}?${params}`, { credentials: 'same-origin' })
+    fetch(`${API_URL}?${params}`, { credentials: 'same-origin', signal: _abortCtrl.signal })
         .then(r => r.json())
         .then(res => {
-            _loading = false;
+            _abortCtrl = null;
             if (!res.success) {
                 tbody.innerHTML = `<tr><td colspan="11"><div class="empty-state"><p>Error loading data: ${escHtml(res.message)}</p></div></td></tr>`;
                 return;
@@ -307,7 +308,8 @@ function loadPage(page) {
             renderPagination(res.page, res.pages, res.total);
         })
         .catch(err => {
-            _loading = false;
+            if (err.name === 'AbortError') return; // silently ignore cancelled requests
+            _abortCtrl = null;
             tbody.innerHTML = `<tr><td colspan="11"><div class="empty-state"><p>Network error. Please try again.</p></div></td></tr>`;
         });
 }

@@ -102,23 +102,21 @@ if ($method === 'POST') {
         $panNumber        = trim($body['pan_number']       ?? '');
         $riskSurcharge    = trim($body['risk_surcharge']   ?? 'owner');
 
-        // ── Auto-migrate: add new columns if they don't exist ──
-        static $migrated = false;
-        if (!$migrated) {
-            $newCols = [
-                'chargeable_weight' => 'DECIMAL(8,3) DEFAULT 0',
-                'packing_charge'    => 'DECIMAL(10,2) DEFAULT 0',
-                'photo_address'     => 'VARCHAR(255) DEFAULT NULL',
-                'photo_parcel'      => 'VARCHAR(255) DEFAULT NULL',
-            ];
+        // ── Ensure required columns exist ──
+        $newCols = [
+            'chargeable_weight' => 'DECIMAL(8,3) DEFAULT 0',
+            'packing_charge'    => 'DECIMAL(10,2) DEFAULT 0',
+            'photo_address'     => 'VARCHAR(255) DEFAULT NULL',
+            'photo_parcel'      => 'VARCHAR(255) DEFAULT NULL',
+        ];
+        try {
             $existingCols = $pdo->query("SHOW COLUMNS FROM shipments")->fetchAll(PDO::FETCH_COLUMN);
             foreach ($newCols as $col => $def) {
                 if (!in_array($col, $existingCols, true)) {
-                    try { $pdo->exec("ALTER TABLE shipments ADD COLUMN `$col` $def"); } catch (\Exception $ae) {}
+                    $pdo->exec("ALTER TABLE shipments ADD COLUMN `$col` $def");
                 }
             }
-            $migrated = true;
-        }
+        } catch (\Exception $ae) {}
 
         // Validation
         $allowed = ['standard','premium','air_cargo','surface'];

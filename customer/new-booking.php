@@ -421,6 +421,7 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                                     <i class="bi bi-upload me-1"></i> Choose Photo
                                 </label>
                                 <input type="file" id="photo_address_input" accept="image/*" capture="environment" style="display:none;">
+                                <img id="photo_address_preview" style="display:none;width:100%;max-height:120px;object-fit:cover;border-radius:8px;margin-top:8px;" alt="Address photo preview">
                                 <div id="photo_address_status" style="margin-top:8px;font-size:12px;display:none;align-items:center;justify-content:center;gap:4px;"></div>
                                 <div id="photo_address_error" style="display:none;color:#dc2626;font-size:12px;margin-top:4px;"></div>
                             </div>
@@ -434,6 +435,7 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                                     <i class="bi bi-upload me-1"></i> Choose Photo
                                 </label>
                                 <input type="file" id="photo_parcel_input" accept="image/*" capture="environment" style="display:none;">
+                                <img id="photo_parcel_preview" style="display:none;width:100%;max-height:120px;object-fit:cover;border-radius:8px;margin-top:8px;" alt="Parcel photo preview">
                                 <div id="photo_parcel_status" style="margin-top:8px;font-size:12px;display:none;align-items:center;justify-content:center;gap:4px;"></div>
                                 <div id="photo_parcel_error" style="display:none;color:#dc2626;font-size:12px;margin-top:4px;"></div>
                             </div>
@@ -487,6 +489,33 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                                     <div class="pricing-row"><span>Base Freight</span><span id="summary_base_price">—</span></div>
                                     <div class="pricing-row"><span>Packing Charges</span><span id="summary_packing_price">—</span></div>
                                     <div class="pricing-row total"><span>Total Amount</span><span id="summary_final_price">—</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Booking Photos -->
+                        <div id="summary_photos_wrap" style="display:none;margin-bottom:20px;">
+                            <div class="summary-section-title mb-2">
+                                <i class="bi bi-camera me-1"></i> Booking Photos
+                            </div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                                <div id="summary_photo_address_wrap" style="display:none;">
+                                    <div style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">
+                                        <i class="bi bi-house-check me-1" style="color:#4338ca;"></i>Address Photo
+                                    </div>
+                                    <img id="summary_photo_address"
+                                         src=""
+                                         alt="Address photo"
+                                         style="width:100%;max-height:160px;object-fit:cover;border-radius:10px;border:2px solid #e0e7ff;display:block;">
+                                </div>
+                                <div id="summary_photo_parcel_wrap" style="display:none;">
+                                    <div style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">
+                                        <i class="bi bi-box-seam me-1" style="color:#0891b2;"></i>Parcel Photo
+                                    </div>
+                                    <img id="summary_photo_parcel"
+                                         src=""
+                                         alt="Parcel photo"
+                                         style="width:100%;max-height:160px;object-fit:cover;border-radius:10px;border:2px solid #e0f2fe;display:block;">
                                 </div>
                             </div>
                         </div>
@@ -588,6 +617,10 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                                 </a>
                                 <a href="new-booking.php" class="btn-outline-admin">
                                     <i class="bi bi-plus-lg me-1"></i> New Booking
+                                </a>
+                                <a href="#" id="gst_invoice_link" target="_blank"
+                                   style="display:none;align-items:center;gap:6px;background:#f0fdf4;color:#166534;border:1.5px solid #86efac;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;text-decoration:none;">
+                                    <i class="bi bi-file-earmark-text"></i> Download GST Invoice
                                 </a>
                             </div>
                         </div>

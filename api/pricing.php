@@ -44,11 +44,9 @@ function calculatePrice(float $weight, string $serviceType, PDO $pdo, ?string $z
     $order = "ORDER BY CASE WHEN weight_to IS NULL THEN 1 ELSE 0 END ASC,
                        weight_to ASC, weight_from ASC";
 
-    // Strictly ONLY look for pricing in the specific zone.
-    // We ignore NULL zones entirely because they are often legacy dummy data.
-    // If no zone is provided, we default to 'rest_of_india'.
     $targetZone = $zone ?: 'rest_of_india';
 
+    // Try zone-specific slabs first, then fall back to global (NULL zone) slabs
     $stmt = $pdo->prepare(
         "SELECT * FROM pricing_slabs
             WHERE service_type = ? AND zone = ?
@@ -56,6 +54,17 @@ function calculatePrice(float $weight, string $serviceType, PDO $pdo, ?string $z
     );
     $stmt->execute([$serviceType, $targetZone]);
     $slabs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Fall back to global slabs (zone IS NULL) if no zone-specific slabs found
+    if (empty($slabs)) {
+        $stmt = $pdo->prepare(
+            "SELECT * FROM pricing_slabs
+                WHERE service_type = ? AND zone IS NULL
+                $order"
+        );
+        $stmt->execute([$serviceType]);
+        $slabs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 
     // ── Apply slab logic ──────────────────────────────────────────────────
     foreach ($slabs as $slab) {
@@ -148,25 +157,7 @@ try {
         $maxWeight = $serviceConstraints[$type] ?? PHP_FLOAT_MAX;
         if ($weight > $maxWeight) continue;
 
-        // 2. Debug: Fetch all slabs for this service to see what's actually in the DB
-        $debugStmt = $pdo->prepare("SELECT id, zone, base_price FROM pricing_slabs WHERE service_type = ?");
-        $debugStmt->execute([$type]);
-        $allServiceSlabs = $debugStmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // 3. Strict Existence Check: ONLY show if pricing is explicitly added for the resolved zone
-        $hasZonePricing = false;
-        foreach ($allServiceSlabs as $s) {
-            if ($s['zone'] === $zone) {
-                $hasZonePricing = true;
-                break;
-            }
-        }
-        
-        if (!$hasZonePricing) {
-            continue; 
-        }
-
-        // 4. Calculate actual price (strictly for this zone)
+        // Calculate price (zone-specific, with NULL-zone fallback)
         $price = calculatePrice($weight, $type, $pdo, $zone);
         if ($price <= 0) continue;
 
@@ -180,7 +171,6 @@ try {
             'tat'       => $tat,
             'tat_label' => $tatLabel,
             'eta'       => $eta,
-            'debug_slabs' => $allServiceSlabs
         ];
     }
 
@@ -189,11 +179,6 @@ try {
         'services' => $services,
         'weight'   => $weight,
         'zone'     => $zone,
-        'debug'    => [
-            'resolved_zone' => $zone,
-            'service_count' => count($services),
-            'pincodes' => ['from' => $pickup, 'to' => $delivery]
-        ]
     ]);
 } catch (Exception $e) {
     error_log('PRICING_ERROR: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
