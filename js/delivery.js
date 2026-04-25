@@ -59,6 +59,12 @@
     /* ── LocalStorage Helper Functions ── */
     function loadDraftState() {
         try {
+            // If we just cleared the form (fresh param), ignore and purge the draft
+            if (window.location.search.includes('fresh=')) {
+                clearDraft();
+                return JSON.parse(JSON.stringify(defaultState));
+            }
+
             const stored = localStorage.getItem(STORAGE_KEY);
             if (!stored) return JSON.parse(JSON.stringify(defaultState));
 
@@ -1035,12 +1041,12 @@
     function restoreFormFields() {
         ['pincode', 'name', 'company', 'phone', 'gstin', 'addr1', 'addr2', 'city', 'state'].forEach(f => {
             const el = document.getElementById(`pickup_${f}`);
-            if (el && state.pickup[f]) el.value = state.pickup[f];
+            if (el) el.value = state.pickup[f] || '';
         });
 
         ['pincode', 'name', 'company', 'phone', 'email', 'gstin', 'addr1', 'addr2', 'city', 'state'].forEach(f => {
             const el = document.getElementById(`delivery_${f}`);
-            if (el && state.delivery[f]) el.value = state.delivery[f];
+            if (el) el.value = state.delivery[f] || '';
         });
 
         // Show pincode results if verified
