@@ -48,7 +48,7 @@ try {
     $checks[] = ['❌', 'Pincode Data', 'Run /setup.php'];
 }
 
-// 4b. Schema Check (Missing Columns)
+// 4b. Schema Check (Thorough Column Check)
 $missingCols = [];
 try {
     $required = [
@@ -58,6 +58,19 @@ try {
         'photo_parcel'      => 'VARCHAR(255) DEFAULT NULL',
         'pickup_company_name' => 'VARCHAR(120) DEFAULT NULL',
         'delivery_company_name' => 'VARCHAR(120) DEFAULT NULL',
+        'pickup_gstin'      => 'VARCHAR(20) DEFAULT NULL',
+        'delivery_gstin'    => 'VARCHAR(20) DEFAULT NULL',
+        'ewaybill_no'       => 'VARCHAR(100) DEFAULT NULL',
+        'risk_surcharge'    => "ENUM('owner','carrier') DEFAULT 'owner'",
+        'gst_invoice'       => 'TINYINT(1) DEFAULT 0',
+        'gstin'             => 'VARCHAR(20) DEFAULT NULL',
+        'pan_number'        => 'VARCHAR(15) DEFAULT NULL',
+        'customer_ref'      => 'VARCHAR(100) DEFAULT NULL',
+        'volumetric_weight' => 'DECIMAL(8,3) DEFAULT 0',
+        'length'            => 'DECIMAL(8,2) DEFAULT 0',
+        'width'             => 'DECIMAL(8,2) DEFAULT 0',
+        'height'            => 'DECIMAL(8,2) DEFAULT 0',
+        'description'       => 'TEXT DEFAULT NULL',
     ];
     $existing = $pdo->query("SHOW COLUMNS FROM shipments")->fetchAll(PDO::FETCH_COLUMN);
     foreach ($required as $col => $def) {
@@ -101,7 +114,7 @@ if (isset($_POST['fix_schema'])) {
     }
 }
 
-// Test insert
+// Test insert (Comprehensive)
 $testResult = null;
 if (isset($_POST['test'])) {
     try {
@@ -111,18 +124,35 @@ if (isset($_POST['test'])) {
 
         $stmt = $pdo->prepare("
             INSERT INTO shipments (
-                tracking_no, customer_id, pickup_name, pickup_phone, pickup_address,
-                pickup_city, pickup_state, pickup_pincode, delivery_name, delivery_phone,
-                delivery_address, delivery_city, delivery_state, delivery_pincode,
-                service_type, weight, pieces, base_price, discount_pct, discount_amount,
-                final_price, payment_method, status, estimated_delivery
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                tracking_no, customer_id,
+                pickup_name, pickup_company_name, pickup_phone, pickup_address, pickup_city, pickup_state, pickup_pincode, pickup_gstin,
+                delivery_name, delivery_company_name, delivery_phone, delivery_address, delivery_city, delivery_state, delivery_pincode, delivery_gstin,
+                service_type, weight, chargeable_weight, volumetric_weight, length, width, height, declared_value, pieces, description, customer_ref,
+                ewaybill_no, packing_material, packing_charge, photo_address, photo_parcel,
+                base_price, discount_pct, discount_amount, final_price,
+                payment_method, risk_surcharge, gst_invoice, gstin, pan_number,
+                status, estimated_delivery
+            ) VALUES (
+                ?, ?,
+                ?, ?, ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?,
+                ?, ?, ?, ?,
+                ?, ?, ?, ?, ?,
+                'booked', ?
+            )
         ");
 
         $stmt->execute([
-            $tracking, 1, 'Test', '9876543210', 'Test', 'Delhi', 'Delhi', '110001',
-            'Test', '9876543210', 'Test', 'Mumbai', 'Maharashtra', '400001',
-            'standard', 0.5, 1, 100, 0, 0, 100, 'prepaid', 'booked', $eta
+            $tracking, 1,
+            'Test', 'Test Corp', '9876543210', 'Test Addr', 'Pune', 'Maharashtra', '411048', 'GST123',
+            'Test', 'Test Corp', '9876543210', 'Test Addr', 'Pune', 'Maharashtra', '411048', 'GST123',
+            'standard', 0.5, 0.5, 0.1, 10, 10, 10, 1000, 1, 'Test Desc', 'REF123',
+            'EWAY123', 0, 0, null, null,
+            100, 0, 0, 100,
+            'prepaid', 'owner', 0, 'GST123', 'PAN123',
+            $eta
         ]);
 
         $id = $pdo->lastInsertId();
