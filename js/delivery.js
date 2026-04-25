@@ -1116,10 +1116,13 @@
     /* ── Clear Form Button ── */
     window.clearBookingForm = function () {
         if (confirm('Are you sure you want to clear all form data? This cannot be undone.')) {
-            // Stop auto-save so it can't re-write the draft before reload
+            // Stop the interval so it can't re-save between now and navigation
             clearInterval(autoSaveInterval);
+            // Reset state BEFORE navigating — beforeunload fires saveDraftState(),
+            // and if state is already empty, hasData=false so nothing gets written back
+            Object.assign(state, JSON.parse(JSON.stringify(defaultState)));
             clearDraft();
-            // Navigate fresh — avoids bfcache restoring form values
+            // Navigate to a fresh URL (prevents bfcache restoring old field values)
             window.location.href = window.location.pathname + '?fresh=' + Date.now();
         }
     };
