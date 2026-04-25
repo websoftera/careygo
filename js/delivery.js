@@ -15,58 +15,62 @@
     const MAX_DIM_H = 60;  // cm
 
     /* ── State ── */
-    const defaultState = {
-        step: 1,
-        totalSteps: 6,
-        pickup: { pincode: '', city: '', state: '', name: '', company: '', phone: '', gstin: '', addr1: '', addr2: '' },
-        delivery: { pincode: '', city: '', state: '', name: '', company: '', phone: '', email: '', gstin: '', addr1: '', addr2: '' },
-        pickupPincodeVerified: false,
-        deliveryPincodeVerified: false,
-        weight: 0,
-        unit: 'kg',
-        pieces: 1,
-        declaredValue: 0,
-        description: '',
-        customerRef: '',
-        serviceType: '',
-        servicePrice: 0,
-        serviceLabel: '',
-        serviceTat: '',
-        ewaybillOpt: 'skip',
-        ewaybillNo: '',
-        riskSurcharge: 'owner',
-        packingMaterial: false,
-        packingCharge: 0,
-        paymentMethod: 'prepaid',
-        gstInvoice: false,
-        gstin: '',
-        pan: '',
-        dim_l: 0,
-        dim_w: 0,
-        dim_h: 0,
-        volumetricWeight: 0,
-        chargeableWeight: 0,
-        photoAddressId: '',
-        photoParcelId: '',
-        savedPickupAddresses: [],
-        savedDeliveryAddresses: [],
-        selectedPickupAddrId: null,
-        selectedDeliveryAddrId: null,
-        useNewPickupAddr: false,
-        useNewDeliveryAddr: false,
-    };
+    function getDefaultState() {
+        return {
+            step: 1,
+            totalSteps: 6,
+            pickup: { pincode: '', city: '', state: '', name: '', company: '', phone: '', gstin: '', addr1: '', addr2: '' },
+            delivery: { pincode: '', city: '', state: '', name: '', company: '', phone: '', email: '', gstin: '', addr1: '', addr2: '' },
+            pickupPincodeVerified: false,
+            deliveryPincodeVerified: false,
+            weight: 0,
+            unit: 'kg',
+            pieces: 1,
+            declaredValue: 0,
+            description: '',
+            customerRef: '',
+            serviceType: '',
+            servicePrice: 0,
+            serviceLabel: '',
+            serviceTat: '',
+            ewaybillOpt: 'skip',
+            ewaybillNo: '',
+            riskSurcharge: 'owner',
+            packingMaterial: false,
+            packingCharge: 0,
+            paymentMethod: 'prepaid',
+            gstInvoice: false,
+            gstin: '',
+            pan: '',
+            dim_l: 0,
+            dim_w: 0,
+            dim_h: 0,
+            volumetricWeight: 0,
+            chargeableWeight: 0,
+            photoAddressId: '',
+            photoParcelId: '',
+            savedPickupAddresses: [],
+            savedDeliveryAddresses: [],
+            selectedPickupAddrId: null,
+            selectedDeliveryAddrId: null,
+            useNewPickupAddr: false,
+            useNewDeliveryAddr: false,
+        };
+    }
+    const defaultState = getDefaultState();
 
     /* ── LocalStorage Helper Functions ── */
     function loadDraftState() {
         try {
-            // If we just cleared the form (fresh param), ignore and purge the draft
-            if (window.location.search.includes('fresh=')) {
+            // Check if we are in the middle of a clear operation (via sessionStorage)
+            if (sessionStorage.getItem('cgo_clearing') || window.location.search.includes('fresh=')) {
+                sessionStorage.removeItem('cgo_clearing');
                 clearDraft();
-                return JSON.parse(JSON.stringify(defaultState));
+                return getDefaultState();
             }
 
             const stored = localStorage.getItem(STORAGE_KEY);
-            if (!stored) return JSON.parse(JSON.stringify(defaultState));
+            if (!stored) return getDefaultState();
 
             const data = JSON.parse(stored);
             const timestamp = data._timestamp || 0;
@@ -74,15 +78,22 @@
 
             if (now - timestamp > STORAGE_EXPIRY) {
                 clearDraft();
-                return JSON.parse(JSON.stringify(defaultState));
+                return getDefaultState();
             }
 
-            const restored = { ...defaultState, ...data };
+            // Deep merge/clone to prevent mutating defaultState
+            const restored = JSON.parse(JSON.stringify(defaultState));
+            Object.assign(restored, data);
+            
+            // Ensure nested objects are also cloned if they exist in data
+            if (data.pickup)   restored.pickup   = { ...restored.pickup,   ...data.pickup };
+            if (data.delivery) restored.delivery = { ...restored.delivery, ...data.delivery };
+            
             restored.step = 1;
             return restored;
         } catch (e) {
             console.warn('Could not load draft:', e);
-            return JSON.parse(JSON.stringify(defaultState));
+            return getDefaultState();
         }
     }
 
@@ -92,11 +103,21 @@
     }
 
     function saveDraftState() {
-        if (isClearing) return;
+        if (isClearing || sessionStorage.getItem('cgo_clearing')) return;
         try {
             const toSave = { ...state, _timestamp: Date.now() };
-            const hasData = (state.pickup && state.pickup.pincode) || (state.delivery && state.delivery.pincode) || state.weight > 0 || state.serviceType;
-            if (hasData) localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+            // Robust check for data presence
+            const hasData = (state.pickup && state.pickup.pincode && state.pickup.pincode.length > 0) || 
+                            (state.delivery && state.delivery.pincode && state.delivery.pincode.length > 0) || 
+                            (state.weight && state.weight > 0) || 
+                            (state.serviceType && state.serviceType.length > 0);
+            
+            if (hasData) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+            } else {
+                // If no data, ensure we don't have an old draft lingering
+                clearDraft();
+            }
         } catch (e) {
             console.warn('Could not save draft:', e);
         }
@@ -1122,16 +1143,19 @@
     /* ── Clear Form Button ── */
     window.clearBookingForm = function () {
         if (confirm('Are you sure you want to clear all form data? This cannot be undone.')) {
-            isClearing = true; // Block any auto-saves
+            sessionStorage.setItem('cgo_clearing', '1');
+            isClearing = true;
             clearInterval(autoSaveInterval);
             clearDraft();
-            // Reset state object
-            Object.keys(state).forEach(key => {
-                if (defaultState.hasOwnProperty(key)) {
-                    state[key] = JSON.parse(JSON.stringify(defaultState[key]));
-                }
+            
+            // Explicitly clear all inputs in the DOM immediately
+            const allInputs = document.querySelectorAll('.wizard-input, .wizard-select');
+            allInputs.forEach(input => {
+                if (input.type === 'checkbox' || input.type === 'radio') input.checked = false;
+                else input.value = '';
             });
-            // Navigate to a fresh URL
+
+            // Redirect to ensure fresh start
             window.location.href = window.location.pathname + '?fresh=' + Date.now();
         }
     };
