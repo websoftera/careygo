@@ -369,8 +369,40 @@ function generateReceiptPDF($shipment)
     $pdf->Cell(60, 6, 'customersupport@careygo.in', 0, 0, 'C');
     $pdf->Cell(50, 6, '+91 87804 06230', 0, 0, 'R');
 
+    // Images Section (Before T&C)
+    $imgY = 232;
+    $hasImages = false;
+    $uploadDir = __DIR__ . '/../uploads/booking-photos/';
+    
+    // Parcel Photo
+    if (!empty($shipment['photo_parcel'])) {
+        $pPath = $uploadDir . $shipment['photo_parcel'];
+        if (file_exists($pPath)) {
+            $pdf->SetXY(12, $imgY);
+            $pdf->SetFont('Arial', 'B', 7);
+            $pdf->SetTextColor(100, 100, 100);
+            $pdf->Cell(40, 4, 'PARCEL PHOTO', 0, 1, 'L');
+            $pdf->Image($pPath, 12, $imgY + 4, 35, 25);
+            $hasImages = true;
+        }
+    }
+    
+    // Address Photo
+    if (!empty($shipment['photo_address'])) {
+        $aPath = $uploadDir . $shipment['photo_address'];
+        if (file_exists($aPath)) {
+            $pdf->SetXY(55, $imgY);
+            $pdf->SetFont('Arial', 'B', 7);
+            $pdf->SetTextColor(100, 100, 100);
+            $pdf->Cell(40, 4, 'ADDRESS PHOTO', 0, 1, 'L');
+            $pdf->Image($aPath, 55, $imgY + 4, 35, 25);
+            $hasImages = true;
+        }
+    }
+
     // Terms & Conditions Block
-    $pdf->SetXY(10, 235);
+    $tcY = $hasImages ? 268 : 235;
+    $pdf->SetXY(10, $tcY);
     $pdf->SetTextColor(0, 0, 0);
     $pdf->SetFont('Arial', 'B', 10);
     $pdf->Cell(50, 6, 'Terms & Conditions:', 0, 1, 'L');
