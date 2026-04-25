@@ -48,6 +48,32 @@ try {
     $checks[] = ['❌', 'Pincode Data', 'Run /setup.php'];
 }
 
+// 4b. Schema Check (Missing Columns)
+$missingCols = [];
+try {
+    $required = [
+        'chargeable_weight' => 'DECIMAL(8,3) DEFAULT 0',
+        'packing_charge'    => 'DECIMAL(10,2) DEFAULT 0',
+        'photo_address'     => 'VARCHAR(255) DEFAULT NULL',
+        'photo_parcel'      => 'VARCHAR(255) DEFAULT NULL',
+        'pickup_company_name' => 'VARCHAR(120) DEFAULT NULL',
+        'delivery_company_name' => 'VARCHAR(120) DEFAULT NULL',
+    ];
+    $existing = $pdo->query("SHOW COLUMNS FROM shipments")->fetchAll(PDO::FETCH_COLUMN);
+    foreach ($required as $col => $def) {
+        if (!in_array($col, $existing, true)) {
+            $missingCols[$col] = $def;
+        }
+    }
+    if (empty($missingCols)) {
+        $checks[] = ['✅', 'Database Schema', 'Up to date'];
+    } else {
+        $checks[] = ['⚠️', 'Database Schema', count($missingCols) . ' columns missing'];
+    }
+} catch (Exception $e) {
+    $checks[] = ['❌', 'Database Schema', $e->getMessage()];
+}
+
 // 5. Helpers
 try {
     require_once __DIR__ . '/../lib/helpers.php';
@@ -55,6 +81,24 @@ try {
     $checks[] = ['✅', 'Helper Functions', 'Working'];
 } catch (Exception $e) {
     $checks[] = ['❌', 'Helper Functions', 'Error: ' . $e->getMessage()];
+}
+
+// Fix schema
+$fixResult = null;
+if (isset($_POST['fix_schema'])) {
+    try {
+        $logs = [];
+        foreach ($missingCols as $col => $def) {
+            $pdo->exec("ALTER TABLE shipments ADD COLUMN `$col` $def");
+            $logs[] = "Added $col";
+        }
+        $fixResult = ['ok' => true, 'logs' => $logs];
+        // Refresh checks
+        header("Location: system-check.php?fixed=1");
+        exit;
+    } catch (Exception $e) {
+        $fixResult = ['ok' => false, 'error' => $e->getMessage()];
+    }
 }
 
 // Test insert
@@ -88,6 +132,8 @@ if (isset($_POST['test'])) {
         $testResult = ['ok' => false, 'error' => $e->getMessage()];
     }
 }
+
+$fixed = isset($_GET['fixed']);
 ?>
 <!DOCTYPE html>
 <html>
@@ -114,7 +160,7 @@ if (isset($_POST['test'])) {
 
 <div class="check-card">
     <h3>🔍 System Diagnostics</h3>
-
+    
     <?php if ($testResult): ?>
         <?php if ($testResult['ok']): ?>
             <div class="alert alert-success">
@@ -129,6 +175,20 @@ if (isset($_POST['test'])) {
         <?php endif; ?>
     <?php endif; ?>
 
+    <?php if ($fixed): ?>
+        <div class="alert alert-success">
+            <strong>✅ Database Schema Fixed!</strong><br>
+            All missing columns have been added to the shipments table.
+        </div>
+    <?php endif; ?>
+
+    <?php if ($fixResult && !$fixResult['ok']): ?>
+        <div class="alert alert-danger">
+            <strong>❌ Fix Failed!</strong><br>
+            <code><?= htmlspecialchars($fixResult['error']) ?></code>
+        </div>
+    <?php endif; ?>
+
     <?php foreach ($checks as $check): ?>
     <div class="check-row">
         <div class="check-icon"><?= $check[0] ?></div>
@@ -139,11 +199,21 @@ if (isset($_POST['test'])) {
     </div>
     <?php endforeach; ?>
 
-    <form method="POST" style="margin-top: 20px;">
-        <button type="submit" name="test" value="1" class="btn btn-primary btn-sm">
-            Test Booking Insert
-        </button>
-    </form>
+    <div class="d-flex gap-2">
+        <?php if (!empty($missingCols)): ?>
+        <form method="POST">
+            <button type="submit" name="fix_schema" value="1" class="btn btn-warning btn-sm">
+                Fix Database Schema
+            </button>
+        </form>
+        <?php endif; ?>
+
+        <form method="POST">
+            <button type="submit" name="test" value="1" class="btn btn-primary btn-sm">
+                Test Booking Insert
+            </button>
+        </form>
+    </div>
 </div>
 
 </body>
