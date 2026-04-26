@@ -27,9 +27,6 @@ require_once 'includes/header.php';
             <i class="bi bi-upload me-1"></i> Import CSV
         </button>
         <input type="file" id="csvUpload" accept=".csv" style="display:none" onchange="importCsv(this)">
-        <button class="btn-outline-admin" id="btnGroupByState" onclick="toggleGroupByState()" title="Toggle state-wise grouping">
-            <i class="bi bi-collection me-1"></i> Group by State
-        </button>
         <button id="btnBulkDelete" class="btn-action danger" style="display:none;padding:5px 12px;height:auto;color:white;background:#dc3545;" onclick="confirmBulkDelete()">
             <i class="bi bi-trash me-1"></i> Delete Selected
         </button>
@@ -39,23 +36,6 @@ require_once 'includes/header.php';
     </div>
 </div>
 
-<!-- State filter bar (hidden by default, loaded via AJAX) -->
-<div id="stateFilterBar" style="display:none;margin-bottom:16px;">
-    <div class="admin-card" style="padding:14px 16px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-            <span style="font-size:13px;font-weight:600;color:var(--text);">
-                <i class="bi bi-map me-1 text-primary"></i> Filter by State
-            </span>
-            <button onclick="clearStateFilter()" id="clearStateBtn"
-                    style="display:none;background:none;border:none;font-size:12px;color:#dc2626;cursor:pointer;font-weight:600;">
-                <i class="bi bi-x-circle me-1"></i> Clear Filter
-            </button>
-        </div>
-        <div id="stateButtons" style="display:flex;flex-wrap:wrap;gap:8px;">
-            <span style="font-size:12px;color:#6b7280;"><span class="spinner-border spinner-border-sm me-1"></span>Loading states…</span>
-        </div>
-    </div>
-</div>
 
 <div class="alert d-flex gap-2 mb-3" style="font-size:12px;border-radius:12px;border:none;background:rgba(245,158,11,0.08);color:#92400e;">
     <i class="bi bi-info-circle-fill mt-1 flex-shrink-0"></i>
@@ -168,23 +148,6 @@ require_once 'includes/header.php';
 </div>
 
 <style>
-/* ── State filter buttons ── */
-.state-filter-btn {
-    background: #f3f4f6;
-    color: #374151;
-    border: 1.5px solid #e5e7eb;
-    border-radius: 20px;
-    padding: 4px 14px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all .15s;
-    font-family: 'Poppins', sans-serif;
-    white-space: nowrap;
-}
-.state-filter-btn:hover { border-color: var(--primary); color: var(--primary); background: #eef2ff; }
-.state-filter-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-
 /* ── Pagination buttons ── */
 .pg-btn {
     min-width: 34px;
@@ -225,12 +188,10 @@ const PER_PAGE = 40;
 
 let _currentPage  = 1;
 let _currentQ     = '';
-let _currentState = '';
 let _totalPages   = 1;
 let _totalRows    = 0;
 let _searchTimer  = null;
 let _abortCtrl    = null;
-let _groupByState = false;
 let _selectedIds  = new Set(); // track checked IDs across pages
 
 /* ── Init ── */
@@ -289,9 +250,8 @@ function loadPage(page) {
         </div></td></tr>`;
 
     const params = new URLSearchParams({
-        page:  page,
-        q:     _currentQ,
-        state: _currentState,
+        page: page,
+        q:    _currentQ,
     });
 
     fetch(`${API_URL}?${params}`, { credentials: 'same-origin', signal: _abortCtrl.signal })
@@ -323,7 +283,7 @@ function renderRows(rows, q) {
             <div class="empty-state">
                 <i class="bi bi-geo-alt" style="font-size:32px;color:#d1d5db;"></i>
                 <p style="margin-top:8px;color:#6b7280;">
-                    ${_currentQ || _currentState ? 'No pincodes match your search.' : 'No pincodes yet. Import a CSV or add manually.'}
+                    ${_currentQ ? 'No pincodes match your search.' : 'No pincodes yet. Import a CSV or add manually.'}
                 </p>
             </div></td></tr>`;
         return;
@@ -380,10 +340,8 @@ function renderPagination(page, pages, total) {
 
     // Result info
     const info = document.getElementById('pageInfo');
-    if (_currentQ || _currentState) {
-        info.innerHTML = `Showing <strong>${from}–${to}</strong> of <strong>${total}</strong> results
-            ${_currentQ ? `for "<strong>${escHtml(_currentQ)}</strong>"` : ''}
-            ${_currentState ? `in <strong>${escHtml(_currentState)}</strong>` : ''}`;
+    if (_currentQ) {
+        info.innerHTML = `Showing <strong>${from}–${to}</strong> of <strong>${total}</strong> results for "<strong>${escHtml(_currentQ)}</strong>"`;
     } else {
         info.innerHTML = total === 0 ? 'No pincodes found.' : `Showing <strong>${from}–${to}</strong> of <strong>${total.toLocaleString()}</strong> pincodes`;
     }
@@ -487,69 +445,6 @@ function confirmBulkDelete() {
             }
         });
     });
-}
-
-/* ── State grouping ── */
-function toggleGroupByState() {
-    _groupByState = !_groupByState;
-    const btn = document.getElementById('btnGroupByState');
-    const bar = document.getElementById('stateFilterBar');
-
-    if (_groupByState) {
-        btn.style.background    = 'var(--primary)';
-        btn.style.color         = '#fff';
-        btn.style.borderColor   = 'var(--primary)';
-        bar.style.display       = 'block';
-        loadStateButtons();
-    } else {
-        btn.style.background  = '';
-        btn.style.color       = '';
-        btn.style.borderColor = '';
-        bar.style.display     = 'none';
-        clearStateFilter();
-    }
-}
-
-function loadStateButtons() {
-    fetch(`${API_URL}?action=states`, { credentials: 'same-origin' })
-        .then(r => r.json())
-        .then(res => {
-            if (!res.success) return;
-            const container = document.getElementById('stateButtons');
-            const total = res.states.reduce((s, x) => s + parseInt(x.cnt), 0);
-
-            container.innerHTML =
-                `<button class="state-filter-btn ${!_currentState ? 'active' : ''}"
-                         onclick="applyStateFilter('', this)">
-                     All States <span style="opacity:.7;">(${total.toLocaleString()})</span>
-                 </button>` +
-                res.states.map(s =>
-                    `<button class="state-filter-btn ${_currentState === s.state ? 'active' : ''}"
-                             onclick="applyStateFilter(${JSON.stringify(s.state)}, this)">
-                         ${escHtml(s.state)}
-                         <span style="opacity:.7;">(${parseInt(s.cnt).toLocaleString()})</span>
-                     </button>`
-                ).join('');
-        });
-}
-
-function applyStateFilter(state, clickedBtn) {
-    document.querySelectorAll('.state-filter-btn').forEach(b => b.classList.remove('active'));
-    if (clickedBtn) clickedBtn.classList.add('active');
-    _currentState = state;
-    const clearBtn = document.getElementById('clearStateBtn');
-    clearBtn.style.display = state ? 'inline-block' : 'none';
-    loadPage(1);
-}
-
-function clearStateFilter() {
-    _currentState = '';
-    document.getElementById('clearStateBtn').style.display = 'none';
-    document.querySelectorAll('.state-filter-btn').forEach(b => b.classList.remove('active'));
-    const allBtn = document.querySelector('.state-filter-btn[onclick*="\'\'"]') ||
-                   document.querySelector('.state-filter-btn');
-    if (allBtn) allBtn.classList.add('active');
-    loadPage(1);
 }
 
 /* ── Add pincode ── */
