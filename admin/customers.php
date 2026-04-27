@@ -9,6 +9,13 @@ $activePage = 'customers';
 $filter = $_GET['status'] ?? '';
 $search = trim($_GET['q'] ?? '');
 
+try {
+    $userCols = $pdo->query("SHOW COLUMNS FROM users")->fetchAll(PDO::FETCH_COLUMN);
+    if (!in_array('customer_earning_pct', $userCols, true)) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN customer_earning_pct DECIMAL(5,2) NOT NULL DEFAULT 0.00");
+    }
+} catch (Exception $e) {}
+
 $where  = "WHERE role = 'customer'";
 $params = [];
 if ($filter && in_array($filter, ['pending','approved','rejected'])) {
@@ -74,6 +81,7 @@ require_once 'includes/header.php';
                     <th>Customer</th>
                     <th>Phone</th>
                     <th>Company</th>
+                    <th>Earning %</th>
                     <th>Status</th>
                     <th>Registered</th>
                     <th>Actions</th>
@@ -81,7 +89,7 @@ require_once 'includes/header.php';
             </thead>
             <tbody>
                 <?php if (empty($customers)): ?>
-                <tr><td colspan="7"><div class="empty-state"><i class="bi bi-people"></i><p>No customers found</p></div></td></tr>
+                <tr><td colspan="8"><div class="empty-state"><i class="bi bi-people"></i><p>No customers found</p></div></td></tr>
                 <?php else: ?>
                 <?php foreach ($customers as $c): ?>
                 <tr id="row_<?= $c['id'] ?>">
@@ -97,6 +105,7 @@ require_once 'includes/header.php';
                     </td>
                     <td style="font-size:13px;"><?= htmlspecialchars($c['phone']) ?></td>
                     <td style="font-size:13px;"><?= htmlspecialchars($c['company_name'] ?: '—') ?></td>
+                    <td style="font-size:13px;font-weight:700;color:var(--primary);" id="earning_pct_<?= $c['id'] ?>"><?= number_format((float)($c['customer_earning_pct'] ?? 0), 2) ?>%</td>
                     <td><span class="badge-status badge-<?= $c['status'] ?>" id="badge_<?= $c['id'] ?>"><?= ucfirst($c['status']) ?></span></td>
                     <td style="font-size:12px;color:var(--muted);"><?= date('d M Y', strtotime($c['created_at'])) ?></td>
                     <td>
@@ -114,6 +123,9 @@ require_once 'includes/header.php';
                             <button class="btn-action" onclick="viewCustomer(<?= $c['id'] ?>)" title="View Details">
                                 <i class="bi bi-eye"></i>
                             </button>
+                            <button class="btn-action" onclick="openEarningModal(<?= (int)$c['id'] ?>, <?= htmlspecialchars(json_encode($c['full_name']), ENT_QUOTES, 'UTF-8') ?>, <?= htmlspecialchars(json_encode((float)($c['customer_earning_pct'] ?? 0)), ENT_QUOTES, 'UTF-8') ?>)" title="Edit Earning Percentage">
+                                <i class="bi bi-percent"></i>
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -121,6 +133,34 @@ require_once 'includes/header.php';
                 <?php endif; ?>
             </tbody>
         </table>
+    </div>
+</div>
+
+<!-- Customer Earning Modal -->
+<div class="modal fade admin-modal" id="earningModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title"><i class="bi bi-cash-coin me-2"></i>Customer Earning</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="earning_customer_id">
+                <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Set earning percentage for <strong id="earning_customer_name"></strong>. New bookings will use this percentage.</div>
+                <div class="form-group">
+                    <label class="form-label" style="font-size:12px;font-weight:600;">Earning Percentage</label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" id="earning_pct_input" min="0" max="100" step="0.01" placeholder="0.00">
+                        <span class="input-group-text">%</span>
+                    </div>
+                    <div class="form-text">Example: booking amount Rs.100 with 10% earning gives Rs.10 earning.</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-outline-admin" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-primary-admin" onclick="saveEarningPct()">Save</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -179,11 +219,46 @@ function viewCustomer(id) {
             </div>
             <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value">${escH(c.phone)}</span></div>
             <div class="detail-row"><span class="detail-label">Company</span><span class="detail-value">${escH(c.company_name||'—')}</span></div>
+            <div class="detail-row"><span class="detail-label">Earning %</span><span class="detail-value"><strong>${Number(c.customer_earning_pct || 0).toFixed(2)}%</strong></span></div>
+            <div class="detail-row"><span class="detail-label">Total Earnings</span><span class="detail-value"><strong>Rs.${Number(c.total_earnings || 0).toFixed(0)}</strong></span></div>
             <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value"><span class="badge-status badge-${c.status}">${c.status}</span></span></div>
             <div class="detail-row"><span class="detail-label">Total Shipments</span><span class="detail-value"><strong>${c.total_shipments||0}</strong></span></div>
             <div class="detail-row"><span class="detail-label">Registered</span><span class="detail-value">${new Date(c.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</span></div>
         `;
     });
+}
+function openEarningModal(id, name, pct) {
+    document.getElementById('earning_customer_id').value = id;
+    document.getElementById('earning_customer_name').textContent = name || 'Customer';
+    document.getElementById('earning_pct_input').value = Number(pct || 0).toFixed(2);
+    new bootstrap.Modal(document.getElementById('earningModal')).show();
+}
+function saveEarningPct() {
+    const id = Number(document.getElementById('earning_customer_id').value || 0);
+    const earning_pct = Number(document.getElementById('earning_pct_input').value || 0);
+    if (!id || Number.isNaN(earning_pct) || earning_pct < 0 || earning_pct > 100) {
+        showToast('Enter earning percentage between 0 and 100', 'error');
+        return;
+    }
+    fetch('<?= SITE_URL ?>/api/admin/customers.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({id, earning_pct}),
+        credentials: 'same-origin'
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const pct = Number(data.earning_pct || earning_pct);
+            const cell = document.getElementById(`earning_pct_${id}`);
+            if (cell) cell.textContent = `${pct.toFixed(2)}%`;
+            bootstrap.Modal.getInstance(document.getElementById('earningModal'))?.hide();
+            showToast('Customer earning percentage updated', 'success');
+        } else {
+            showToast(data.message || 'Failed to update earning percentage', 'error');
+        }
+    })
+    .catch(() => showToast('Network error', 'error'));
 }
 function escH(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
 </script>

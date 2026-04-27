@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS `users` (
     `email`         VARCHAR(191)    NOT NULL UNIQUE,
     `phone`         VARCHAR(20)     NOT NULL,
     `company_name`  VARCHAR(120)    DEFAULT NULL,
+    `customer_earning_pct` DECIMAL(5,2) NOT NULL DEFAULT 0.00,
     `password_hash` VARCHAR(255)    NOT NULL,
     `role`          ENUM('customer','admin') NOT NULL DEFAULT 'customer',
     `status`        ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',

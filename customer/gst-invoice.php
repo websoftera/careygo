@@ -32,11 +32,18 @@ $invoiceNo   = 'INV-' . str_pad($s['id'], 6, '0', STR_PAD_LEFT) . '-' . date('Y'
 $invoiceDate = date('d M Y', strtotime($s['created_at']));
 
 // Tax calculation (18% GST — 9% CGST + 9% SGST for same-state; 18% IGST for inter-state)
-$baseAmt  = (float) $s['final_price'];
-// Reverse calculate: assume price is inclusive of GST
+$totalAmt   = (float) $s['final_price'];
+$packingAmt = (float) ($s['packing_charge'] ?? 0);
+$freightAmt = max(0, $totalAmt - $packingAmt);
+// Reverse calculate: assume prices are inclusive of GST
 $gstRate  = 0.18;
-$taxable  = round($baseAmt / (1 + $gstRate), 2);
-$gstAmt   = round($baseAmt - $taxable, 2);
+$taxable  = round($freightAmt / (1 + $gstRate), 2);
+$gstAmt   = round($freightAmt - $taxable, 2);
+$packTaxable = $packTax = 0;
+if ($packingAmt > 0) {
+    $packTaxable = round($packingAmt / (1 + $gstRate), 2);
+    $packTax     = round($packingAmt - $packTaxable, 2);
+}
 $sameState = strtolower(trim($s['pickup_state'] ?? '')) === strtolower(trim($s['delivery_state'] ?? ''));
 $cgst = $sgst = $igst = 0;
 if ($sameState) {
@@ -234,18 +241,14 @@ $serviceDesc = $serviceLabels[$s['service_type']] ?? ucwords(str_replace('_',' '
                     <?php else: ?>
                     <td class="text-right">₹<?= number_format($igst, 2) ?></td>
                     <?php endif; ?>
-                    <td class="text-right"><strong>₹<?= number_format($baseAmt, 2) ?></strong></td>
+                    <td class="text-right"><strong>₹<?= number_format($freightAmt, 2) ?></strong></td>
                 </tr>
-                <?php if ($s['packing_charge'] > 0): ?>
+                <?php if ($packingAmt > 0): ?>
                 <tr>
                     <td>2</td>
                     <td>Packing Material & Labour</td>
                     <td class="text-right">996812</td>
                     <td class="text-right">—</td>
-                    <?php
-                        $packTaxable = round((float)$s['packing_charge'] / 1.18, 2);
-                        $packTax     = round((float)$s['packing_charge'] - $packTaxable, 2);
-                    ?>
                     <td class="text-right">₹<?= number_format($packTaxable, 2) ?></td>
                     <?php if ($sameState): ?>
                     <td class="text-right">₹<?= number_format($packTax/2, 2) ?></td>
@@ -253,7 +256,7 @@ $serviceDesc = $serviceLabels[$s['service_type']] ?? ucwords(str_replace('_',' '
                     <?php else: ?>
                     <td class="text-right">₹<?= number_format($packTax, 2) ?></td>
                     <?php endif; ?>
-                    <td class="text-right"><strong>₹<?= number_format((float)$s['packing_charge'], 2) ?></strong></td>
+                    <td class="text-right"><strong>₹<?= number_format($packingAmt, 2) ?></strong></td>
                 </tr>
                 <?php endif; ?>
             </tbody>
@@ -269,16 +272,16 @@ $serviceDesc = $serviceLabels[$s['service_type']] ?? ucwords(str_replace('_',' '
             </div>
             <div class="inv-totals">
                 <table>
-                    <tr><td>Taxable Amount</td><td class="td-right">₹<?= number_format($taxable + ($s['packing_charge'] > 0 ? $packTaxable : 0), 2) ?></td></tr>
+                    <tr><td>Taxable Amount</td><td class="td-right">₹<?= number_format($taxable + $packTaxable, 2) ?></td></tr>
                     <?php if ($sameState): ?>
-                    <tr><td>CGST @ 9%</td><td class="td-right">₹<?= number_format($cgst + ($s['packing_charge'] > 0 ? $packTax/2 : 0), 2) ?></td></tr>
-                    <tr><td>SGST @ 9%</td><td class="td-right">₹<?= number_format($sgst + ($s['packing_charge'] > 0 ? $packTax/2 : 0), 2) ?></td></tr>
+                    <tr><td>CGST @ 9%</td><td class="td-right">₹<?= number_format($cgst + ($packTax/2), 2) ?></td></tr>
+                    <tr><td>SGST @ 9%</td><td class="td-right">₹<?= number_format($sgst + ($packTax/2), 2) ?></td></tr>
                     <?php else: ?>
-                    <tr><td>IGST @ 18%</td><td class="td-right">₹<?= number_format($igst + ($s['packing_charge'] > 0 ? $packTax : 0), 2) ?></td></tr>
+                    <tr><td>IGST @ 18%</td><td class="td-right">₹<?= number_format($igst + $packTax, 2) ?></td></tr>
                     <?php endif; ?>
                     <tr class="total-row">
                         <td style="padding:10px 12px;">TOTAL AMOUNT</td>
-                        <td class="td-right" style="padding:10px 12px;">₹<?= number_format($baseAmt + (float)($s['packing_charge'] ?? 0), 2) ?></td>
+                        <td class="td-right" style="padding:10px 12px;">₹<?= number_format($totalAmt, 2) ?></td>
                     </tr>
                 </table>
             </div>

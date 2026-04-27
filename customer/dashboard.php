@@ -119,6 +119,7 @@ $serviceLabels = ['standard'=>'Standard Express','premium'=>'Premium Express','a
                     <th>Service</th>
                     <th>Weight</th>
                     <th>Amount</th>
+                    <th>Earning</th>
                     <th>Status</th>
                     <th>Date</th>
                     <th></th>
@@ -135,14 +136,21 @@ $serviceLabels = ['standard'=>'Standard Express','premium'=>'Premium Express','a
                     <div style="color:var(--muted)">→ <?= htmlspecialchars($s['delivery_city']) ?></div>
                 </td>
                 <td style="font-size:12px;"><?= htmlspecialchars($serviceLabels[$s['service_type']] ?? $s['service_type']) ?></td>
-                <td style="font-size:12px;"><?= number_format((float)$s['weight'], 3) ?> kg</td>
+                <td style="font-size:12px;"><?= number_format((float)($s['chargeable_weight'] ?: $s['weight']), 3) ?> kg</td>
                 <td style="font-size:13px;font-weight:700;">₹<?= number_format($s['final_price'], 0) ?></td>
+                <td style="font-size:12px;">
+                    <div style="font-weight:700;color:var(--success);">Rs.<?= number_format((float)($s['customer_earning_amount'] ?? 0), 0) ?></div>
+                    <div style="color:var(--muted);"><?= number_format((float)($s['customer_earning_pct'] ?? 0), 2) ?>%</div>
+                </td>
                 <td><span class="badge-status badge-<?= $s['status'] ?>"><?= ucwords(str_replace('_', ' ', $s['status'])) ?></span></td>
                 <td style="font-size:11px;color:var(--muted)"><?= date('d M Y', strtotime($s['created_at'])) ?></td>
                 <td>
                     <div class="d-flex gap-1">
                         <a href="tracking.php?id=<?= $s['id'] ?>" class="btn-new-delivery" style="font-size:11px;padding:5px 10px;" title="Track"><i class="bi bi-geo-alt"></i></a>
                         <a href="../api/download_receipt.php?tracking_no=<?= urlencode($s['tracking_no']) ?>" target="_blank" class="btn-outline-admin" style="font-size:11px;padding:5px 10px;" title="Download Receipt"><i class="bi bi-file-earmark-pdf"></i></a>
+                        <?php if (!empty($s['gst_invoice']) || !empty($s['gstin']) || !empty($s['pickup_gstin']) || !empty($s['delivery_gstin'])): ?>
+                        <a href="gst-invoice.php?id=<?= $s['id'] ?>" target="_blank" class="btn-outline-admin" style="font-size:11px;padding:5px 10px;" title="GST Invoice"><i class="bi bi-receipt"></i></a>
+                        <?php endif; ?>
                         <a href="shipment.php?id=<?= $s['id'] ?>" class="btn-outline-admin" style="font-size:11px;padding:5px 10px;" title="View Details"><i class="bi bi-eye"></i></a>
                     </div>
                 </td>

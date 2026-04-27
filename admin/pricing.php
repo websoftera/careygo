@@ -53,7 +53,7 @@ require_once 'includes/header.php';
 </div>
 
 <!-- Packing Material Charge Card -->
-<div class="admin-card mb-4">
+<div class="admin-card mb-4" id="packing-material-charge">
     <div class="admin-card-header">
         <h6 class="admin-card-title"><i class="bi bi-box2-heart me-2"></i>Packing Material Charge</h6>
     </div>
@@ -352,7 +352,8 @@ require_once 'includes/header.php';
 function savePackingCharge() {
     const btn = document.getElementById('savePackingBtn');
     const val = document.getElementById('packing_charge_input').value;
-    if (!val || isNaN(parseFloat(val))) { showToast('Enter a valid charge amount', 'warning'); return; }
+    const amount = parseFloat(val);
+    if (val === '' || isNaN(amount) || amount < 0) { showToast('Enter a valid charge amount', 'warning'); return; }
 
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving…';
@@ -360,7 +361,7 @@ function savePackingCharge() {
     fetch('<?= SITE_URL ?>/api/admin/settings.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key: 'packing_charge', value: val }),
+        body: JSON.stringify({ key: 'packing_charge', value: amount.toFixed(2) }),
         credentials: 'same-origin'
     })
     .then(r => r.json())

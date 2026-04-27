@@ -38,6 +38,7 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
         <ul>
             <li class="cust-nav-label">Navigation</li>
             <li><a href="dashboard.php" class="cust-nav-link"><i class="bi bi-grid-1x2"></i> Dashboard</a></li>
+            <li><a href="earnings.php" class="cust-nav-link"><i class="bi bi-cash-coin"></i> My Earnings</a></li>
             <li><a href="new-booking.php" class="cust-nav-link active"><i class="bi bi-plus-circle"></i> New Booking</a></li>
             <li><a href="#" class="cust-nav-link" onclick="openRateCalc();return false;"><i class="bi bi-calculator"></i> Rate Calculator</a></li>
             <li class="cust-nav-label mt-2">Account</li>
@@ -305,8 +306,9 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
 
                         <div class="form-grid-2">
                             <div class="wizard-form-group">
-                                <label class="wizard-label">Declared Value (₹)</label>
+                                <label class="wizard-label">Total Value of Consignment (Rs.) <span class="req">*</span></label>
                                 <input type="number" class="wizard-input" id="declared_value" min="0" step="0.01" placeholder="0.00">
+                                <div class="wizard-error" id="err_declared_value"></div>
                             </div>
                             <div class="wizard-form-group">
                                 <label class="wizard-label">Customer Reference No.</label>
@@ -332,7 +334,7 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                         <h6 class="admin-card-title"><i class="bi bi-lightning me-2 text-primary"></i>Step 3 — Select Service</h6>
                     </div>
                     <div class="admin-card-body">
-                        <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Prices calculated based on your shipment weight. Select a service to continue.</p>
+                        <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Prices calculated based on chargeable weight. Select a service to continue.</p>
                         <div id="services_container">
                             <div class="price-loading"><span class="spinner-border spinner-border-sm me-2 text-primary"></span> Loading services...</div>
                         </div>
@@ -398,7 +400,7 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                             <input type="checkbox" style="display:none;">
                             <div class="cust-checkbox-box"><i class="bi bi-check-lg"></i></div>
                             <div>
-                                <div style="font-size:13px;font-weight:600;">Packing Material <span style="font-size:11px;color:#6b7280;">(click to see charges)</span></div>
+                                <div style="font-size:13px;font-weight:600;">Packing Material <span id="packing_charge_hint" style="font-size:11px;color:#6b7280;">(click to see charges)</span></div>
                                 <div style="font-size:12px;color:var(--muted);">Include professional packing material for your shipment</div>
                             </div>
                         </label>

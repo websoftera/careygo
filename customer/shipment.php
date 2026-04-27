@@ -32,6 +32,7 @@ require_once 'includes/header.php';
 $serviceLabels = ['standard'=>'Standard Express','premium'=>'Premium Express','air_cargo'=>'Air Cargo','surface'=>'Surface Cargo'];
 $statusOrder   = ['booked','picked_up','in_transit','out_for_delivery','delivered'];
 $currentIdx    = array_search($shipment['status'], $statusOrder);
+$hasGstInvoice = !empty($shipment['gst_invoice']) || !empty($shipment['gstin']) || !empty($shipment['pickup_gstin']) || !empty($shipment['delivery_gstin']);
 
 $statusLabels  = ['booked'=>'Booked','picked_up'=>'Picked Up','in_transit'=>'In Transit','out_for_delivery'=>'Out for Delivery','delivered'=>'Delivered','cancelled'=>'Cancelled'];
 ?>
@@ -58,6 +59,11 @@ $statusLabels  = ['booked'=>'Booked','picked_up'=>'Picked Up','in_transit'=>'In 
                     <a href="../api/download_receipt.php?tracking_no=<?= urlencode($shipment['tracking_no']) ?>" target="_blank" class="btn-outline-admin" style="font-size:12px;padding:6px 12px;text-decoration:none;display:inline-block;">
                         <i class="bi bi-file-earmark-pdf me-1"></i> Download Receipt
                     </a>
+                    <?php if ($hasGstInvoice): ?>
+                    <a href="gst-invoice.php?id=<?= $shipment['id'] ?>" target="_blank" class="btn-outline-admin" style="font-size:12px;padding:6px 12px;text-decoration:none;display:inline-block;margin-left:6px;">
+                        <i class="bi bi-receipt me-1"></i> GST Invoice
+                    </a>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -132,7 +138,8 @@ $statusLabels  = ['booked'=>'Booked','picked_up'=>'Picked Up','in_transit'=>'In 
                 <div class="shipment-detail-section">
                     <div class="shipment-detail-section-title">Shipment Details</div>
                     <div class="detail-row"><span class="detail-label">Service</span><span class="detail-value" style="font-weight:600;"><?= htmlspecialchars($serviceLabels[$shipment['service_type']] ?? $shipment['service_type']) ?></span></div>
-                    <div class="detail-row"><span class="detail-label">Weight</span><span class="detail-value"><?= number_format((float)$shipment['weight'], 3) ?> kg</span></div>
+                    <div class="detail-row"><span class="detail-label">Actual Weight</span><span class="detail-value"><?= number_format((float)$shipment['weight'], 3) ?> kg</span></div>
+                    <div class="detail-row"><span class="detail-label">Chargeable Weight</span><span class="detail-value"><?= number_format((float)($shipment['chargeable_weight'] ?: $shipment['weight']), 3) ?> kg</span></div>
                     <div class="detail-row"><span class="detail-label">Pieces</span><span class="detail-value"><?= $shipment['pieces'] ?></span></div>
                     <div class="detail-row"><span class="detail-label">Declared Value</span><span class="detail-value">₹<?= number_format((float)($shipment['declared_value'] ?? 0), 2) ?></span></div>
                     <div class="detail-row"><span class="detail-label">Description</span><span class="detail-value"><?= htmlspecialchars($shipment['description'] ?: '—') ?></span></div>

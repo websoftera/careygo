@@ -27,10 +27,14 @@ try {
 } catch (Exception $e) {}
 
 $method = $_SERVER['REQUEST_METHOD'];
+$allowedKeys = ['packing_charge', 'site_name'];
 
 if ($method === 'GET') {
     $key = trim($_GET['key'] ?? '');
     if (!$key) { json_response(['success' => false, 'message' => 'Key required.'], 422); }
+    if (!in_array($key, $allowedKeys, true)) {
+        json_response(['success' => false, 'message' => 'Invalid setting key.'], 422);
+    }
     try {
         $stmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = ?");
         $stmt->execute([$key]);
@@ -47,6 +51,15 @@ if ($method === 'POST') {
     $val  = $body['value'] ?? '';
 
     if (!$key) { json_response(['success' => false, 'message' => 'Key required.'], 422); }
+    if (!in_array($key, $allowedKeys, true)) {
+        json_response(['success' => false, 'message' => 'Invalid setting key.'], 422);
+    }
+    if ($key === 'packing_charge') {
+        if ($val === '' || !is_numeric($val) || (float)$val < 0) {
+            json_response(['success' => false, 'message' => 'Enter a valid packing charge.'], 422);
+        }
+        $val = number_format((float)$val, 2, '.', '');
+    }
 
     try {
         $stmt = $pdo->prepare(

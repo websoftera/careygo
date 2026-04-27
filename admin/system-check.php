@@ -71,6 +71,8 @@ try {
         'width'             => 'DECIMAL(8,2) DEFAULT 0',
         'height'            => 'DECIMAL(8,2) DEFAULT 0',
         'description'       => 'TEXT DEFAULT NULL',
+        'customer_earning_pct' => 'DECIMAL(5,2) NOT NULL DEFAULT 0.00',
+        'customer_earning_amount' => 'DECIMAL(10,2) NOT NULL DEFAULT 0.00',
     ];
     $existing = $pdo->query("SHOW COLUMNS FROM shipments")->fetchAll(PDO::FETCH_COLUMN);
     foreach ($required as $col => $def) {

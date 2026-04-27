@@ -143,13 +143,29 @@ $defaultTat = ['standard' => 3, 'premium' => 1, 'air_cargo' => 2, 'surface' => 5
 // ── Calculate prices ──────────────────────────────────────────────────────────
 $serviceTypes = ['standard', 'premium', 'air_cargo', 'surface'];
 $services = [];
+$packingCharge = 50.0;
+
+try {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS settings (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        setting_key VARCHAR(100) NOT NULL UNIQUE,
+        setting_value TEXT NOT NULL DEFAULT '',
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    )");
+    $settingStmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = ?");
+    $settingStmt->execute(['packing_charge']);
+    $settingValue = $settingStmt->fetchColumn();
+    if ($settingValue !== false && is_numeric($settingValue)) {
+        $packingCharge = max(0.0, (float)$settingValue);
+    }
+} catch (Exception $e) {}
 
 try {
     $serviceConstraints = [
-        'standard'  => 5.000,
-        'premium'   => 10.000,
-        'air_cargo' => 15.000,
-        'surface'   => 25.000,
+        'standard'  => 60.000,
+        'premium'   => 60.000,
+        'air_cargo' => 60.000,
+        'surface'   => 60.000,
     ];
 
     foreach ($serviceTypes as $type) {
@@ -168,7 +184,7 @@ try {
         if ($price <= 0) continue;
 
         $tat      = $tatData[$type] ?? $defaultTat[$type];
-        $eta      = addBusinessDays($tat, 'D, d M Y');
+        $eta      = addBusinessDays($tat, 'l, d M Y');
         $tatLabel = $tat === 1 ? '1 day' : "$tat days";
 
         $services[] = [
@@ -185,6 +201,7 @@ try {
         'services' => $services,
         'weight'   => $weight,
         'zone'     => $zone,
+        'packing_charge' => $packingCharge,
     ]);
 } catch (Exception $e) {
     error_log('PRICING_ERROR: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());

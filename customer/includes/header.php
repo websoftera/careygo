@@ -46,6 +46,7 @@ if (!$user || $user['status'] !== 'approved') {
         <ul>
             <li class="cust-nav-label">Navigation</li>
             <li><a href="dashboard.php" class="cust-nav-link <?= ($activePage ?? '') === 'dashboard' ? 'active' : '' ?>"><i class="bi bi-grid-1x2"></i> Dashboard</a></li>
+            <li><a href="earnings.php" class="cust-nav-link <?= ($activePage ?? '') === 'earnings' ? 'active' : '' ?>"><i class="bi bi-cash-coin"></i> My Earnings</a></li>
             <li><a href="new-booking.php" class="cust-nav-link <?= ($activePage ?? '') === 'new-booking' ? 'active' : '' ?>"><i class="bi bi-plus-circle"></i> New Booking</a></li>
             <li><a href="#" class="cust-nav-link" onclick="openRateCalc();return false;"><i class="bi bi-calculator"></i> Rate Calculator</a></li>
             <li class="cust-nav-label mt-2">Account</li>

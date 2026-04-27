@@ -23,6 +23,8 @@
             delivery: { pincode: '', city: '', state: '', name: '', company: '', phone: '', email: '', gstin: '', addr1: '', addr2: '' },
             pickupPincodeVerified: false,
             deliveryPincodeVerified: false,
+            pickupVerifiedPincode: '',
+            deliveryVerifiedPincode: '',
             weight: 0,
             unit: 'kg',
             pieces: 1,
@@ -38,6 +40,7 @@
             riskSurcharge: 'owner',
             packingMaterial: false,
             packingCharge: 0,
+            availablePackingCharge: 0,
             paymentMethod: 'prepaid',
             gstInvoice: false,
             gstin: '',
@@ -134,6 +137,23 @@
     const panels      = document.querySelectorAll('.wizard-panel');
     const progressBar = document.getElementById('wizardProgress');
 
+    function isPincodeVerified(type) {
+        const current = String(state[type]?.pincode || '').trim();
+        const verified = String(state[`${type}VerifiedPincode`] || '').trim();
+        return current.length === 6
+            && state[`${type}PincodeVerified`] === true
+            && verified === current
+            && !!state[type]?.city
+            && !!state[type]?.state;
+    }
+
+    function syncEwaybillStateFromDOM() {
+        const selected = document.querySelector('.ewaybill-opt[data-ewaybill-opt].selected');
+        if (selected) state.ewaybillOpt = selected.dataset.ewaybillOpt || 'skip';
+        const ewbEl = document.getElementById('ewaybill_no');
+        if (ewbEl) state.ewaybillNo = ewbEl.value.trim();
+    }
+
     /* ── Navigate to step ── */
     function goToStep(n) {
         state.step = n;
@@ -162,7 +182,7 @@
                 showErr('pickup_pincode', 'Enter pickup pincode'); ok = false;
             } else if (state.pickup.pincode.length < 6) {
                 showErr('pickup_pincode', 'Please enter 6 digit pincode'); ok = false;
-            } else if (!state.pickupPincodeVerified) {
+            } else if (!isPincodeVerified('pickup')) {
                 showErr('pickup_pincode', 'Please verify pincode by clicking Check'); ok = false;
             }
 
@@ -177,7 +197,7 @@
                 showErr('delivery_pincode', 'Enter delivery pincode'); ok = false;
             } else if (state.delivery.pincode.length < 6) {
                 showErr('delivery_pincode', 'Please enter 6 digit pincode'); ok = false;
-            } else if (!state.deliveryPincodeVerified) {
+            } else if (!isPincodeVerified('delivery')) {
                 showErr('delivery_pincode', 'Please verify pincode by clicking Check'); ok = false;
             }
 
@@ -190,15 +210,18 @@
 
         if (n === 2) {
             const wt = getWeightInKg();
-            const absoluteMax = 25.0; // Current maximum limit across all services
+            const absoluteMax = MAX_PIECE_WEIGHT_KG;
             if (!wt || wt <= 0) {
                 showErr('weight', 'Enter a valid weight'); ok = false;
             } else if (wt > absoluteMax) {
                 showWeightAlert(wt, absoluteMax);
-                showErr('weight', `Maximum ${absoluteMax} kg allowed per shipment`); ok = false;
+                showErr('weight', `Maximum allowable weight is ${absoluteMax} kg`); ok = false;
             }
 
             if (!state.pieces || state.pieces < 1) { showErr('pieces', 'Min 1 piece required'); ok = false; }
+            if (!state.declaredValue || state.declaredValue <= 0) {
+                showErr('declared_value', 'Total value of consignment is required'); ok = false;
+            }
 
             // Dimension limits (only if dimensions are entered)
             if (state.dim_l > 0 || state.dim_w > 0 || state.dim_h > 0) {
@@ -213,6 +236,7 @@
         }
 
         if (n === 4) {
+            syncEwaybillStateFromDOM();
             // Sync ewaybill from DOM
             const ewbEl = document.getElementById('ewaybill_no');
             if (ewbEl) state.ewaybillNo = ewbEl.value.trim();
@@ -261,7 +285,7 @@
     }
 
     /* ── Weight alert popup ── */
-    function showWeightAlert(wt, max = 25) {
+    function showWeightAlert(wt, max = MAX_PIECE_WEIGHT_KG) {
         // Create or reuse alert modal
         let modal = document.getElementById('weightAlertModal');
         if (modal) modal.remove();
@@ -274,7 +298,7 @@
                 <div style="font-size:48px;margin-bottom:12px;">⚠️</div>
                 <h5 style="color:#dc2626;margin-bottom:8px;">Weight Limit Exceeded</h5>
                 <p style="font-size:14px;color:#555;margin-bottom:6px;">
-                    Maximum allowable weight for online booking is <strong>${max} kg</strong>.
+                    Maximum allowable weight is <strong>${max} kg</strong>.
                 </p>
                 <p style="font-size:13px;color:#777;margin-bottom:20px;">
                     Your entered weight is <strong>${wt.toFixed(3)} kg</strong>. For heavier shipments, please contact our support team for specialized cargo rates.
@@ -304,19 +328,17 @@
         const btn = document.getElementById(`${type}_lookup_btn`);
 
         // Validate 6 digits
-        if (!pincode) {
-            showErr(`${type}_pincode`, 'Enter pickup pincode');
-            return;
-        }
-        if (pincode.length < 6) {
+        if (!pincode || pincode.length < 6) {
             showErr(`${type}_pincode`, 'Please enter 6 digit pincode');
             if (resultEl) {
-                resultEl.innerHTML = `<i class="bi bi-exclamation-triangle text-danger"></i> Please enter a valid 6 digit pincode`;
+                resultEl.innerHTML = `<i class="bi bi-exclamation-triangle text-danger"></i> Please enter 6 digit pincode`;
                 resultEl.classList.add('show');
             }
             return;
         }
 
+        state[`${type}PincodeVerified`] = false;
+        state[`${type}VerifiedPincode`] = '';
         btn && (btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>');
         fetch(`${SITE_URL}/api/pincode.php?pincode=${encodeURIComponent(pincode)}`)
             .then(r => r.json())
@@ -326,7 +348,8 @@
                     const info = data.data;
                     state[type].city  = info.city;
                     state[type].state = info.state;
-                    state[`${type}PincodeVerified`] = true;  // ✓ Mark as verified
+                    state[`${type}PincodeVerified`] = true;
+                    state[`${type}VerifiedPincode`] = pincode;
 
                     if (resultEl) {
                         resultEl.innerHTML = `<i class="bi bi-check-circle-fill text-success"></i> <strong>${info.city}</strong>, ${info.state} — Serviceable`;
@@ -339,13 +362,22 @@
                     loadSavedAddresses(type, pincode);
                 } else {
                     state[`${type}PincodeVerified`] = false;
+                    state[`${type}VerifiedPincode`] = '';
                     if (resultEl) {
                         resultEl.innerHTML = `<i class="bi bi-exclamation-triangle text-danger"></i> Pincode not found or not serviceable`;
                         resultEl.classList.add('show');
                     }
                 }
             })
-            .catch(() => { btn && (btn.innerHTML = '<i class="bi bi-search"></i> Check'); });
+            .catch(() => {
+                state[`${type}PincodeVerified`] = false;
+                state[`${type}VerifiedPincode`] = '';
+                btn && (btn.innerHTML = '<i class="bi bi-search"></i> Check');
+                if (resultEl) {
+                    resultEl.innerHTML = `<i class="bi bi-exclamation-triangle text-danger"></i> Could not verify pincode. Please try again.`;
+                    resultEl.classList.add('show');
+                }
+            });
     }
 
     document.querySelectorAll('[data-pincode-lookup]').forEach(btn => {
@@ -361,15 +393,26 @@
         inp.addEventListener('keypress', e => {
             if (!/[0-9]/.test(e.key)) e.preventDefault();
         });
+        inp.addEventListener('paste', e => {
+            e.preventDefault();
+            const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+            inp.value = pasted;
+            inp.dispatchEvent(new Event('input', { bubbles: true }));
+        });
         inp.addEventListener('input', () => {
+            inp.value = inp.value.replace(/\D/g, '');
             // Clamp to 6 digits
             if (inp.value.length > 6) inp.value = inp.value.slice(0, 6);
             const type = inp.dataset.pincodeInput;
             state[type].pincode = inp.value.trim();
             // Reset verification when user changes the pincode
             state[`${type}PincodeVerified`] = false;
-            // Auto-lookup when 6 digits entered
-            if (inp.value.length === 6) lookupPincode(inp.value.trim(), type);
+            state[`${type}VerifiedPincode`] = '';
+            const resultEl = document.getElementById(`${type}_pincode_result`);
+            if (resultEl) {
+                resultEl.innerHTML = '<i class="bi bi-info-circle text-primary"></i> Click Check to verify this pincode';
+                resultEl.classList.add('show');
+            }
         });
         inp.addEventListener('keydown', e => {
             if (e.key === 'Enter') {
@@ -431,6 +474,7 @@
         state[type].state = addr.state;
         state[type].pincode = addr.pincode;
         state[`${type}PincodeVerified`] = true; // Saved address = already verified
+        state[`${type}VerifiedPincode`] = addr.pincode;
         state[`useNew${type.charAt(0).toUpperCase() + type.slice(1)}Addr`] = false;
 
         const newForm = document.getElementById(`${type}_new_form`);
@@ -624,16 +668,23 @@
             const meta = serviceMap[svc.type] || { icon: 'bi-box', label: svc.type, code: '' };
 
             // Color-code by speed — affects card border + badge palette
-            let tatColor, tatBg, tatBorder, tatIcon;
+            let tatColor, tatBg, tatBorder, tatIcon, dayBg, dayColor;
             if (svc.tat <= 1) {
                 tatColor = '#14532d'; tatBg = '#dcfce7'; tatBorder = '#16a34a'; tatIcon = 'bi-lightning-fill';
+                dayBg = '#bbf7d0'; dayColor = '#14532d';
             } else if (svc.tat <= 2) {
                 tatColor = '#1e3a8a'; tatBg = '#dbeafe'; tatBorder = '#2563eb'; tatIcon = 'bi-send-fill';
+                dayBg = '#bfdbfe'; dayColor = '#1e3a8a';
             } else if (svc.tat <= 4) {
                 tatColor = '#78350f'; tatBg = '#fef3c7'; tatBorder = '#d97706'; tatIcon = 'bi-clock-fill';
+                dayBg = '#fde68a'; dayColor = '#78350f';
             } else {
                 tatColor = '#1f2937'; tatBg = '#f3f4f6'; tatBorder = '#6b7280'; tatIcon = 'bi-truck';
+                dayBg = '#e5e7eb'; dayColor = '#111827';
             }
+            const etaParts = String(svc.eta || '').split(',').map(p => p.trim());
+            const etaDay = etaParts.length > 1 ? etaParts[0] : '';
+            const etaDate = etaParts.length > 1 ? etaParts.slice(1).join(', ') : svc.eta;
 
             return `
             <div class="service-card" data-service="${svc.type}"
@@ -652,14 +703,15 @@
                 </div>
                 <!-- Timeline row: duration → delivery day+date -->
                 <div style="display:flex;align-items:center;gap:8px;margin:10px 0 6px;padding:10px 12px;
-                            background:${tatBg};border-radius:8px;flex-wrap:wrap;">
-                    <span style="display:inline-flex;align-items:center;gap:5px;font-weight:700;font-size:13px;color:${tatColor};">
+                            background:${tatBg};border:1px solid ${tatBorder};border-radius:8px;flex-wrap:wrap;">
+                    <span style="display:inline-flex;align-items:center;gap:5px;font-weight:700;font-size:13px;color:${tatColor};background:#fff;border:1px solid ${tatBorder};border-radius:999px;padding:4px 9px;">
                         <i class="bi ${tatIcon}"></i> ${escHtml(svc.tat_label)}
                     </span>
                     <span style="color:${tatBorder};font-weight:700;font-size:16px;">→</span>
-                    <span style="display:inline-flex;align-items:center;gap:5px;font-size:13px;color:${tatColor};">
+                    <span style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:${tatColor};">
                         <i class="bi bi-calendar2-check" style="font-size:14px;"></i>
-                        Delivery by <strong>${escHtml(svc.eta)}</strong>
+                        Delivery by ${etaDay ? `<strong style="background:${dayBg};color:${dayColor};border-radius:999px;padding:3px 8px;">${escHtml(etaDay)}</strong>` : ''}
+                        <strong>${escHtml(etaDate)}</strong>
                     </span>
                 </div>
                 <div class="service-card-meta" style="margin-top:4px;">
@@ -707,6 +759,30 @@
 
     /* ── Packing material — show charges popup ── */
     const packingWrap = document.getElementById('packing_material_wrap');
+    function formatMoney(amount) {
+        return (Number(amount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function setPackingCharge(charge) {
+        const parsed = Math.max(0, parseFloat(charge || 0) || 0);
+        state.availablePackingCharge = parsed;
+        if (state.packingMaterial) state.packingCharge = parsed;
+        const hint = document.getElementById('packing_charge_hint');
+        if (hint) hint.textContent = `(â‚¹${formatMoney(parsed)})`;
+    }
+
+    function loadPackingCharge() {
+        return fetch(`${SITE_URL}/api/settings.php?key=packing_charge`)
+            .then(r => r.json())
+            .then(data => {
+                setPackingCharge(data.value);
+                return state.availablePackingCharge;
+            })
+            .catch(() => {
+                if (!state.availablePackingCharge) setPackingCharge(state.packingCharge || 50);
+                return state.availablePackingCharge;
+            });
+    }
     packingWrap && packingWrap.addEventListener('click', e => {
         e.preventDefault(); // Don't toggle yet — show popup first
         if (!state.packingMaterial) {
@@ -720,14 +796,7 @@
     });
 
     function showPackingChargePopup() {
-        // Fetch current packing charge from server
-        fetch(`${SITE_URL}/api/settings.php?key=packing_charge`)
-            .then(r => r.json())
-            .then(data => {
-                const charge = parseFloat(data.value || 50);
-                displayPackingModal(charge);
-            })
-            .catch(() => displayPackingModal(50)); // fallback
+        loadPackingCharge().then(displayPackingModal);
     }
 
     function displayPackingModal(charge) {
@@ -770,7 +839,7 @@
 
     window.confirmPackingMaterial = function(charge) {
         state.packingMaterial = true;
-        state.packingCharge   = charge;
+        setPackingCharge(charge);
         packingWrap && packingWrap.classList.add('checked');
         document.getElementById('packingChargeModal')?.remove();
     };
@@ -982,6 +1051,11 @@
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Booking...';
 
         const totalPrice = state.servicePrice + (state.packingMaterial ? state.packingCharge : 0);
+        const hasGstDetails = !!(
+            state.gstin ||
+            state.pickup.gstin ||
+            state.delivery.gstin
+        );
 
         const payload = {
             pickup:             state.pickup,
@@ -1005,8 +1079,8 @@
             height:             state.dim_h || 0,
             volumetric_weight:  state.volumetricWeight || 0,
             payment_method:     state.paymentMethod,
-            gst_invoice:        state.gstInvoice ? 1 : 0,
-            gstin:              state.gstin,
+            gst_invoice:        (state.gstInvoice || hasGstDetails) ? 1 : 0,
+            gstin:              state.gstin || state.pickup.gstin || state.delivery.gstin,
             pan_number:         state.pan,
             photo_address:      state.photoAddressId || '',
             photo_parcel:       state.photoParcelId  || '',
@@ -1026,7 +1100,7 @@
                 const trackEl = document.getElementById('final_tracking_no');
                 if (trackEl) trackEl.textContent = data.tracking_no;
                 // Show GST invoice download link if requested
-                if (state.gstInvoice && data.id) {
+                if ((state.gstInvoice || hasGstDetails || data.gst_invoice) && data.id) {
                     const invoiceLink = document.getElementById('gst_invoice_link');
                     if (invoiceLink) {
                         invoiceLink.href = `${SITE_URL}/customer/gst-invoice.php?id=${data.id}`;
@@ -1186,6 +1260,7 @@
     /* ── Init ── */
     goToStep(1);
     restoreFormFields();
+    loadPackingCharge();
     addClearButton();
 
     if ((state.pickup && state.pickup.pincode) || (state.delivery && state.delivery.pincode) || state.weight > 0) {

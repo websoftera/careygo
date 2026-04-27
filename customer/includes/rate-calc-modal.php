@@ -23,7 +23,7 @@
                     <label class="rc-label"><i class="bi bi-geo-alt-fill text-primary me-1"></i>Pickup Pincode</label>
                     <div class="rc-pincode-row">
                         <input type="text" class="wizard-input" id="rc_pickup_pincode"
-                               maxlength="10" placeholder="Enter 6-digit pincode"
+                               maxlength="6" inputmode="numeric" pattern="[0-9]{6}" placeholder="Enter 6-digit pincode"
                                oninput="rcResetResults()">
                         <button class="btn-lookup" id="rc_pickup_btn" onclick="rcLookup('pickup')">
                             <i class="bi bi-search"></i> Check
@@ -37,7 +37,7 @@
                     <label class="rc-label"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Delivery Pincode</label>
                     <div class="rc-pincode-row">
                         <input type="text" class="wizard-input" id="rc_delivery_pincode"
-                               maxlength="10" placeholder="Enter 6-digit pincode"
+                               maxlength="6" inputmode="numeric" pattern="[0-9]{6}" placeholder="Enter 6-digit pincode"
                                oninput="rcResetResults()">
                         <button class="btn-lookup" id="rc_delivery_btn" onclick="rcLookup('delivery')">
                             <i class="bi bi-search"></i> Check
@@ -56,6 +56,15 @@
                         <button class="weight-unit-btn" id="rc_unit_gm" onclick="rcSetUnit('gm')">GM</button>
                     </div>
                 </div>
+
+                <label class="cust-checkbox-wrap mb-3" id="rc_packing_wrap" style="cursor:pointer;">
+                    <input type="checkbox" id="rc_packing_material" style="display:none;" onchange="rcResetResults()">
+                    <div class="cust-checkbox-box"><i class="bi bi-check-lg"></i></div>
+                    <div>
+                        <div style="font-size:13px;font-weight:600;">Packing Material <span id="rc_packing_charge_hint" style="font-size:11px;color:#6b7280;"></span></div>
+                        <div style="font-size:12px;color:var(--muted);">Add professional packing material to the estimate</div>
+                    </div>
+                </label>
 
                 <!-- Error -->
                 <div id="rc_error" class="cust-alert cust-alert-danger" style="display:none;margin-bottom:12px;"></div>
@@ -168,6 +177,25 @@
     'use strict';
     const RC_URL = '<?= rtrim(SITE_URL, '/') ?>';
     let rcUnit = 'kg';
+    let rcPackingCharge = 0;
+
+    fetch(`${RC_URL}/api/settings.php?key=packing_charge`)
+        .then(r => r.json())
+        .then(data => {
+            rcPackingCharge = Math.max(0, parseFloat(data.value || 0) || 0);
+            const hint = document.getElementById('rc_packing_charge_hint');
+            if (hint) hint.textContent = `(₹${rcPackingCharge.toLocaleString('en-IN')})`;
+        })
+        .catch(() => {});
+
+    document.getElementById('rc_packing_wrap')?.addEventListener('click', e => {
+        e.preventDefault();
+        const chk = document.getElementById('rc_packing_material');
+        if (!chk) return;
+        chk.checked = !chk.checked;
+        document.getElementById('rc_packing_wrap')?.classList.toggle('checked', chk.checked);
+        rcResetResults();
+    });
 
     /* ── Unit toggle ── */
     window.rcSetUnit = function (u) {
@@ -182,7 +210,13 @@
         const btn = document.getElementById(`rc_${type}_btn`);
         const res = document.getElementById(`rc_${type}_result`);
         const pin = inp ? inp.value.trim() : '';
-        if (!pin || pin.length < 6) return;
+        if (!pin || pin.length < 6) {
+            if (res) {
+                res.innerHTML = `<i class="bi bi-exclamation-triangle text-danger"></i> Please enter 6 digit pincode`;
+                res.classList.add('show');
+            }
+            return;
+        }
 
         if (btn) btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
         fetch(`${RC_URL}/api/pincode.php?pincode=${encodeURIComponent(pin)}`)
@@ -224,13 +258,16 @@
         if (errEl) errEl.style.display = 'none';
 
         if (!pickup || pickup.length < 6) {
-            if (errEl) { errEl.textContent = 'Enter a valid pickup pincode.'; errEl.style.display = 'block'; } return;
+            if (errEl) { errEl.textContent = 'Please enter 6 digit pincode'; errEl.style.display = 'block'; } return;
         }
         if (!delivery || delivery.length < 6) {
-            if (errEl) { errEl.textContent = 'Enter a valid delivery pincode.'; errEl.style.display = 'block'; } return;
+            if (errEl) { errEl.textContent = 'Please enter 6 digit pincode'; errEl.style.display = 'block'; } return;
         }
         if (weight <= 0) {
             if (errEl) { errEl.textContent = 'Enter a valid weight.'; errEl.style.display = 'block'; } return;
+        }
+        if (weight > 60) {
+            if (errEl) { errEl.textContent = 'Maximum allowable weight is 60 kg'; errEl.style.display = 'block'; } return;
         }
 
         if (btn) { btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Calculating…'; btn.disabled = true; }
@@ -241,6 +278,9 @@
             .then(data => {
                 if (btn) { btn.innerHTML = '<i class="bi bi-calculator me-2"></i> Calculate Rates'; btn.disabled = false; }
                 if (data.success && data.services && data.services.length > 0) {
+                    if (typeof data.packing_charge !== 'undefined') {
+                        rcPackingCharge = Math.max(0, parseFloat(data.packing_charge || 0) || 0);
+                    }
                     rcRenderResults(data.services, data.zone, weight);
                 } else {
                     if (results) results.innerHTML = '<div class="cust-alert cust-alert-warning mt-3">No pricing available for this route.</div>';
@@ -269,8 +309,13 @@
         };
 
         const zoneTxt = zone ? (zoneLabels[zone] || zone) : '';
+        const includePacking = !!document.getElementById('rc_packing_material')?.checked;
+        const packingCharge = includePacking ? rcPackingCharge : 0;
         const rows = services.map(svc => {
             const m = svcMap[svc.type] || { icon: 'bi-box', label: svc.type };
+            const basePrice = parseFloat(svc.price) || 0;
+            const totalPrice = basePrice + packingCharge;
+            if (includePacking) svc.price = totalPrice;
             return `<div class="rc-service-row">
                 <div class="rc-service-left">
                     <i class="${m.icon} rc-service-icon"></i>
@@ -289,12 +334,22 @@
                 ${zoneTxt ? `<span class="rc-zone-badge"><i class="bi bi-geo-alt me-1"></i>${esc(zoneTxt)}</span>` : ''}
             </div>
             ${rows}
+            ${includePacking ? `<p class="rc-disclaimer">Packing Material included: ₹${packingCharge.toLocaleString('en-IN')} per shipment.</p>` : ''}
             <p class="rc-disclaimer">* Estimates only. Final charges may vary based on actual weight &amp; dimensions.</p>`;
     }
 
     /* ── Enter key shortcuts ── */
     ['rc_pickup_pincode', 'rc_delivery_pincode'].forEach(id => {
-        document.getElementById(id)?.addEventListener('keydown', e => {
+        const el = document.getElementById(id);
+        el?.addEventListener('input', () => {
+            el.value = el.value.replace(/\D/g, '').slice(0, 6);
+        });
+        el?.addEventListener('paste', e => {
+            e.preventDefault();
+            el.value = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+            rcResetResults();
+        });
+        el?.addEventListener('keydown', e => {
             if (e.key === 'Enter') rcLookup(id.includes('pickup') ? 'pickup' : 'delivery');
         });
     });
@@ -307,6 +362,9 @@
         ['rc_pickup_pincode','rc_delivery_pincode','rc_weight'].forEach(id => {
             const el = document.getElementById(id); if (el) el.value = '';
         });
+        const packing = document.getElementById('rc_packing_material');
+        if (packing) packing.checked = false;
+        document.getElementById('rc_packing_wrap')?.classList.remove('checked');
         ['rc_pickup_result','rc_delivery_result'].forEach(id => {
             const el = document.getElementById(id); if (el) { el.innerHTML = ''; el.classList.remove('show'); }
         });

@@ -64,6 +64,12 @@
                 </a>
             </li>
             <li>
+                <a href="pricing.php#packing-material-charge" class="sidebar-link <?= ($activePage ?? '') === 'packing-material' ? 'active' : '' ?>">
+                    <i class="bi bi-box2-heart"></i>
+                    <span>Packing Material</span>
+                </a>
+            </li>
+            <li>
                 <a href="pincodes.php" class="sidebar-link <?= ($activePage ?? '') === 'pincodes' ? 'active' : '' ?>">
                     <i class="bi bi-geo-alt"></i>
                     <span>Pincodes / TAT</span>

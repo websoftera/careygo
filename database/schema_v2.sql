@@ -102,6 +102,8 @@ CREATE TABLE IF NOT EXISTS `shipments` (
     `discount_pct`      DECIMAL(5,2)  NOT NULL DEFAULT 0.00,
     `discount_amount`   DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     `final_price`       DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    `customer_earning_pct` DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+    `customer_earning_amount` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     -- Payment
     `payment_method`    ENUM('prepaid','cod','credit') NOT NULL DEFAULT 'prepaid',
     `gst_invoice`       TINYINT(1)   NOT NULL DEFAULT 0,
