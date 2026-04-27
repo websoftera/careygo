@@ -7,17 +7,34 @@
 // Sidebar Toggle Logic
 const custSidebar = document.getElementById('custSidebar');
 const custOverlay = document.getElementById('custOverlay');
-document.getElementById('custToggle')?.addEventListener('click', () => { 
-    custSidebar.classList.add('open'); 
-    custOverlay.classList.add('show'); 
-});
-document.getElementById('custSidebarClose')?.addEventListener('click', () => { 
-    custSidebar.classList.remove('open'); 
-    custOverlay.classList.remove('show'); 
-});
-custOverlay?.addEventListener('click', () => { 
-    custSidebar.classList.remove('open'); 
-    custOverlay.classList.remove('show'); 
+function setCustomerSidebarCollapsed(collapsed) {
+    document.body.classList.toggle('sidebar-collapsed', collapsed);
+    try { localStorage.setItem('customerSidebarCollapsed', collapsed ? '1' : '0'); } catch (e) {}
+}
+function openCustomerSidebar() {
+    setCustomerSidebarCollapsed(false);
+    custSidebar?.classList.add('open');
+    if (window.matchMedia('(max-width: 991.98px)').matches) {
+        custOverlay?.classList.add('show');
+    }
+}
+function closeCustomerSidebar() {
+    setCustomerSidebarCollapsed(true);
+    custSidebar?.classList.remove('open');
+    custOverlay?.classList.remove('show');
+}
+try {
+    if (localStorage.getItem('customerSidebarCollapsed') === '1') {
+        document.body.classList.add('sidebar-collapsed');
+    }
+} catch (e) {}
+document.getElementById('custToggle')?.addEventListener('click', openCustomerSidebar);
+document.getElementById('custSidebarClose')?.addEventListener('click', closeCustomerSidebar);
+custOverlay?.addEventListener('click', closeCustomerSidebar);
+document.querySelectorAll('.cust-nav-link').forEach(link => {
+    link.addEventListener('click', () => {
+        if (link.getAttribute('href') && link.getAttribute('href') !== '#') closeCustomerSidebar();
+    });
 });
 
 function openRateCalc() { 

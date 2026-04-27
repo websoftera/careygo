@@ -10,12 +10,37 @@
     const toggleBtn = document.getElementById('sidebarToggle');
     const closeBtn  = document.getElementById('sidebarClose');
 
-    function openSidebar()  { sidebar && sidebar.classList.add('open');  overlay && overlay.classList.add('show'); }
-    function closeSidebar() { sidebar && sidebar.classList.remove('open'); overlay && overlay.classList.remove('show'); }
+    function setCollapsed(collapsed) {
+        document.body.classList.toggle('sidebar-collapsed', collapsed);
+        try { localStorage.setItem('adminSidebarCollapsed', collapsed ? '1' : '0'); } catch (e) {}
+    }
+    function openSidebar()  {
+        setCollapsed(false);
+        sidebar && sidebar.classList.add('open');
+        if (window.matchMedia('(max-width: 991.98px)').matches) {
+            overlay && overlay.classList.add('show');
+        }
+    }
+    function closeSidebar() {
+        setCollapsed(true);
+        sidebar && sidebar.classList.remove('open');
+        overlay && overlay.classList.remove('show');
+    }
+
+    try {
+        if (localStorage.getItem('adminSidebarCollapsed') === '1') {
+            document.body.classList.add('sidebar-collapsed');
+        }
+    } catch (e) {}
 
     toggleBtn && toggleBtn.addEventListener('click', openSidebar);
     closeBtn  && closeBtn.addEventListener('click',  closeSidebar);
     overlay   && overlay.addEventListener('click',   closeSidebar);
+    document.querySelectorAll('.sidebar-link').forEach(link => {
+        link.addEventListener('click', () => {
+            if (link.getAttribute('href') && link.getAttribute('href') !== '#') closeSidebar();
+        });
+    });
 
     /* ── Toast notifications ── */
     window.showToast = function (msg, type = 'default', duration = 3500) {

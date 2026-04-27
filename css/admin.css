@@ -49,6 +49,14 @@
     overflow-x: hidden;
 }
 
+body.sidebar-collapsed .admin-sidebar {
+    transform: translateX(-100%);
+}
+
+body.sidebar-collapsed .admin-content-wrap {
+    margin-left: 0;
+}
+
 .sidebar-header {
     display: flex;
     align-items: center;
@@ -377,7 +385,7 @@
 
 /* ===== TABLE ===== */
 .admin-table-wrap {
-    overflow-x: auto;
+    overflow-x: visible !important;
     border-radius: 0 0 16px 16px;
 }
 
@@ -385,6 +393,7 @@
     width: 100%;
     border-collapse: collapse;
     font-size: 13px;
+    table-layout: auto;
 }
 
 .admin-table thead th {
@@ -394,9 +403,10 @@
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.6px;
-    padding: 12px 16px;
+    padding: 10px 12px;
     border-bottom: 1px solid var(--border);
-    white-space: nowrap;
+    white-space: normal;
+    word-break: normal;
 }
 
 .admin-table tbody tr {
@@ -407,9 +417,11 @@
 .admin-table tbody tr:hover { background: #f8f9fe; }
 
 .admin-table tbody td {
-    padding: 13px 16px;
+    padding: 11px 12px;
     color: var(--text);
     vertical-align: middle;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 /* ===== BADGES ===== */
@@ -627,7 +639,8 @@
 .user-cell-sub {
     font-size: 11px;
     color: var(--muted);
-    white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 /* ===== MODAL ===== */
@@ -840,6 +853,9 @@
     .admin-content-wrap {
         margin-left: 0;
     }
+    body:not(.sidebar-collapsed) .admin-sidebar.open {
+        transform: translateX(0);
+    }
 }
 
 @media (max-width: 575.98px) {
@@ -847,4 +863,9 @@
     .admin-topbar { padding: 0 16px; }
     .stat-card { padding: 16px; }
     .stat-value { font-size: 20px; }
+    .admin-table { font-size: 12px; }
+    .admin-table thead th,
+    .admin-table tbody td { padding: 9px 8px; }
+    .btn-success-admin,
+    .btn-danger-admin { padding: 6px 8px; font-size: 11px; }
 }

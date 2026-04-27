@@ -25,7 +25,7 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
 <aside class="cust-sidebar" id="custSidebar">
     <div class="cust-sidebar-header">
         <a href="../index.php"><img src="../assets/images/Main-Careygo-logo-white.png" alt="Careygo" class="cust-sidebar-logo"></a>
-        <button class="cust-sidebar-close d-lg-none" id="custSidebarClose"><i class="bi bi-x-lg"></i></button>
+        <button class="cust-sidebar-close" id="custSidebarClose"><i class="bi bi-x-lg"></i></button>
     </div>
     <div class="cust-sidebar-user">
         <div class="cust-user-avatar"><?= strtoupper(substr($user['full_name'], 0, 1)) ?></div>
@@ -51,7 +51,7 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
 
 <div class="cust-content-wrap">
     <header class="cust-topbar">
-        <button class="cust-toggle-btn d-lg-none" id="custToggle"><i class="bi bi-list"></i></button>
+        <button class="cust-toggle-btn" id="custToggle"><i class="bi bi-list"></i></button>
         <div class="cust-topbar-title">New Booking</div>
         <div class="cust-topbar-actions">
             <button class="btn-rate-calc" onclick="openRateCalc()">
@@ -642,9 +642,35 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
 // Sidebar toggle
 const custSidebar = document.getElementById('custSidebar');
 const custOverlay = document.getElementById('custOverlay');
-document.getElementById('custToggle')?.addEventListener('click', () => { custSidebar.classList.add('open'); custOverlay.classList.add('show'); });
-document.getElementById('custSidebarClose')?.addEventListener('click', () => { custSidebar.classList.remove('open'); custOverlay.classList.remove('show'); });
-custOverlay?.addEventListener('click', () => { custSidebar.classList.remove('open'); custOverlay.classList.remove('show'); });
+function setCustomerSidebarCollapsed(collapsed) {
+    document.body.classList.toggle('sidebar-collapsed', collapsed);
+    try { localStorage.setItem('customerSidebarCollapsed', collapsed ? '1' : '0'); } catch (e) {}
+}
+function openCustomerSidebar() {
+    setCustomerSidebarCollapsed(false);
+    custSidebar?.classList.add('open');
+    if (window.matchMedia('(max-width: 991.98px)').matches) {
+        custOverlay?.classList.add('show');
+    }
+}
+function closeCustomerSidebar() {
+    setCustomerSidebarCollapsed(true);
+    custSidebar?.classList.remove('open');
+    custOverlay?.classList.remove('show');
+}
+try {
+    if (localStorage.getItem('customerSidebarCollapsed') === '1') {
+        document.body.classList.add('sidebar-collapsed');
+    }
+} catch (e) {}
+document.getElementById('custToggle')?.addEventListener('click', openCustomerSidebar);
+document.getElementById('custSidebarClose')?.addEventListener('click', closeCustomerSidebar);
+custOverlay?.addEventListener('click', closeCustomerSidebar);
+document.querySelectorAll('.cust-nav-link').forEach(link => {
+    link.addEventListener('click', () => {
+        if (link.getAttribute('href') && link.getAttribute('href') !== '#') closeCustomerSidebar();
+    });
+});
 function openRateCalc() { new bootstrap.Modal(document.getElementById('rateCalcModal')).show(); }
 </script>
 </body>

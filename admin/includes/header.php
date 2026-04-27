@@ -20,7 +20,7 @@
         <a href="<?= $adminRoot ?? '../' ?>admin/dashboard.php" class="sidebar-brand">
             <img src="<?= $adminRoot ?? '../' ?>assets/images/Main-Careygo-logo-white.png" alt="Careygo" class="sidebar-logo">
         </a>
-        <button class="sidebar-close d-lg-none" id="sidebarClose" aria-label="Close sidebar">
+        <button class="sidebar-close" id="sidebarClose" aria-label="Close sidebar">
             <i class="bi bi-x-lg"></i>
         </button>
     </div>
@@ -95,7 +95,7 @@
 
     <!-- Top Navbar -->
     <header class="admin-topbar">
-        <button class="admin-toggle-btn d-lg-none" id="sidebarToggle" aria-label="Open sidebar">
+        <button class="admin-toggle-btn" id="sidebarToggle" aria-label="Open sidebar">
             <i class="bi bi-list"></i>
         </button>
         <div class="topbar-title">
