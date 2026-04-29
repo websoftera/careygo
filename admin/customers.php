@@ -227,6 +227,11 @@ function viewCustomer(id) {
             <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value"><span class="badge-status badge-${c.status}">${c.status}</span></span></div>
             <div class="detail-row"><span class="detail-label">Total Shipments</span><span class="detail-value"><strong>${c.total_shipments||0}</strong></span></div>
             <div class="detail-row"><span class="detail-label">Registered</span><span class="detail-value">${new Date(c.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</span></div>
+            <div class="mt-3">
+                <a href="customer-dashboard.php?id=${c.id}" class="btn-primary-admin" style="font-size:12px;padding:8px 14px;text-decoration:none;">
+                    <i class="bi bi-grid-1x2 me-1"></i> Customer Dashboard
+                </a>
+            </div>
         `;
     });
 }

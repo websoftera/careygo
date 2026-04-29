@@ -53,8 +53,11 @@ require_once 'includes/header.php';
     <div class="admin-card-header"><h6 class="admin-card-title"><i class="bi bi-truck me-2"></i>Shipments</h6></div>
     <div class="admin-table-wrap">
         <table class="admin-table">
-            <thead><tr><th>Tracking</th><th>Route</th><th>Service</th><th>Weight</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
+            <thead><tr><th>Tracking</th><th>Route</th><th>Service</th><th>Weight</th><th>Amount</th><th>Earning</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
             <tbody>
+            <?php if (empty($shipments)): ?>
+            <tr><td colspan="9"><div class="empty-state"><i class="bi bi-truck"></i><p>No shipments found</p></div></td></tr>
+            <?php endif; ?>
             <?php foreach ($shipments as $s): ?>
             <tr>
                 <td style="font-weight:700;color:var(--primary);"><?= htmlspecialchars($s['tracking_no']) ?></td>
@@ -62,8 +65,21 @@ require_once 'includes/header.php';
                 <td><?= htmlspecialchars($serviceLabels[$s['service_type']] ?? $s['service_type']) ?></td>
                 <td><?= number_format((float)($s['chargeable_weight'] ?: $s['weight']), 0) ?> kg</td>
                 <td>Rs.<?= number_format((float)$s['final_price'], 0) ?></td>
+                <td>
+                    <div style="font-weight:700;color:var(--success);">Rs.<?= number_format((float)($s['customer_earning_amount'] ?? 0), 0) ?></div>
+                    <div style="font-size:11px;color:var(--muted);"><?= number_format((float)($s['customer_earning_pct'] ?? 0), 2) ?>%</div>
+                </td>
                 <td><span class="badge-status badge-<?= $s['status'] ?>"><?= ucwords(str_replace('_',' ', $s['status'])) ?></span></td>
                 <td><?= date('d M Y', strtotime($s['created_at'])) ?></td>
+                <td>
+                    <div class="d-flex gap-1">
+                        <a href="../api/download_receipt.php?tracking_no=<?= urlencode($s['tracking_no']) ?>" target="_blank" class="btn-outline-admin" style="font-size:11px;padding:5px 10px;" title="View Receipt"><i class="bi bi-file-earmark-pdf"></i></a>
+                        <?php if (!empty($s['gst_invoice']) || !empty($s['gstin']) || !empty($s['pickup_gstin']) || !empty($s['delivery_gstin'])): ?>
+                        <a href="../customer/gst-invoice.php?id=<?= (int)$s['id'] ?>" target="_blank" class="btn-outline-admin" style="font-size:11px;padding:5px 10px;" title="GST Invoice"><i class="bi bi-receipt"></i></a>
+                        <?php endif; ?>
+                        <a href="deliveries.php?q=<?= urlencode($s['tracking_no']) ?>" class="btn-outline-admin" style="font-size:11px;padding:5px 10px;" title="Open in Deliveries"><i class="bi bi-eye"></i></a>
+                    </div>
+                </td>
             </tr>
             <?php endforeach; ?>
             </tbody>
