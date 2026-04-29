@@ -47,6 +47,21 @@ CREATE TABLE IF NOT EXISTS `pricing_slabs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
+-- Customer earning percentages by pricing slab
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `customer_earning_slabs` (
+    `id`              INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `customer_id`     INT UNSIGNED NOT NULL,
+    `pricing_slab_id` INT UNSIGNED NOT NULL,
+    `earning_pct`     DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+    `updated_at`      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uniq_customer_slab` (`customer_id`, `pricing_slab_id`),
+    INDEX `idx_customer_id` (`customer_id`),
+    INDEX `idx_pricing_slab_id` (`pricing_slab_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
 -- Pincode TAT details (import from Excel / manage via admin)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS `pincode_tat` (

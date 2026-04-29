@@ -38,8 +38,8 @@ function generateAwbNumber(PDO $pdo, string $serviceType, string $franchiseeId, 
     $datePart = $createdAt->format('dmy');
     $prefix = $mode . ' ' . $franchiseeId . ' ' . $datePart;
 
-    $stmt = $pdo->prepare("SELECT tracking_no FROM shipments WHERE tracking_no LIKE ? ORDER BY tracking_no DESC LIMIT 1");
-    $stmt->execute([$prefix . ' %']);
+    $stmt = $pdo->prepare("SELECT tracking_no FROM shipments WHERE tracking_no LIKE ? ORDER BY CAST(RIGHT(tracking_no, 5) AS UNSIGNED) DESC LIMIT 1");
+    $stmt->execute([$mode . ' ' . $franchiseeId . ' %']);
     $last = (string)($stmt->fetchColumn() ?: '');
     $sequence = 1;
     if (preg_match('/(\d{5})$/', $last, $m)) {
@@ -67,11 +67,86 @@ function ensureEarningColumns(PDO $pdo): void
         if (!in_array('customer_earning_amount', $shipmentCols, true)) {
             $pdo->exec("ALTER TABLE shipments ADD COLUMN customer_earning_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00");
         }
+        if (!in_array('pickup_email', $shipmentCols, true)) {
+            $pdo->exec("ALTER TABLE shipments ADD COLUMN pickup_email VARCHAR(191) DEFAULT NULL");
+        }
+        if (!in_array('delivery_email', $shipmentCols, true)) {
+            $pdo->exec("ALTER TABLE shipments ADD COLUMN delivery_email VARCHAR(191) DEFAULT NULL");
+        }
+        $pdo->exec("CREATE TABLE IF NOT EXISTS customer_earning_slabs (
+            id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+            customer_id INT UNSIGNED NOT NULL,
+            pricing_slab_id INT UNSIGNED NOT NULL,
+            earning_pct DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY uniq_customer_slab (customer_id, pricing_slab_id),
+            INDEX idx_customer_id (customer_id),
+            INDEX idx_pricing_slab_id (pricing_slab_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
     } catch (Exception $e) {
         @error_log('Earning column check failed: ' . $e->getMessage());
     }
 
     $done = true;
+}
+
+function resolveShipmentZone(PDO $pdo, string $pickupPincode, string $deliveryPincode, string $pickupCity, string $pickupState, string $deliveryCity, string $deliveryState): string
+{
+    $pickupRow = null;
+    $deliveryRow = null;
+    try {
+        $stmt = $pdo->prepare("SELECT city, state FROM pincode_tat WHERE pincode = ? LIMIT 1");
+        $stmt->execute([$pickupPincode]);
+        $pickupRow = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        $stmt->execute([$deliveryPincode]);
+        $deliveryRow = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    } catch (Exception $e) {}
+
+    $pCity = trim($pickupRow['city'] ?? $pickupCity);
+    $pState = trim($pickupRow['state'] ?? $pickupState);
+    $dCity = trim($deliveryRow['city'] ?? $deliveryCity);
+    $dState = trim($deliveryRow['state'] ?? $deliveryState);
+
+    if ($pickupPincode !== '' && $pickupPincode === $deliveryPincode) return 'within_city';
+    if ($pCity !== '' && $dCity !== '' && $pState !== '' && $dState !== '') {
+        return determineZone($pCity, $pState, $dCity, $dState);
+    }
+    return 'rest_of_india';
+}
+
+function findCustomerEarningPct(PDO $pdo, int $customerId, string $serviceType, string $zone, float $weight, float $fallbackPct): float
+{
+    $sql = "
+        SELECT ces.earning_pct
+        FROM pricing_slabs ps
+        INNER JOIN customer_earning_slabs ces ON ces.pricing_slab_id = ps.id AND ces.customer_id = ?
+        WHERE ps.service_type = ? AND ps.zone = ?
+          AND (
+              (ps.weight_to IS NOT NULL AND ? <= ps.weight_to)
+              OR ps.weight_to IS NULL
+          )
+        ORDER BY CASE WHEN ps.weight_to IS NULL THEN 1 ELSE 0 END ASC,
+                 ps.weight_to ASC, ps.weight_from ASC
+        LIMIT 1";
+
+    try {
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$customerId, $serviceType, $zone, $weight]);
+        $pct = $stmt->fetchColumn();
+        if ($pct !== false && is_numeric($pct)) {
+            return max(0.0, min(100.0, (float)$pct));
+        }
+        if ($zone !== 'rest_of_india') {
+            $stmt->execute([$customerId, $serviceType, 'rest_of_india', $weight]);
+            $pct = $stmt->fetchColumn();
+            if ($pct !== false && is_numeric($pct)) {
+                return max(0.0, min(100.0, (float)$pct));
+            }
+        }
+    } catch (Exception $e) {}
+
+    return $fallbackPct;
 }
 
 ensureEarningColumns($pdo);
@@ -112,6 +187,7 @@ if ($method === 'POST') {
         $pickupName    = trim($pickup['name']  ?? '');
         $pickupCompany = trim($pickup['company'] ?? '');
         $pickupPhone   = trim($pickup['phone'] ?? '');
+        $pickupEmail   = trim($pickup['email'] ?? '');
         $pickupAddr1   = trim($pickup['addr1'] ?? '');
         $pickupAddr2   = trim($pickup['addr2'] ?? '');
         $pickupCity    = trim($pickup['city']  ?? '');
@@ -122,6 +198,7 @@ if ($method === 'POST') {
         $delivName    = trim($delivery['name']  ?? '');
         $delivCompany = trim($delivery['company'] ?? '');
         $delivPhone   = trim($delivery['phone'] ?? '');
+        $delivEmail   = trim($body['delivery_email'] ?? ($delivery['email'] ?? ''));
         $delivAddr1   = trim($delivery['addr1'] ?? '');
         $delivAddr2   = trim($delivery['addr2'] ?? '');
         $delivCity    = trim($delivery['city']  ?? '');
@@ -169,26 +246,14 @@ if ($method === 'POST') {
         }
 
         if ($packingMaterial) {
-            $packingCharge = 50.0;
-            try {
-                $pdo->exec("CREATE TABLE IF NOT EXISTS settings (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    setting_key VARCHAR(100) NOT NULL UNIQUE,
-                    setting_value TEXT NOT NULL DEFAULT '',
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-                )");
-                $settingStmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = ?");
-                $settingStmt->execute(['packing_charge']);
-                $settingValue = $settingStmt->fetchColumn();
-                if ($settingValue !== false && is_numeric($settingValue)) {
-                    $packingCharge = max(0.0, (float)$settingValue);
-                }
-            } catch (Exception $e) {}
+            $packingCharge = round(max(0.0, $packingCharge), 2);
+            if ($packingCharge <= 0) {
+                json_response(['success' => false, 'message' => 'Packing material charge is required.'], 422);
+            }
         } else {
             $packingCharge = 0.0;
         }
         $finalPrice = round($basePrice + $packingCharge, 2);
-        $customerEarningAmount = round($finalPrice * $customerEarningPct / 100);
 
         // Validation
         $allowed = ['standard','premium','air_cargo','surface'];
@@ -200,10 +265,13 @@ if ($method === 'POST') {
         if ($declaredValue <= 0) {
             json_response(['success' => false, 'message' => 'Total value of consignment is required.'], 422);
         }
+        if ($declaredValue > 1000) {
+            json_response(['success' => false, 'message' => 'Total value of consignment cannot exceed Rs. 1000.'], 422);
+        }
 
         // Service weight constraints (production-ready)
         $serviceConstraints = [
-            'standard'  => 60.000,
+            'standard'  => 2.000,
             'premium'   => 60.000,
             'air_cargo' => 60.000,
             'surface'   => 60.000,
@@ -215,13 +283,31 @@ if ($method === 'POST') {
                 'message' => "Chargeable weight exceeds limit for $serviceType service. Maximum: {$maxWeight} kg"
             ], 422);
         }
-        if (!$pickupName || !$pickupPhone || !$pickupAddr1 || !$pickupCity || !$pickupPincode) {
+        $pickupPhone = preg_replace('/\D+/', '', $pickupPhone);
+        $delivPhone = preg_replace('/\D+/', '', $delivPhone);
+        if (!$pickupName || !$pickupPhone || !$pickupEmail || !$pickupAddr1 || !$pickupCity || !$pickupPincode) {
             json_response(['success' => false, 'message' => 'Pickup address is incomplete.'], 422);
         }
-        if (!$delivName || !$delivPhone || !$delivAddr1 || !$delivCity || !$delivPincode) {
+        if (!preg_match('/^\d{10}$/', $pickupPhone)) {
+            json_response(['success' => false, 'message' => 'Please enter 10 digit pickup mobile number.'], 422);
+        }
+        if (!filter_var($pickupEmail, FILTER_VALIDATE_EMAIL)) {
+            json_response(['success' => false, 'message' => 'Please enter valid pickup email address.'], 422);
+        }
+        if (!$delivName || !$delivPhone || !$delivEmail || !$delivAddr1 || !$delivCity || !$delivPincode) {
             json_response(['success' => false, 'message' => 'Delivery address is incomplete.'], 422);
         }
+        if (!preg_match('/^\d{10}$/', $delivPhone)) {
+            json_response(['success' => false, 'message' => 'Please enter 10 digit delivery mobile number.'], 422);
+        }
+        if (!filter_var($delivEmail, FILTER_VALIDATE_EMAIL)) {
+            json_response(['success' => false, 'message' => 'Please enter valid delivery email address.'], 422);
+        }
         if (!in_array($paymentMethod, ['prepaid','cod','credit'])) $paymentMethod = 'prepaid';
+
+        $shipmentZone = resolveShipmentZone($pdo, $pickupPincode, $delivPincode, $pickupCity, $pickupState, $delivCity, $delivState);
+        $customerEarningPct = findCustomerEarningPct($pdo, $userId, $serviceType, $shipmentZone, $chargeableWeight, $customerEarningPct);
+        $customerEarningAmount = round($finalPrice * $customerEarningPct / 100);
 
         // Generate AWB: [Mode]-[FranchiseeID]-[Date]-[Sequence], displayed with spaces.
         $tracking = generateAwbNumber($pdo, $serviceType, $franchiseeId, $createdAtIst);
@@ -240,8 +326,8 @@ if ($method === 'POST') {
         $stmt = $pdo->prepare("
             INSERT INTO shipments (
                 tracking_no, customer_id,
-                pickup_name, pickup_company_name, pickup_phone, pickup_address, pickup_city, pickup_state, pickup_pincode, pickup_gstin,
-                delivery_name, delivery_company_name, delivery_phone, delivery_address, delivery_city, delivery_state, delivery_pincode, delivery_gstin,
+                pickup_name, pickup_company_name, pickup_phone, pickup_email, pickup_address, pickup_city, pickup_state, pickup_pincode, pickup_gstin,
+                delivery_name, delivery_company_name, delivery_phone, delivery_email, delivery_address, delivery_city, delivery_state, delivery_pincode, delivery_gstin,
                 service_type, weight, chargeable_weight, volumetric_weight, length, width, height, declared_value, pieces, description, customer_ref,
                 ewaybill_no, packing_material, packing_charge, photo_address, photo_parcel,
                 base_price, discount_pct, discount_amount, final_price,
@@ -250,8 +336,8 @@ if ($method === 'POST') {
                 status, estimated_delivery, created_at
             ) VALUES (
                 ?, ?,
-                ?, ?, ?, ?, ?, ?, ?, ?,
-                ?, ?, ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?, ?, ?, ?,
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                 ?, ?, ?, ?, ?,
                 ?, ?, ?, ?,
@@ -262,8 +348,8 @@ if ($method === 'POST') {
         ");
         $stmt->execute([
             $tracking, $userId,
-            $pickupName, $pickupCompany, $pickupPhone, $pickupFull, $pickupCity, $pickupState, $pickupPincode, $pickupGstin,
-            $delivName, $delivCompany, $delivPhone, $delivFull, $delivCity, $delivState, $delivPincode, $delivGstin,
+            $pickupName, $pickupCompany, $pickupPhone, $pickupEmail, $pickupFull, $pickupCity, $pickupState, $pickupPincode, $pickupGstin,
+            $delivName, $delivCompany, $delivPhone, $delivEmail, $delivFull, $delivCity, $delivState, $delivPincode, $delivGstin,
             $serviceType, $weight, $chargeableWeight, $volWeight, $length, $width, $height, $declaredValue, $pieces, $description, $customerRef,
             $ewaybillNo, $packingMaterial, $packingCharge, $photoAddress ?: null, $photoParcel ?: null,
             $basePrice, $discountPct, $discountAmt, $finalPrice,
@@ -333,7 +419,7 @@ if ($method === 'POST') {
                 'payment_method'      => $paymentMethod,
                 'created_at'          => $createdAtSql,
                 'estimated_delivery'  => $etaDate,
-                'delivery_email'      => $body['delivery_email'] ?? null,
+                'delivery_email'      => $delivEmail,
                 'franchisee_id'       => $franchiseeId,
             ];
 
@@ -350,7 +436,7 @@ if ($method === 'POST') {
             }
 
             // 3. Send notification to receiver (if email provided in body)
-            if (!empty($body['delivery_email'])) {
+            if (!empty($delivEmail)) {
                 $receiver = [
                     'name'  => $delivName,
                     'phone' => $delivPhone,

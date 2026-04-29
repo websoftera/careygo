@@ -24,10 +24,10 @@ if (!$tracking_no) {
 try {
     // Fetch shipment
     if ($user['role'] === 'admin') {
-        $stmt = $pdo->prepare('SELECT * FROM shipments WHERE tracking_no = ?');
+        $stmt = $pdo->prepare('SELECT s.*, u.email AS customer_email FROM shipments s JOIN users u ON u.id = s.customer_id WHERE s.tracking_no = ?');
         $stmt->execute([$tracking_no]);
     } else {
-        $stmt = $pdo->prepare('SELECT * FROM shipments WHERE tracking_no = ? AND customer_id = ?');
+        $stmt = $pdo->prepare('SELECT s.*, u.email AS customer_email FROM shipments s JOIN users u ON u.id = s.customer_id WHERE s.tracking_no = ? AND s.customer_id = ?');
         $stmt->execute([$tracking_no, $user['sub']]);
     }
     
@@ -41,9 +41,9 @@ try {
     // Generate PDF
     $pdf = generateReceiptPDF($shipment);
     
-    // Output as download
+    // Output inline so it opens in the browser
     $filename = 'Careygo_Receipt_' . $tracking_no . '.pdf';
-    $pdf->Output('D', $filename);
+    $pdf->Output('I', $filename);
     
 } catch (Exception $e) {
     header('HTTP/1.1 500 Internal Server Error');

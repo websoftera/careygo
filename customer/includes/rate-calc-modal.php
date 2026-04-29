@@ -61,10 +61,14 @@
                     <input type="checkbox" id="rc_packing_material" style="display:none;" onchange="rcResetResults()">
                     <div class="cust-checkbox-box"><i class="bi bi-check-lg"></i></div>
                     <div>
-                        <div style="font-size:13px;font-weight:600;">Packing Material <span id="rc_packing_charge_hint" style="font-size:11px;color:#6b7280;"></span></div>
-                        <div style="font-size:12px;color:var(--muted);">Add professional packing material to the estimate</div>
+                        <div style="font-size:13px;font-weight:600;">Packing Material <span id="rc_packing_charge_hint" style="font-size:11px;color:#6b7280;">(optional)</span></div>
+                        <div style="font-size:12px;color:var(--muted);">Enter packing material charge for this estimate</div>
                     </div>
                 </label>
+                <div id="rc_packing_charge_row" style="display:none;margin-top:-4px;margin-bottom:14px;">
+                    <label class="rc-label">Packing Material Charge (Rs.)</label>
+                    <input type="number" id="rc_packing_charge" class="wizard-input" min="0" step="0.01" placeholder="0.00" oninput="rcResetResults()">
+                </div>
 
                 <!-- Error -->
                 <div id="rc_error" class="cust-alert cust-alert-danger" style="display:none;margin-bottom:12px;"></div>
@@ -179,7 +183,7 @@
     let rcUnit = 'kg';
     let rcPackingCharge = 0;
 
-    fetch(`${RC_URL}/api/settings.php?key=packing_charge`)
+    false && fetch(`${RC_URL}/api/settings.php?key=packing_charge`)
         .then(r => r.json())
         .then(data => {
             rcPackingCharge = Math.max(0, parseFloat(data.value || 0) || 0);
@@ -194,7 +198,20 @@
         if (!chk) return;
         chk.checked = !chk.checked;
         document.getElementById('rc_packing_wrap')?.classList.toggle('checked', chk.checked);
+        document.getElementById('rc_packing_charge_row').style.display = chk.checked ? 'block' : 'none';
+        if (!chk.checked) {
+            rcPackingCharge = 0;
+            const inp = document.getElementById('rc_packing_charge');
+            if (inp) inp.value = '';
+            const hint = document.getElementById('rc_packing_charge_hint');
+            if (hint) hint.textContent = '(optional)';
+        }
         rcResetResults();
+    });
+    document.getElementById('rc_packing_charge')?.addEventListener('input', e => {
+        rcPackingCharge = Math.max(0, parseFloat(e.target.value || 0) || 0);
+        const hint = document.getElementById('rc_packing_charge_hint');
+        if (hint) hint.textContent = rcPackingCharge > 0 ? `(Rs.${rcPackingCharge.toLocaleString('en-IN')})` : '(optional)';
     });
 
     /* ── Unit toggle ── */
@@ -278,9 +295,6 @@
             .then(data => {
                 if (btn) { btn.innerHTML = '<i class="bi bi-calculator me-2"></i> Calculate Rates'; btn.disabled = false; }
                 if (data.success && data.services && data.services.length > 0) {
-                    if (typeof data.packing_charge !== 'undefined') {
-                        rcPackingCharge = Math.max(0, parseFloat(data.packing_charge || 0) || 0);
-                    }
                     rcRenderResults(data.services, data.zone, weight);
                 } else {
                     if (results) results.innerHTML = '<div class="cust-alert cust-alert-warning mt-3">No pricing available for this route.</div>';
@@ -310,6 +324,12 @@
 
         const zoneTxt = zone ? (zoneLabels[zone] || zone) : '';
         const includePacking = !!document.getElementById('rc_packing_material')?.checked;
+        rcPackingCharge = Math.max(0, parseFloat(document.getElementById('rc_packing_charge')?.value || 0) || 0);
+        if (includePacking && rcPackingCharge <= 0) {
+            const errEl = document.getElementById('rc_error');
+            if (errEl) { errEl.textContent = 'Enter packing material charge.'; errEl.style.display = 'block'; }
+            return;
+        }
         const packingCharge = includePacking ? rcPackingCharge : 0;
         const rows = services.map(svc => {
             const m = svcMap[svc.type] || { icon: 'bi-box', label: svc.type };
@@ -365,6 +385,12 @@
         const packing = document.getElementById('rc_packing_material');
         if (packing) packing.checked = false;
         document.getElementById('rc_packing_wrap')?.classList.remove('checked');
+        document.getElementById('rc_packing_charge_row').style.display = 'none';
+        const packCharge = document.getElementById('rc_packing_charge');
+        if (packCharge) packCharge.value = '';
+        rcPackingCharge = 0;
+        const packHint = document.getElementById('rc_packing_charge_hint');
+        if (packHint) packHint.textContent = '(optional)';
         ['rc_pickup_result','rc_delivery_result'].forEach(id => {
             const el = document.getElementById(id); if (el) { el.innerHTML = ''; el.classList.remove('show'); }
         });

@@ -103,9 +103,6 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                                 <input type="text" class="wizard-input" id="pickup_pincode" data-pincode-input="pickup" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" placeholder="Enter 6-digit pincode">
                                 <div class="wizard-error" id="err_pickup_pincode"></div>
                             </div>
-                            <button class="btn-lookup" id="pickup_lookup_btn" data-pincode-lookup data-pincode-type="pickup">
-                                <i class="bi bi-search"></i> Check
-                            </button>
                         </div>
 
                         <div class="pincode-result" id="pickup_pincode_result"></div>
@@ -135,13 +132,18 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                             <div class="form-grid-2">
                                 <div class="wizard-form-group">
                                     <label class="wizard-label">Mobile Number <span class="req">*</span></label>
-                                    <input type="tel" class="wizard-input" id="pickup_phone" placeholder="+91 XXXXX XXXXX">
+                                    <input type="tel" class="wizard-input" id="pickup_phone" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" placeholder="10 digit mobile number">
                                     <div class="wizard-error" id="err_pickup_phone"></div>
                                 </div>
                                 <div class="wizard-form-group">
                                     <label class="wizard-label">Sender's GSTIN <span class="opt">(optional)</span></label>
                                     <input type="text" class="wizard-input" id="pickup_gstin" placeholder="GSTIN No.">
                                 </div>
+                            </div>
+                            <div class="wizard-form-group">
+                                <label class="wizard-label">Email Address <span class="req">*</span></label>
+                                <input type="email" class="wizard-input" id="pickup_email" placeholder="sender@example.com">
+                                <div class="wizard-error" id="err_pickup_email"></div>
                             </div>
                             <div class="wizard-form-group">
                                 <label class="wizard-label">Address Line 1 <span class="req">*</span></label>
@@ -177,9 +179,6 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                                 <input type="text" class="wizard-input" id="delivery_pincode" data-pincode-input="delivery" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" placeholder="Enter 6-digit pincode">
                                 <div class="wizard-error" id="err_delivery_pincode"></div>
                             </div>
-                            <button class="btn-lookup" id="delivery_lookup_btn" data-pincode-lookup data-pincode-type="delivery">
-                                <i class="bi bi-search"></i> Check
-                            </button>
                         </div>
 
                         <div class="pincode-result" id="delivery_pincode_result"></div>
@@ -207,7 +206,7 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                             <div class="form-grid-2">
                                 <div class="wizard-form-group">
                                     <label class="wizard-label">Mobile Number <span class="req">*</span></label>
-                                    <input type="tel" class="wizard-input" id="delivery_phone" placeholder="+91 XXXXX XXXXX">
+                                    <input type="tel" class="wizard-input" id="delivery_phone" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" placeholder="10 digit mobile number">
                                     <div class="wizard-error" id="err_delivery_phone"></div>
                                 </div>
                                 <div class="wizard-form-group">
@@ -216,7 +215,7 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                                 </div>
                             </div>
                             <div class="wizard-form-group">
-                                <label class="wizard-label">Email Address (for AWB notification) <span class="opt">(optional)</span></label>
+                                <label class="wizard-label">Email Address (for AWB notification) <span class="req">*</span></label>
                                 <input type="email" class="wizard-input" id="delivery_email" placeholder="receiver@example.com">
                                 <div style="font-size:11px;color:#666;margin-top:4px;">📧 Receiver will get a notification with tracking details</div>
                                 <div class="wizard-error" id="err_delivery_email"></div>
@@ -307,7 +306,7 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                         <div class="form-grid-2">
                             <div class="wizard-form-group">
                                 <label class="wizard-label">Total Value of Consignment (Rs.) <span class="req">*</span></label>
-                                <input type="number" class="wizard-input" id="declared_value" min="0" step="0.01" placeholder="0.00">
+                                <input type="number" class="wizard-input" id="declared_value" min="0" max="1000" step="0.01" placeholder="0.00">
                                 <div class="wizard-error" id="err_declared_value"></div>
                             </div>
                             <div class="wizard-form-group">
@@ -386,13 +385,6 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                                     <div class="ewaybill-opt-sub">Goods are accepted at sender's risk</div>
                                 </div>
                             </div>
-                            <div class="ewaybill-opt" data-risk-opt="carrier">
-                                <div class="ewaybill-opt-radio"></div>
-                                <div>
-                                    <div class="ewaybill-opt-label">Carrier's Risk</div>
-                                    <div class="ewaybill-opt-sub">Careygo handles risk coverage (surcharge applies)</div>
-                                </div>
-                            </div>
                         </div>
 
                         <div class="wizard-section-label">Value Added Services</div>
@@ -400,10 +392,15 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                             <input type="checkbox" style="display:none;">
                             <div class="cust-checkbox-box"><i class="bi bi-check-lg"></i></div>
                             <div>
-                                <div style="font-size:13px;font-weight:600;">Packing Material <span id="packing_charge_hint" style="font-size:11px;color:#6b7280;">(click to see charges)</span></div>
-                                <div style="font-size:12px;color:var(--muted);">Include professional packing material for your shipment</div>
+                                <div style="font-size:13px;font-weight:600;">Packing Material <span id="packing_charge_hint" style="font-size:11px;color:#6b7280;">(optional)</span></div>
+                                <div style="font-size:12px;color:var(--muted);">Enter packing material charge for this booking</div>
                             </div>
                         </label>
+                        <div id="packing_charge_row" style="display:none;margin-top:12px;max-width:320px;">
+                            <label class="wizard-label">Packing Material Charge (Rs.) <span class="req">*</span></label>
+                            <input type="number" class="wizard-input" id="packing_charge" min="0" step="0.01" placeholder="0.00">
+                            <div class="wizard-error" id="err_packing_charge"></div>
+                        </div>
 
                         <hr style="margin:20px 0;">
 
@@ -550,8 +547,8 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                         <div class="payment-option" data-payment="cod">
                             <div class="payment-option-radio"></div>
                             <div class="payment-option-info">
-                                <strong>Cash on Delivery (COD)</strong>
-                                <p>Pay when shipment is picked up</p>
+                                <strong>Pay when the shipment is delivered</strong>
+                                <p>Payment will be collected at delivery</p>
                             </div>
                             <i class="bi bi-cash-coin payment-option-icon"></i>
                         </div>
@@ -566,7 +563,7 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
 
                         <hr style="margin:20px 0;">
 
-                        <div class="wizard-section-label">GST Invoice</div>
+                        <div class="wizard-section-label">Generate GST Invoice</div>
                         <label class="cust-checkbox-wrap" id="gst_invoice_wrap">
                             <input type="checkbox">
                             <div class="cust-checkbox-box"><i class="bi bi-check-lg"></i></div>
@@ -622,7 +619,7 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                                 </a>
                                 <a href="#" id="gst_invoice_link" target="_blank"
                                    style="display:none;align-items:center;gap:6px;background:#f0fdf4;color:#166534;border:1.5px solid #86efac;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;text-decoration:none;">
-                                    <i class="bi bi-file-earmark-text"></i> Download GST Invoice
+                                    <i class="bi bi-file-earmark-text"></i> Generate GST Invoice
                                 </a>
                             </div>
                         </div>

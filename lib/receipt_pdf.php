@@ -101,6 +101,12 @@ function receipt_ist_timestamp(?string $createdAt): DateTimeImmutable
     return new DateTimeImmutable($createdAt ?: 'now', $tz);
 }
 
+function receipt_weight_display($weight): string
+{
+    $w = (float)$weight;
+    return number_format($w, 0) . ' kg';
+}
+
 function receipt_has_gst_details(array $shipment): bool
 {
     return !empty($shipment['gst_invoice'])
@@ -194,6 +200,11 @@ function generateReceiptPDF($shipment)
     $pdf->SetFont('Arial', 'B', 8);
     $pdf->Cell(35, 5, ' ' . htmlspecialchars($shipment['pickup_phone']), 'B', 0, 'L');
 
+    $pdf->SetFont('Arial', '', 8);
+    $pdf->Cell(12, 5, "Email:");
+    $pdf->SetFont('Arial', 'B', 7);
+    $pdf->Cell(45, 5, ' ' . htmlspecialchars(substr($shipment['pickup_email'] ?? $shipment['customer_email'] ?? '', 0, 28)), 'B', 0, 'L');
+
     // Address
     $pdf->SetXY($x, $y+=$lineH);
     $pdf->SetFont('Arial', '', 8);
@@ -221,10 +232,12 @@ function generateReceiptPDF($shipment)
     $pdf->SetFont('Arial', 'B', 8);
     $pdf->Cell(20, 5, ' ' . htmlspecialchars(receipt_upper($shipment['pickup_state'])), 'B', 0, 'C');
     $pdf->SetFont('Arial', '', 8);
-    $pdf->Cell(14, 5, "PIN Code:");
+    $pdf->SetXY($x, $y+=$lineH);
+    $pdf->SetFont('Arial', '', 8);
+    $pdf->Cell(18, 5, "PIN Code:");
     $pdf->SetFont('Arial', 'B', 10);
     $pdf->SetTextColor(0, 26, 147);
-    $pdf->Cell(15, 5, ' ' . htmlspecialchars($shipment['pickup_pincode']), 'B', 0, 'C');
+    $pdf->Cell(30, 5, ' ' . htmlspecialchars($shipment['pickup_pincode']), 'B', 0, 'C');
     $pdf->SetTextColor(0, 0, 0);
 
     // GSTIN
@@ -262,6 +275,11 @@ function generateReceiptPDF($shipment)
     $pdf->SetFont('Arial', 'B', 8);
     $pdf->Cell(35, 5, ' ' . htmlspecialchars($shipment['delivery_phone']), 'B', 0, 'L');
 
+    $pdf->SetFont('Arial', '', 8);
+    $pdf->Cell(12, 5, "Email:");
+    $pdf->SetFont('Arial', 'B', 7);
+    $pdf->Cell(44, 5, ' ' . htmlspecialchars(substr($shipment['delivery_email'] ?? '', 0, 28)), 'B', 0, 'L');
+
     // Address
     $pdf->SetXY($x, $y+=$lineH);
     $pdf->SetFont('Arial', '', 8);
@@ -289,10 +307,12 @@ function generateReceiptPDF($shipment)
     $pdf->SetFont('Arial', 'B', 8);
     $pdf->Cell(20, 5, ' ' . htmlspecialchars(receipt_upper($shipment['delivery_state'])), 'B', 0, 'C');
     $pdf->SetFont('Arial', '', 8);
-    $pdf->Cell(14, 5, "PIN Code:");
+    $pdf->SetXY($x, $y+=$lineH);
+    $pdf->SetFont('Arial', '', 8);
+    $pdf->Cell(18, 5, "PIN Code:");
     $pdf->SetFont('Arial', 'B', 10);
     $pdf->SetTextColor(0, 26, 147);
-    $pdf->Cell(14, 5, ' ' . htmlspecialchars($shipment['delivery_pincode']), 'B', 0, 'C');
+    $pdf->Cell(30, 5, ' ' . htmlspecialchars($shipment['delivery_pincode']), 'B', 0, 'C');
     $pdf->SetTextColor(0, 0, 0);
 
     // GSTIN
@@ -318,12 +338,12 @@ function generateReceiptPDF($shipment)
     $pdf->SetFont('Arial', '', 8);
     $pdf->Cell(20, 5, 'Actual Wt:');
     $pdf->SetFont('Arial', 'B', 8);
-    $pdf->Cell(18, 5, number_format((float)$shipment['weight'], 3) . ' kg', 'B', 0, 'C');
+    $pdf->Cell(18, 5, receipt_weight_display($shipment['weight']), 'B', 0, 'C');
     $pdf->SetFont('Arial', '', 8);
     $pdf->Cell(15, 5, 'Chg Wt:');
     $pdf->SetFont('Arial', 'B', 8);
     $receiptWeight = (float)($shipment['chargeable_weight'] ?? 0) > 0 ? (float)$shipment['chargeable_weight'] : (float)$shipment['weight'];
-    $pdf->Cell(18, 5, number_format($receiptWeight, 3) . ' kg', 'B', 0, 'C');
+    $pdf->Cell(18, 5, receipt_weight_display($receiptWeight), 'B', 0, 'C');
 
     // ----------- BOX 4 Top -----------
     $pdf->SetFont('Arial', '', 8);

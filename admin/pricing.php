@@ -53,7 +53,7 @@ require_once 'includes/header.php';
 </div>
 
 <!-- Packing Material Charge Card -->
-<div class="admin-card mb-4" id="packing-material-charge">
+<div class="admin-card mb-4" id="packing-material-charge" style="display:none;">
     <div class="admin-card-header">
         <h6 class="admin-card-title"><i class="bi bi-box2-heart me-2"></i>Packing Material Charge</h6>
     </div>
@@ -340,7 +340,7 @@ require_once 'includes/header.php';
 <script>
 // ── Packing charge ──
 (function loadPackingCharge() {
-    fetch('<?= SITE_URL ?>/api/admin/settings.php?key=packing_charge', { credentials: 'same-origin' })
+    false && fetch('<?= SITE_URL ?>/api/admin/settings.php?key=packing_charge', { credentials: 'same-origin' })
         .then(r => r.json())
         .then(data => {
             const inp = document.getElementById('packing_charge_input');

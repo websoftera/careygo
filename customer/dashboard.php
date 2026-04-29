@@ -147,7 +147,7 @@ $serviceLabels = ['standard'=>'Standard Express','premium'=>'Premium Express','a
                 <td>
                     <div class="d-flex gap-1">
                         <a href="tracking.php?id=<?= $s['id'] ?>" class="btn-new-delivery" style="font-size:11px;padding:5px 10px;" title="Track"><i class="bi bi-geo-alt"></i></a>
-                        <a href="../api/download_receipt.php?tracking_no=<?= urlencode($s['tracking_no']) ?>" target="_blank" class="btn-outline-admin" style="font-size:11px;padding:5px 10px;" title="Download Receipt"><i class="bi bi-file-earmark-pdf"></i></a>
+                        <a href="../api/download_receipt.php?tracking_no=<?= urlencode($s['tracking_no']) ?>" target="_blank" class="btn-outline-admin" style="font-size:11px;padding:5px 10px;" title="View Receipt"><i class="bi bi-file-earmark-pdf"></i></a>
                         <?php if (!empty($s['gst_invoice']) || !empty($s['gstin']) || !empty($s['pickup_gstin']) || !empty($s['delivery_gstin'])): ?>
                         <a href="gst-invoice.php?id=<?= $s['id'] ?>" target="_blank" class="btn-outline-admin" style="font-size:11px;padding:5px 10px;" title="GST Invoice"><i class="bi bi-receipt"></i></a>
                         <?php endif; ?>

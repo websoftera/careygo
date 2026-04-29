@@ -51,4 +51,24 @@ if ($method === 'POST') {
     json_response(['success' => true, 'message' => 'Status updated.']);
 }
 
+if ($method === 'DELETE') {
+    $body = json_decode(file_get_contents('php://input'), true) ?? [];
+    $id = (int)($body['id'] ?? 0);
+    if (!$id) json_response(['success' => false, 'message' => 'Invalid ID.'], 422);
+
+    try {
+        try {
+            $pdo->prepare("DELETE FROM tracking_events WHERE shipment_id = ?")->execute([$id]);
+        } catch (Exception $e) {}
+        $stmt = $pdo->prepare("DELETE FROM shipments WHERE id = ?");
+        $stmt->execute([$id]);
+        if ($stmt->rowCount() === 0) {
+            json_response(['success' => false, 'message' => 'Shipment not found.'], 404);
+        }
+        json_response(['success' => true, 'message' => 'Booking deleted.']);
+    } catch (Exception $e) {
+        json_response(['success' => false, 'message' => 'Delete failed.'], 500);
+    }
+}
+
 json_response(['success' => false, 'message' => 'Method not allowed.'], 405);

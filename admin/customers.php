@@ -81,7 +81,7 @@ require_once 'includes/header.php';
                     <th>Customer</th>
                     <th>Phone</th>
                     <th>Company</th>
-                    <th>Earning %</th>
+                    <th>Default Earning %</th>
                     <th>Status</th>
                     <th>Registered</th>
                     <th>Actions</th>
@@ -123,6 +123,9 @@ require_once 'includes/header.php';
                             <button class="btn-action" onclick="viewCustomer(<?= $c['id'] ?>)" title="View Details">
                                 <i class="bi bi-eye"></i>
                             </button>
+                            <a class="btn-action" href="customer-dashboard.php?id=<?= (int)$c['id'] ?>" title="Customer Dashboard">
+                                <i class="bi bi-grid-1x2"></i>
+                            </a>
                             <button class="btn-action" onclick="openEarningModal(<?= (int)$c['id'] ?>, <?= htmlspecialchars(json_encode($c['full_name']), ENT_QUOTES, 'UTF-8') ?>, <?= htmlspecialchars(json_encode((float)($c['customer_earning_pct'] ?? 0)), ENT_QUOTES, 'UTF-8') ?>)" title="Edit Earning Percentage">
                                 <i class="bi bi-percent"></i>
                             </button>
@@ -141,12 +144,12 @@ require_once 'includes/header.php';
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h6 class="modal-title"><i class="bi bi-cash-coin me-2"></i>Customer Earning</h6>
+                <h6 class="modal-title"><i class="bi bi-cash-coin me-2"></i>Default Customer Earning</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="earning_customer_id">
-                <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Set earning percentage for <strong id="earning_customer_name"></strong>. New bookings will use this percentage.</div>
+                <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Set fallback earning percentage for <strong id="earning_customer_name"></strong>. Slab-wise earnings can be managed from Customer Earnings.</div>
                 <div class="form-group">
                     <label class="form-label" style="font-size:12px;font-weight:600;">Earning Percentage</label>
                     <div class="input-group">
@@ -219,7 +222,7 @@ function viewCustomer(id) {
             </div>
             <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value">${escH(c.phone)}</span></div>
             <div class="detail-row"><span class="detail-label">Company</span><span class="detail-value">${escH(c.company_name||'—')}</span></div>
-            <div class="detail-row"><span class="detail-label">Earning %</span><span class="detail-value"><strong>${Number(c.customer_earning_pct || 0).toFixed(2)}%</strong></span></div>
+            <div class="detail-row"><span class="detail-label">Default Earning %</span><span class="detail-value"><strong>${Number(c.customer_earning_pct || 0).toFixed(2)}%</strong></span></div>
             <div class="detail-row"><span class="detail-label">Total Earnings</span><span class="detail-value"><strong>Rs.${Number(c.total_earnings || 0).toFixed(0)}</strong></span></div>
             <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value"><span class="badge-status badge-${c.status}">${c.status}</span></span></div>
             <div class="detail-row"><span class="detail-label">Total Shipments</span><span class="detail-value"><strong>${c.total_shipments||0}</strong></span></div>

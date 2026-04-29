@@ -19,7 +19,7 @@
         return {
             step: 1,
             totalSteps: 6,
-            pickup: { pincode: '', city: '', state: '', name: '', company: '', phone: '', gstin: '', addr1: '', addr2: '' },
+            pickup: { pincode: '', city: '', state: '', name: '', company: '', phone: '', email: '', gstin: '', addr1: '', addr2: '' },
             delivery: { pincode: '', city: '', state: '', name: '', company: '', phone: '', email: '', gstin: '', addr1: '', addr2: '' },
             pickupPincodeVerified: false,
             deliveryPincodeVerified: false,
@@ -188,6 +188,9 @@
 
             if (!state.pickup.name)    { showErr('pickup_name',    'Enter sender full name');    ok = false; }
             if (!state.pickup.phone)   { showErr('pickup_phone',   'Enter sender mobile number'); ok = false; }
+            else if (!/^\d{10}$/.test(state.pickup.phone)) { showErr('pickup_phone', 'Please enter 10 digit mobile number'); ok = false; }
+            if (!state.pickup.email)   { showErr('pickup_email', 'Enter sender email address'); ok = false; }
+            else if (!isValidEmail(state.pickup.email)) { showErr('pickup_email', 'Enter a valid email address'); ok = false; }
             if (!state.pickup.addr1)   { showErr('pickup_addr1',   'Enter pickup address');      ok = false; }
             if (!state.pickup.city)    { showErr('pickup_city',    'Enter city');                ok = false; }
             if (!state.pickup.state)   { showErr('pickup_state',   'Enter state');               ok = false; }
@@ -203,6 +206,9 @@
 
             if (!state.delivery.name)    { showErr('delivery_name',    'Enter receiver full name');  ok = false; }
             if (!state.delivery.phone)   { showErr('delivery_phone',   'Enter receiver mobile number'); ok = false; }
+            else if (!/^\d{10}$/.test(state.delivery.phone)) { showErr('delivery_phone', 'Please enter 10 digit mobile number'); ok = false; }
+            if (!state.delivery.email)   { showErr('delivery_email', 'Enter receiver email address'); ok = false; }
+            else if (!isValidEmail(state.delivery.email)) { showErr('delivery_email', 'Enter a valid email address'); ok = false; }
             if (!state.delivery.addr1)   { showErr('delivery_addr1',   'Enter delivery address');    ok = false; }
             if (!state.delivery.city)    { showErr('delivery_city',    'Enter city');               ok = false; }
             if (!state.delivery.state)   { showErr('delivery_state',   'Enter state');              ok = false; }
@@ -221,6 +227,8 @@
             if (!state.pieces || state.pieces < 1) { showErr('pieces', 'Min 1 piece required'); ok = false; }
             if (!state.declaredValue || state.declaredValue <= 0) {
                 showErr('declared_value', 'Total value of consignment is required'); ok = false;
+            } else if (state.declaredValue > 1000) {
+                showErr('declared_value', 'Total value of consignment cannot exceed Rs. 1000'); ok = false;
             }
 
             // Dimension limits (only if dimensions are entered)
@@ -248,6 +256,10 @@
                 if (inputRow) inputRow.style.display = 'block';
                 ok = false;
             }
+            if (state.packingMaterial && (!state.packingCharge || state.packingCharge <= 0)) {
+                showErr('packing_charge', 'Packing material charge is required');
+                ok = false;
+            }
             // Photo uploads mandatory
             if (!state.photoAddressId) {
                 showPhotoError('photo_address_error', 'Address photo is required before proceeding');
@@ -273,6 +285,10 @@
         if (inp) inp.classList.add('is-error');
     }
 
+    function isValidEmail(value) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+    }
+
     function showPhotoError(id, msg) {
         const el = document.getElementById(id);
         if (el) { el.textContent = msg; el.style.display = 'block'; el.style.color = '#dc2626'; el.style.fontSize = '12px'; el.style.marginTop = '4px'; }
@@ -289,6 +305,7 @@
         // Create or reuse alert modal
         let modal = document.getElementById('weightAlertModal');
         if (modal) modal.remove();
+        const enteredWeight = Number.isInteger(wt) ? String(wt) : wt.toFixed(3).replace(/\.?0+$/, '');
         
         modal = document.createElement('div');
         modal.id = 'weightAlertModal';
@@ -301,7 +318,7 @@
                     Maximum allowable weight is <strong>${max} kg</strong>.
                 </p>
                 <p style="font-size:13px;color:#777;margin-bottom:20px;">
-                    Your entered weight is <strong>${wt.toFixed(3)} kg</strong>. For heavier shipments, please contact our support team for specialized cargo rates.
+                    Your entered weight is <strong>${enteredWeight} kg</strong>. For heavier shipments, please contact our support team for specialized cargo rates.
                 </p>
                 <button onclick="document.getElementById('weightAlertModal').remove()"
                         style="background:#001a93;color:#fff;border:none;border-radius:8px;padding:10px 28px;font-size:14px;font-weight:600;cursor:pointer;">
@@ -357,8 +374,10 @@
                     }
                     const cityEl  = document.getElementById(`${type}_city`);
                     const stateEl = document.getElementById(`${type}_state`);
-                    if (cityEl)  { cityEl.value  = info.city;  state[type].city  = info.city; }
-                    if (stateEl) { stateEl.value = info.state; state[type].state = info.state; }
+                    const cityName = String(info.city || '').toUpperCase();
+                    const stateName = String(info.state || '').toUpperCase();
+                    if (cityEl)  { cityEl.value  = cityName;  state[type].city  = cityName; }
+                    if (stateEl) { stateEl.value = stateName; state[type].state = stateName; }
                     loadSavedAddresses(type, pincode);
                 } else {
                     state[`${type}PincodeVerified`] = false;
@@ -410,8 +429,13 @@
             state[`${type}VerifiedPincode`] = '';
             const resultEl = document.getElementById(`${type}_pincode_result`);
             if (resultEl) {
-                resultEl.innerHTML = '<i class="bi bi-info-circle text-primary"></i> Click Check to verify this pincode';
-                resultEl.classList.add('show');
+                resultEl.innerHTML = inp.value.length > 0
+                    ? '<i class="bi bi-info-circle text-primary"></i> Enter 6 digit pincode'
+                    : '';
+                resultEl.classList.toggle('show', inp.value.length > 0);
+            }
+            if (inp.value.length === 6) {
+                lookupPincode(inp.value.trim(), type);
             }
         });
         inp.addEventListener('keydown', e => {
@@ -466,19 +490,24 @@
         });
 
         state[`selected${type.charAt(0).toUpperCase() + type.slice(1)}AddrId`] = id;
-        state[type].name  = addr.full_name;
-        state[type].phone = addr.phone;
-        state[type].addr1 = addr.address_line1;
-        state[type].addr2 = addr.address_line2 || '';
-        state[type].city  = addr.city;
-        state[type].state = addr.state;
+        state[type].name  = String(addr.full_name || '').toUpperCase();
+        state[type].phone = String(addr.phone || '').replace(/\D/g, '').slice(0, 10);
+        state[type].addr1 = String(addr.address_line1 || '').toUpperCase();
+        state[type].addr2 = String(addr.address_line2 || '').toUpperCase();
+        state[type].city  = String(addr.city || '').toUpperCase();
+        state[type].state = String(addr.state || '').toUpperCase();
         state[type].pincode = addr.pincode;
         state[`${type}PincodeVerified`] = true; // Saved address = already verified
         state[`${type}VerifiedPincode`] = addr.pincode;
         state[`useNew${type.charAt(0).toUpperCase() + type.slice(1)}Addr`] = false;
 
+        ['name', 'phone', 'addr1', 'addr2', 'city', 'state', 'pincode'].forEach(field => {
+            const el = document.getElementById(`${type}_${field}`);
+            if (el) el.value = state[type][field] || '';
+        });
+
         const newForm = document.getElementById(`${type}_new_form`);
-        if (newForm) newForm.classList.remove('show');
+        if (newForm) newForm.classList.add('show');
     };
 
     function showNewAddressForm(type) {
@@ -496,12 +525,20 @@
 
     /* ── Sync address form fields to state ── */
     ['pickup', 'delivery'].forEach(type => {
-        const fields = type === 'delivery'
-            ? ['name', 'company', 'phone', 'email', 'gstin', 'addr1', 'addr2', 'city', 'state']
-            : ['name', 'company', 'phone', 'gstin', 'addr1', 'addr2', 'city', 'state'];
+        const fields = ['name', 'company', 'phone', 'email', 'gstin', 'addr1', 'addr2', 'city', 'state'];
         fields.forEach(field => {
             const el = document.getElementById(`${type}_${field}`);
-            if (el) el.addEventListener('input', () => { state[type][field] = el.value.trim(); });
+            if (el) el.addEventListener('input', () => {
+                if (field === 'phone') {
+                    el.value = el.value.replace(/\D/g, '').slice(0, 10);
+                } else if (field !== 'email') {
+                    const start = el.selectionStart;
+                    const end = el.selectionEnd;
+                    el.value = el.value.toUpperCase();
+                    try { el.setSelectionRange(start, end); } catch (e) {}
+                }
+                state[type][field] = el.value.trim();
+            });
         });
     });
 
@@ -530,7 +567,11 @@
     piecesInput && piecesInput.addEventListener('input', () => { state.pieces = parseInt(piecesInput.value) || 1; });
 
     const declaredValueInput = document.getElementById('declared_value');
-    declaredValueInput && declaredValueInput.addEventListener('input', () => { state.declaredValue = parseFloat(declaredValueInput.value) || 0; });
+    declaredValueInput && declaredValueInput.addEventListener('input', () => {
+        const val = parseFloat(declaredValueInput.value) || 0;
+        if (val > 1000) declaredValueInput.value = '1000';
+        state.declaredValue = parseFloat(declaredValueInput.value) || 0;
+    });
 
     const descriptionInput = document.getElementById('description');
     descriptionInput && descriptionInput.addEventListener('input', () => { state.description = descriptionInput.value.trim(); });
@@ -759,6 +800,8 @@
 
     /* ── Packing material — show charges popup ── */
     const packingWrap = document.getElementById('packing_material_wrap');
+    const packingChargeInput = document.getElementById('packing_charge');
+    const packingChargeRow = document.getElementById('packing_charge_row');
     function formatMoney(amount) {
         return (Number(amount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
@@ -783,6 +826,22 @@
                 return state.availablePackingCharge;
             });
     }
+    function updateCustomerPackingCharge(value) {
+        const parsed = Math.max(0, parseFloat(value || 0) || 0);
+        state.packingCharge = parsed;
+        const hint = document.getElementById('packing_charge_hint');
+        if (hint) hint.textContent = state.packingMaterial && parsed > 0 ? `(Rs.${formatMoney(parsed)})` : '(optional)';
+    }
+    function setCustomerPackingSelected(selected) {
+        state.packingMaterial = !!selected;
+        packingWrap && packingWrap.classList.toggle('checked', state.packingMaterial);
+        if (packingChargeRow) packingChargeRow.style.display = state.packingMaterial ? 'block' : 'none';
+        if (!state.packingMaterial) {
+            state.packingCharge = 0;
+            if (packingChargeInput) packingChargeInput.value = '';
+        }
+        updateCustomerPackingCharge(state.packingCharge);
+    }
     packingWrap && packingWrap.addEventListener('click', e => {
         e.preventDefault(); // Don't toggle yet — show popup first
         if (!state.packingMaterial) {
@@ -794,6 +853,14 @@
             packingWrap.classList.remove('checked');
         }
     });
+
+    packingWrap && packingWrap.addEventListener('click', e => {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        setCustomerPackingSelected(!state.packingMaterial);
+        if (state.packingMaterial) packingChargeInput?.focus();
+    }, true);
+    packingChargeInput && packingChargeInput.addEventListener('input', () => updateCustomerPackingCharge(packingChargeInput.value));
 
     function showPackingChargePopup() {
         loadPackingCharge().then(displayPackingModal);
@@ -1134,7 +1201,7 @@
 
     /* ── Restore form fields from state ── */
     function restoreFormFields() {
-        ['pincode', 'name', 'company', 'phone', 'gstin', 'addr1', 'addr2', 'city', 'state'].forEach(f => {
+        ['pincode', 'name', 'company', 'phone', 'email', 'gstin', 'addr1', 'addr2', 'city', 'state'].forEach(f => {
             const el = document.getElementById(`pickup_${f}`);
             if (el) el.value = state.pickup[f] || '';
         });
@@ -1181,9 +1248,9 @@
         if (riskBtn) riskBtn.click();
 
         if (state.packingMaterial && packingWrap) {
-            state.packingMaterial = false; // reset so click logic works
-            packingWrap.classList.add('checked');
-            state.packingMaterial = true;
+            setCustomerPackingSelected(true);
+            if (packingChargeInput && state.packingCharge > 0) packingChargeInput.value = state.packingCharge;
+            updateCustomerPackingCharge(state.packingCharge);
         }
 
         if (state.paymentMethod) {

@@ -64,9 +64,9 @@
                 </a>
             </li>
             <li>
-                <a href="pricing.php#packing-material-charge" class="sidebar-link <?= ($activePage ?? '') === 'packing-material' ? 'active' : '' ?>">
-                    <i class="bi bi-box2-heart"></i>
-                    <span>Packing Material</span>
+                <a href="customer-earnings.php" class="sidebar-link <?= ($activePage ?? '') === 'customer-earnings' ? 'active' : '' ?>">
+                    <i class="bi bi-cash-coin"></i>
+                    <span>Customer Earnings</span>
                 </a>
             </li>
             <li>

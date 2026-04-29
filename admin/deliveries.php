@@ -135,6 +135,7 @@ require_once 'includes/header.php';
                     <td>
                         <button class="btn-action" onclick="viewShipment(<?= $s['id'] ?>)" title="View Details"><i class="bi bi-eye"></i></button>
                         <button class="btn-action" onclick="trackingModal(<?= $s['id'] ?>, '<?= htmlspecialchars($s['tracking_no']) ?>')" title="Tracking"><i class="bi bi-geo-alt"></i></button>
+                        <button class="btn-action danger" onclick="confirmAction('Delete this booking?', ()=>deleteShipment(<?= $s['id'] ?>))" title="Delete Booking"><i class="bi bi-trash"></i></button>
                     </td>
                 </tr>
                 <?php endforeach; ?>
@@ -213,7 +214,7 @@ function viewShipment(id) {
             <div class="col-12"><hr class="my-1"></div>
             <div class="col-md-6">
                 <div class="detail-row"><span class="detail-label">Tracking No</span><span class="detail-value" style="font-weight:700;color:var(--primary)">${escH(s.tracking_no)}</span></div>
-                <div class="mb-2"><a href="../api/download_receipt.php?tracking_no=${encodeURIComponent(s.tracking_no)}" target="_blank" class="btn-outline-admin" style="font-size:11px;padding:4px 8px;text-decoration:none;display:inline-block;"><i class="bi bi-file-earmark-pdf me-1"></i> Download Receipt</a></div>
+                <div class="mb-2"><a href="../api/download_receipt.php?tracking_no=${encodeURIComponent(s.tracking_no)}" target="_blank" class="btn-outline-admin" style="font-size:11px;padding:4px 8px;text-decoration:none;display:inline-block;"><i class="bi bi-file-earmark-pdf me-1"></i> View Receipt</a></div>
                 <div class="detail-row"><span class="detail-label">Service</span><span class="detail-value">${escH(svcMap[s.service_type]||s.service_type)}</span></div>
                 <div class="detail-row"><span class="detail-label">Weight</span><span class="detail-value">${parseFloat(s.weight).toFixed(3)} kg</span></div>
                 <div class="detail-row"><span class="detail-label">Pieces</span><span class="detail-value">${s.pieces}</span></div>
@@ -231,6 +232,25 @@ function viewShipment(id) {
     });
 }
 function escH(s){ return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : '—'; }
+
+function deleteShipment(id) {
+    fetch('<?= SITE_URL ?>/api/admin/shipments.php', {
+        method: 'DELETE',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({id}),
+        credentials: 'same-origin'
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Booking deleted', 'success');
+            document.getElementById(`srow_${id}`)?.remove();
+        } else {
+            showToast(data.message || 'Delete failed', 'error');
+        }
+    })
+    .catch(() => showToast('Network error', 'error'));
+}
 
 function trackingModal(id, trackingNo) {
     const modal = new bootstrap.Modal(document.getElementById('trackingManagementModal'));

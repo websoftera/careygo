@@ -143,9 +143,9 @@ $defaultTat = ['standard' => 3, 'premium' => 1, 'air_cargo' => 2, 'surface' => 5
 // ── Calculate prices ──────────────────────────────────────────────────────────
 $serviceTypes = ['standard', 'premium', 'air_cargo', 'surface'];
 $services = [];
-$packingCharge = 50.0;
+$packingCharge = 0.0;
 
-try {
+if (false) try {
     $pdo->exec("CREATE TABLE IF NOT EXISTS settings (
         id INT AUTO_INCREMENT PRIMARY KEY,
         setting_key VARCHAR(100) NOT NULL UNIQUE,
@@ -162,7 +162,7 @@ try {
 
 try {
     $serviceConstraints = [
-        'standard'  => 60.000,
+        'standard'  => 2.000,
         'premium'   => 60.000,
         'air_cargo' => 60.000,
         'surface'   => 60.000,
