@@ -32,8 +32,6 @@ require_once 'includes/header.php';
 $serviceLabels = ['standard'=>'Standard Express','premium'=>'Premium Express','air_cargo'=>'Air Cargo','surface'=>'Surface Cargo'];
 $statusOrder   = ['booked','picked_up','in_transit','out_for_delivery','delivered'];
 $currentIdx    = array_search($shipment['status'], $statusOrder);
-$hasGstInvoice = !empty($shipment['gst_invoice']) || !empty($shipment['gstin']) || !empty($shipment['pickup_gstin']) || !empty($shipment['delivery_gstin']);
-
 $statusLabels  = ['booked'=>'Booked','picked_up'=>'Picked Up','in_transit'=>'In Transit','out_for_delivery'=>'Out for Delivery','delivered'=>'Delivered','cancelled'=>'Cancelled'];
 ?>
 
@@ -59,11 +57,9 @@ $statusLabels  = ['booked'=>'Booked','picked_up'=>'Picked Up','in_transit'=>'In 
                     <a href="../api/download_receipt.php?tracking_no=<?= urlencode($shipment['tracking_no']) ?>" target="_blank" class="btn-outline-admin" style="font-size:12px;padding:6px 12px;text-decoration:none;display:inline-block;">
                         <i class="bi bi-file-earmark-pdf me-1"></i> Download Receipt
                     </a>
-                    <?php if ($hasGstInvoice): ?>
                     <a href="gst-invoice.php?id=<?= $shipment['id'] ?>" target="_blank" class="btn-outline-admin" style="font-size:12px;padding:6px 12px;text-decoration:none;display:inline-block;margin-left:6px;">
                         <i class="bi bi-receipt me-1"></i> GST Invoice
                     </a>
-                    <?php endif; ?>
                 </div>
             </div>
         </div>

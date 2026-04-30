@@ -42,9 +42,6 @@
             packingCharge: 0,
             availablePackingCharge: 0,
             paymentMethod: 'prepaid',
-            gstInvoice: false,
-            gstin: '',
-            pan: '',
             dim_l: 0,
             dim_w: 0,
             dim_h: 0,
@@ -492,6 +489,7 @@
         state[`selected${type.charAt(0).toUpperCase() + type.slice(1)}AddrId`] = id;
         state[type].name  = String(addr.full_name || '').toUpperCase();
         state[type].phone = String(addr.phone || '').replace(/\D/g, '').slice(0, 10);
+        state[type].email = String(addr.email || (type === 'pickup' ? (window.CURRENT_CUSTOMER_EMAIL || '') : '')).trim();
         state[type].addr1 = String(addr.address_line1 || '').toUpperCase();
         state[type].addr2 = String(addr.address_line2 || '').toUpperCase();
         state[type].city  = String(addr.city || '').toUpperCase();
@@ -501,7 +499,7 @@
         state[`${type}VerifiedPincode`] = addr.pincode;
         state[`useNew${type.charAt(0).toUpperCase() + type.slice(1)}Addr`] = false;
 
-        ['name', 'phone', 'addr1', 'addr2', 'city', 'state', 'pincode'].forEach(field => {
+        ['name', 'phone', 'email', 'addr1', 'addr2', 'city', 'state', 'pincode'].forEach(field => {
             const el = document.getElementById(`${type}_${field}`);
             if (el) el.value = state[type][field] || '';
         });
@@ -571,6 +569,12 @@
         const val = parseFloat(declaredValueInput.value) || 0;
         if (val > 1000) declaredValueInput.value = '1000';
         state.declaredValue = parseFloat(declaredValueInput.value) || 0;
+    });
+    declaredValueInput && declaredValueInput.addEventListener('blur', () => {
+        if (state.declaredValue > 1000) {
+            declaredValueInput.value = '1000';
+            state.declaredValue = 1000;
+        }
     });
 
     const descriptionInput = document.getElementById('description');
@@ -802,6 +806,7 @@
     const packingWrap = document.getElementById('packing_material_wrap');
     const packingChargeInput = document.getElementById('packing_charge');
     const packingChargeRow = document.getElementById('packing_charge_row');
+    if (packingChargeRow) packingChargeRow.style.display = 'block';
     function formatMoney(amount) {
         return (Number(amount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
@@ -835,7 +840,7 @@
     function setCustomerPackingSelected(selected) {
         state.packingMaterial = !!selected;
         packingWrap && packingWrap.classList.toggle('checked', state.packingMaterial);
-        if (packingChargeRow) packingChargeRow.style.display = state.packingMaterial ? 'block' : 'none';
+        if (packingChargeRow) packingChargeRow.style.display = 'block';
         if (!state.packingMaterial) {
             state.packingCharge = 0;
             if (packingChargeInput) packingChargeInput.value = '';
@@ -860,7 +865,12 @@
         setCustomerPackingSelected(!state.packingMaterial);
         if (state.packingMaterial) packingChargeInput?.focus();
     }, true);
-    packingChargeInput && packingChargeInput.addEventListener('input', () => updateCustomerPackingCharge(packingChargeInput.value));
+    packingChargeInput && packingChargeInput.addEventListener('input', () => {
+        updateCustomerPackingCharge(packingChargeInput.value);
+        const hasCharge = state.packingCharge > 0;
+        state.packingMaterial = hasCharge;
+        packingWrap && packingWrap.classList.toggle('checked', hasCharge);
+    });
 
     function showPackingChargePopup() {
         loadPackingCharge().then(displayPackingModal);
@@ -1097,19 +1107,6 @@
         });
     });
 
-    const gstWrap = document.getElementById('gst_invoice_wrap');
-    gstWrap && gstWrap.addEventListener('click', () => {
-        state.gstInvoice = !state.gstInvoice;
-        gstWrap.classList.toggle('checked', state.gstInvoice);
-        const gstFields = document.getElementById('gst_fields');
-        if (gstFields) gstFields.style.display = state.gstInvoice ? 'block' : 'none';
-    });
-
-    const gstinInput = document.getElementById('gstin');
-    gstinInput && gstinInput.addEventListener('input', () => { state.gstin = gstinInput.value.trim(); });
-    const panInput = document.getElementById('pan_number');
-    panInput && panInput.addEventListener('input', () => { state.pan = panInput.value.trim(); });
-
     /* ── Final submit ── */
     const submitBtn = document.getElementById('submit_booking');
     submitBtn && submitBtn.addEventListener('click', () => {
@@ -1118,12 +1115,6 @@
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Booking...';
 
         const totalPrice = state.servicePrice + (state.packingMaterial ? state.packingCharge : 0);
-        const hasGstDetails = !!(
-            state.gstin ||
-            state.pickup.gstin ||
-            state.delivery.gstin
-        );
-
         const payload = {
             pickup:             state.pickup,
             delivery:           state.delivery,
@@ -1146,9 +1137,9 @@
             height:             state.dim_h || 0,
             volumetric_weight:  state.volumetricWeight || 0,
             payment_method:     state.paymentMethod,
-            gst_invoice:        (state.gstInvoice || hasGstDetails) ? 1 : 0,
-            gstin:              state.gstin || state.pickup.gstin || state.delivery.gstin,
-            pan_number:         state.pan,
+            gst_invoice:        1,
+            gstin:              state.pickup.gstin || state.delivery.gstin,
+            pan_number:         '',
             photo_address:      state.photoAddressId || '',
             photo_parcel:       state.photoParcelId  || '',
         };
@@ -1166,8 +1157,8 @@
                 goToStep(7);
                 const trackEl = document.getElementById('final_tracking_no');
                 if (trackEl) trackEl.textContent = data.tracking_no;
-                // Show GST invoice download link if requested
-                if ((state.gstInvoice || hasGstDetails || data.gst_invoice) && data.id) {
+                // GST invoice is generated for every booking.
+                if (data.id) {
                     const invoiceLink = document.getElementById('gst_invoice_link');
                     if (invoiceLink) {
                         invoiceLink.href = `${SITE_URL}/customer/gst-invoice.php?id=${data.id}`;
@@ -1257,10 +1248,6 @@
             const paymentBtn = document.querySelector(`[data-payment="${state.paymentMethod}"]`);
             if (paymentBtn) paymentBtn.click();
         }
-
-        if (state.gstInvoice && gstWrap) gstWrap.click();
-        if (state.gstin && gstinInput) gstinInput.value = state.gstin;
-        if (state.pan && panInput) panInput.value = state.pan;
 
         // Restore photo upload status
         if (state.photoAddressId) {

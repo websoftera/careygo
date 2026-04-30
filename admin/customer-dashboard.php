@@ -74,9 +74,7 @@ require_once 'includes/header.php';
                 <td>
                     <div class="d-flex gap-1">
                         <a href="../api/download_receipt.php?tracking_no=<?= urlencode($s['tracking_no']) ?>" target="_blank" class="btn-outline-admin" style="font-size:11px;padding:5px 10px;" title="View Receipt"><i class="bi bi-file-earmark-pdf"></i></a>
-                        <?php if (!empty($s['gst_invoice']) || !empty($s['gstin']) || !empty($s['pickup_gstin']) || !empty($s['delivery_gstin'])): ?>
                         <a href="../customer/gst-invoice.php?id=<?= (int)$s['id'] ?>" target="_blank" class="btn-outline-admin" style="font-size:11px;padding:5px 10px;" title="GST Invoice"><i class="bi bi-receipt"></i></a>
-                        <?php endif; ?>
                         <a href="deliveries.php?q=<?= urlencode($s['tracking_no']) ?>" class="btn-outline-admin" style="font-size:11px;padding:5px 10px;" title="Open in Deliveries"><i class="bi bi-eye"></i></a>
                     </div>
                 </td>

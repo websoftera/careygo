@@ -65,7 +65,7 @@
                         <div style="font-size:12px;color:var(--muted);">Enter packing material charge for this estimate</div>
                     </div>
                 </label>
-                <div id="rc_packing_charge_row" style="display:none;margin-top:-4px;margin-bottom:14px;">
+                <div id="rc_packing_charge_row" style="display:block;margin-top:-4px;margin-bottom:14px;">
                     <label class="rc-label">Packing Material Charge (Rs.)</label>
                     <input type="number" id="rc_packing_charge" class="wizard-input" min="0" step="0.01" placeholder="0.00" oninput="rcResetResults()">
                 </div>
@@ -198,7 +198,7 @@
         if (!chk) return;
         chk.checked = !chk.checked;
         document.getElementById('rc_packing_wrap')?.classList.toggle('checked', chk.checked);
-        document.getElementById('rc_packing_charge_row').style.display = chk.checked ? 'block' : 'none';
+        document.getElementById('rc_packing_charge_row').style.display = 'block';
         if (!chk.checked) {
             rcPackingCharge = 0;
             const inp = document.getElementById('rc_packing_charge');
@@ -212,6 +212,11 @@
         rcPackingCharge = Math.max(0, parseFloat(e.target.value || 0) || 0);
         const hint = document.getElementById('rc_packing_charge_hint');
         if (hint) hint.textContent = rcPackingCharge > 0 ? `(Rs.${rcPackingCharge.toLocaleString('en-IN')})` : '(optional)';
+        const chk = document.getElementById('rc_packing_material');
+        if (chk) {
+            chk.checked = rcPackingCharge > 0;
+            document.getElementById('rc_packing_wrap')?.classList.toggle('checked', chk.checked);
+        }
     });
 
     /* ── Unit toggle ── */
@@ -385,7 +390,7 @@
         const packing = document.getElementById('rc_packing_material');
         if (packing) packing.checked = false;
         document.getElementById('rc_packing_wrap')?.classList.remove('checked');
-        document.getElementById('rc_packing_charge_row').style.display = 'none';
+        document.getElementById('rc_packing_charge_row').style.display = 'block';
         const packCharge = document.getElementById('rc_packing_charge');
         if (packCharge) packCharge.value = '';
         rcPackingCharge = 0;

@@ -3,7 +3,7 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../lib/auth.php';
 
 $authUser = auth_require('customer');
-$stmt = $pdo->prepare('SELECT id, full_name, status FROM users WHERE id = ?');
+$stmt = $pdo->prepare('SELECT id, full_name, email, status FROM users WHERE id = ?');
 $stmt->execute([$authUser['sub']]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!$user || $user['status'] !== 'approved') { header('Location: pending.php'); exit; }
@@ -396,7 +396,7 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                                 <div style="font-size:12px;color:var(--muted);">Enter packing material charge for this booking</div>
                             </div>
                         </label>
-                        <div id="packing_charge_row" style="display:none;margin-top:12px;max-width:320px;">
+                        <div id="packing_charge_row" style="display:block;margin-top:12px;max-width:320px;">
                             <label class="wizard-label">Packing Material Charge (Rs.) <span class="req">*</span></label>
                             <input type="number" class="wizard-input" id="packing_charge" min="0" step="0.01" placeholder="0.00">
                             <div class="wizard-error" id="err_packing_charge"></div>
@@ -561,31 +561,6 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                             <i class="bi bi-building-check payment-option-icon"></i>
                         </div>
 
-                        <hr style="margin:20px 0;">
-
-                        <div class="wizard-section-label">Generate GST Invoice</div>
-                        <label class="cust-checkbox-wrap" id="gst_invoice_wrap">
-                            <input type="checkbox">
-                            <div class="cust-checkbox-box"><i class="bi bi-check-lg"></i></div>
-                            <div>
-                                <div style="font-size:13px;font-weight:600;">Require GST Compliant Tax Invoice</div>
-                                <div style="font-size:12px;color:var(--muted);">Invoice will be sent to your registered email after shipment</div>
-                            </div>
-                        </label>
-
-                        <div id="gst_fields" style="display:none;margin-top:16px;">
-                            <div class="form-grid-2">
-                                <div class="wizard-form-group">
-                                    <label class="wizard-label">GSTIN</label>
-                                    <input type="text" class="wizard-input" id="gstin" placeholder="22AAAAA0000A1Z5" maxlength="15">
-                                </div>
-                                <div class="wizard-form-group">
-                                    <label class="wizard-label">PAN Number</label>
-                                    <input type="text" class="wizard-input" id="pan_number" placeholder="AAAAA0000A" maxlength="10">
-                                </div>
-                            </div>
-                        </div>
-
                         <div id="form_error" class="alert alert-danger mt-3" style="display:none;font-size:13px;border-radius:10px;"></div>
                         <div class="wizard-error" id="err_payment_error"></div>
 
@@ -632,7 +607,10 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
 </div>
 
 <?php include __DIR__ . '/includes/rate-calc-modal.php'; ?>
-<script>window.SITE_URL = '<?= rtrim(SITE_URL, '/') ?>';</script>
+<script>
+window.SITE_URL = '<?= rtrim(SITE_URL, '/') ?>';
+window.CURRENT_CUSTOMER_EMAIL = <?= json_encode($user['email'] ?? '') ?>;
+</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../js/delivery.js"></script>
 <script>

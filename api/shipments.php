@@ -152,7 +152,7 @@ function findCustomerEarningPct(PDO $pdo, int $customerId, string $serviceType, 
 ensureEarningColumns($pdo);
 
 // Verify customer is approved
-$stmt = $pdo->prepare('SELECT status, customer_earning_pct FROM users WHERE id = ?');
+$stmt = $pdo->prepare('SELECT status, email, customer_earning_pct FROM users WHERE id = ?');
 $stmt->execute([$userId]);
 $customerRow = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!$customerRow || $customerRow['status'] !== 'approved') {
@@ -188,6 +188,9 @@ if ($method === 'POST') {
         $pickupCompany = trim($pickup['company'] ?? '');
         $pickupPhone   = trim($pickup['phone'] ?? '');
         $pickupEmail   = trim($pickup['email'] ?? '');
+        if ($pickupEmail === '') {
+            $pickupEmail = trim($customerRow['email'] ?? '');
+        }
         $pickupAddr1   = trim($pickup['addr1'] ?? '');
         $pickupAddr2   = trim($pickup['addr2'] ?? '');
         $pickupCity    = trim($pickup['city']  ?? '');
@@ -229,7 +232,7 @@ if ($method === 'POST') {
         $discountPct      = 0;  // Discount removed
         $discountAmt      = 0;
         $paymentMethod    = trim($body['payment_method']   ?? 'prepaid');
-        $gstInvoice       = (int)    ($body['gst_invoice']      ?? 0);
+        $gstInvoice       = 1;
         $gstin            = trim($body['gstin']            ?? '');
         $panNumber        = trim($body['pan_number']       ?? '');
         $riskSurcharge    = 'owner';
@@ -285,7 +288,10 @@ if ($method === 'POST') {
         }
         $pickupPhone = preg_replace('/\D+/', '', $pickupPhone);
         $delivPhone = preg_replace('/\D+/', '', $delivPhone);
-        if (!$pickupName || !$pickupPhone || !$pickupEmail || !$pickupAddr1 || !$pickupCity || !$pickupPincode) {
+        if (!$pickupEmail) {
+            json_response(['success' => false, 'message' => 'Pickup email address is required.'], 422);
+        }
+        if (!$pickupName || !$pickupPhone || !$pickupAddr1 || !$pickupCity || !$pickupPincode) {
             json_response(['success' => false, 'message' => 'Pickup address is incomplete.'], 422);
         }
         if (!preg_match('/^\d{10}$/', $pickupPhone)) {
