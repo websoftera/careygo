@@ -245,7 +245,7 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
 
                         <div class="wizard-nav">
                             <span></span>
-                            <button class="btn-wizard-next" data-wizard-next>Next <i class="bi bi-arrow-right ms-1"></i></button>
+                            <button type="button" class="btn-wizard-next" data-wizard-next>Next <i class="bi bi-arrow-right ms-1"></i></button>
                         </div>
                     </div>
                 </div>
@@ -319,8 +319,8 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                             <textarea class="wizard-textarea" id="description" rows="3" placeholder="E.g. Electronics, Documents, Clothing…"></textarea>
                         </div>
                         <div class="wizard-nav">
-                            <button class="btn-wizard-back" data-wizard-back><i class="bi bi-arrow-left me-1"></i> Back</button>
-                            <button class="btn-wizard-next" data-step2-next>Next <i class="bi bi-arrow-right ms-1"></i></button>
+                            <button type="button" class="btn-wizard-back" data-wizard-back><i class="bi bi-arrow-left me-1"></i> Back</button>
+                            <button type="button" class="btn-wizard-next" data-step2-next>Next <i class="bi bi-arrow-right ms-1"></i></button>
                         </div>
                     </div>
                 </div>
@@ -339,8 +339,8 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                         </div>
                         <div class="wizard-error" id="err_service_error"></div>
                         <div class="wizard-nav">
-                            <button class="btn-wizard-back" data-wizard-back><i class="bi bi-arrow-left me-1"></i> Back</button>
-                            <button class="btn-wizard-next" data-wizard-next>Next <i class="bi bi-arrow-right ms-1"></i></button>
+                            <button type="button" class="btn-wizard-back" data-wizard-back><i class="bi bi-arrow-left me-1"></i> Back</button>
+                            <button type="button" class="btn-wizard-next" data-wizard-next>Next <i class="bi bi-arrow-right ms-1"></i></button>
                         </div>
                     </div>
                 </div>
@@ -441,8 +441,8 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                         </div>
 
                         <div class="wizard-nav">
-                            <button class="btn-wizard-back" data-wizard-back><i class="bi bi-arrow-left me-1"></i> Back</button>
-                            <button class="btn-wizard-next" data-wizard-next>Next <i class="bi bi-arrow-right ms-1"></i></button>
+                            <button type="button" class="btn-wizard-back" data-wizard-back><i class="bi bi-arrow-left me-1"></i> Back</button>
+                            <button type="button" class="btn-wizard-next" data-wizard-next>Next <i class="bi bi-arrow-right ms-1"></i></button>
                         </div>
                     </div>
                 </div>
@@ -520,8 +520,8 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                         </div>
 
                         <div class="wizard-nav">
-                            <button class="btn-wizard-back" data-wizard-back><i class="bi bi-arrow-left me-1"></i> Back</button>
-                            <button class="btn-wizard-next" data-wizard-next>Proceed to Payment <i class="bi bi-arrow-right ms-1"></i></button>
+                            <button type="button" class="btn-wizard-back" data-wizard-back><i class="bi bi-arrow-left me-1"></i> Back</button>
+                            <button type="button" class="btn-wizard-next" data-wizard-next>Proceed to Payment <i class="bi bi-arrow-right ms-1"></i></button>
                         </div>
                     </div>
                 </div>
@@ -565,8 +565,8 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                         <div class="wizard-error" id="err_payment_error"></div>
 
                         <div class="wizard-nav">
-                            <button class="btn-wizard-back" data-wizard-back><i class="bi bi-arrow-left me-1"></i> Back</button>
-                            <button class="btn-wizard-next" id="submit_booking" style="background:#22c55e;border-color:#22c55e;">
+                            <button type="button" class="btn-wizard-back" data-wizard-back><i class="bi bi-arrow-left me-1"></i> Back</button>
+                            <button type="button" class="btn-wizard-next" id="submit_booking" style="background:#22c55e;border-color:#22c55e;">
                                 <i class="bi bi-check-circle me-2"></i> Confirm Booking
                             </button>
                         </div>

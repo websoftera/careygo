@@ -31,8 +31,7 @@ $validZones = ['within_city', 'within_state', 'metro', 'rest_of_india'];
  * Calculate price for a service type using pricing_slabs table.
  *
  * Zone resolution:
- *   - If $zone is set, first look for slabs WHERE zone = $zone.
- *     If none found, fall back to slabs WHERE zone IS NULL (global).
+ *   - If $zone is set, use only slabs WHERE zone = $zone.
  *   - If $zone is null, use slabs WHERE zone IS NULL only.
  *
  * Slab logic:
@@ -46,25 +45,22 @@ function calculatePrice(float $weight, string $serviceType, PDO $pdo, ?string $z
 
     $targetZone = $zone ?: 'rest_of_india';
 
-    // Try zone-specific slabs first, then fall back to global (NULL zone) slabs
-    $stmt = $pdo->prepare(
-        "SELECT * FROM pricing_slabs
-            WHERE service_type = ? AND zone = ?
-            $order"
-    );
-    $stmt->execute([$serviceType, $targetZone]);
-    $slabs = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    // Fall back to global slabs (zone IS NULL) if no zone-specific slabs found
-    if (empty($slabs)) {
+    if ($zone === null) {
         $stmt = $pdo->prepare(
             "SELECT * FROM pricing_slabs
                 WHERE service_type = ? AND zone IS NULL
                 $order"
         );
         $stmt->execute([$serviceType]);
-        $slabs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        $stmt = $pdo->prepare(
+            "SELECT * FROM pricing_slabs
+                WHERE service_type = ? AND zone = ?
+                $order"
+        );
+        $stmt->execute([$serviceType, $targetZone]);
     }
+    $slabs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // ── Apply slab logic ──────────────────────────────────────────────────
     foreach ($slabs as $slab) {
@@ -173,13 +169,8 @@ try {
         $maxWeight = $serviceConstraints[$type] ?? PHP_FLOAT_MAX;
         if ($weight > $maxWeight) continue;
 
-        // Calculate price (zone-specific, with NULL-zone fallback)
+        // Calculate price only for the resolved zone. Missing zone pricing hides the service.
         $price = calculatePrice($weight, $type, $pdo, $zone);
-        
-        // If no zone-specific price, try falling back to rest_of_india explicitly
-        if ($price <= 0 && $zone !== 'rest_of_india') {
-            $price = calculatePrice($weight, $type, $pdo, 'rest_of_india');
-        }
 
         if ($price <= 0) continue;
 

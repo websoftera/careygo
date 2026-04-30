@@ -66,6 +66,9 @@
             if (sessionStorage.getItem('cgo_clearing') || window.location.search.includes('fresh=')) {
                 sessionStorage.removeItem('cgo_clearing');
                 clearDraft();
+                if (window.location.search.includes('fresh=')) {
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
                 return getDefaultState();
             }
 
@@ -137,6 +140,11 @@
     function isPincodeVerified(type) {
         const current = String(state[type]?.pincode || '').trim();
         const verified = String(state[`${type}VerifiedPincode`] || '').trim();
+        if (current.length === 6 && !!state[type]?.city && !!state[type]?.state) {
+            state[`${type}PincodeVerified`] = true;
+            state[`${type}VerifiedPincode`] = current;
+            return true;
+        }
         return current.length === 6
             && state[`${type}PincodeVerified`] === true
             && verified === current
@@ -153,6 +161,10 @@
 
     /* ── Navigate to step ── */
     function goToStep(n) {
+        if (n !== 7) {
+            syncAllFieldsFromDOM();
+            saveDraftState();
+        }
         state.step = n;
         panels.forEach((p, i) => p.classList.toggle('active', i + 1 === n));
         stepItems.forEach((s, i) => {
@@ -180,7 +192,8 @@
             } else if (state.pickup.pincode.length < 6) {
                 showErr('pickup_pincode', 'Please enter 6 digit pincode'); ok = false;
             } else if (!isPincodeVerified('pickup')) {
-                showErr('pickup_pincode', 'Please verify pincode by clicking Check'); ok = false;
+                lookupPincode(state.pickup.pincode, 'pickup');
+                showErr('pickup_pincode', 'Pincode verification is in progress. Please wait.'); ok = false;
             }
 
             if (!state.pickup.name)    { showErr('pickup_name',    'Enter sender full name');    ok = false; }
@@ -198,7 +211,8 @@
             } else if (state.delivery.pincode.length < 6) {
                 showErr('delivery_pincode', 'Please enter 6 digit pincode'); ok = false;
             } else if (!isPincodeVerified('delivery')) {
-                showErr('delivery_pincode', 'Please verify pincode by clicking Check'); ok = false;
+                lookupPincode(state.delivery.pincode, 'delivery');
+                showErr('delivery_pincode', 'Pincode verification is in progress. Please wait.'); ok = false;
             }
 
             if (!state.delivery.name)    { showErr('delivery_name',    'Enter receiver full name');  ok = false; }
@@ -327,13 +341,19 @@
 
     /* ── Next / Back ── */
     document.querySelectorAll('[data-wizard-next]').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', e => {
+            e.preventDefault();
+            syncAllFieldsFromDOM();
             if (validateStep(state.step)) goToStep(state.step + 1);
         });
     });
 
     document.querySelectorAll('[data-wizard-back]').forEach(btn => {
-        btn.addEventListener('click', () => { if (state.step > 1) goToStep(state.step - 1); });
+        btn.addEventListener('click', e => {
+            e.preventDefault();
+            syncAllFieldsFromDOM();
+            if (state.step > 1) goToStep(state.step - 1);
+        });
     });
 
     /* ── Pincode lookup ── */
@@ -474,7 +494,18 @@
             </div>`).join('');
 
         wrap.classList.add('show');
-        if (addresses.length > 0) selectSavedAddr(type, addresses[0].id);
+        const selectedId = state[`selected${type.charAt(0).toUpperCase() + type.slice(1)}AddrId`];
+        const hasTypedAddress = !!(state[type].name || state[type].phone || state[type].email || state[type].addr1 || state[type].addr2);
+        const usingNewAddress = state[`useNew${type.charAt(0).toUpperCase() + type.slice(1)}Addr`] === true;
+
+        if (selectedId) {
+            selectSavedAddr(type, selectedId);
+        } else if (!hasTypedAddress && !usingNewAddress && addresses.length > 0) {
+            selectSavedAddr(type, addresses[0].id);
+        } else {
+            const newForm = document.getElementById(`${type}_new_form`);
+            if (newForm) newForm.classList.add('show');
+        }
     }
 
     window.selectSavedAddr = function (type, id) {
@@ -649,7 +680,9 @@
     });
 
     /* ── Step 3: Load services when entering ── */
-    document.querySelector('[data-step2-next]') && document.querySelector('[data-step2-next]').addEventListener('click', () => {
+    document.querySelector('[data-step2-next]') && document.querySelector('[data-step2-next]').addEventListener('click', e => {
+        e.preventDefault();
+        syncAllFieldsFromDOM();
         if (validateStep(2)) { loadServices(); goToStep(3); }
     });
 
@@ -732,7 +765,7 @@
             const etaDate = etaParts.length > 1 ? etaParts.slice(1).join(', ') : svc.eta;
 
             return `
-            <div class="service-card" data-service="${svc.type}"
+            <div class="service-card" data-service="${svc.type}" data-price="${svc.price}" data-label="${escHtml(meta.label)}" data-tat="${escHtml(svc.tat_label)}"
                  style="border-left:4px solid ${tatBorder};"
                  onclick="selectService('${svc.type}', ${svc.price}, '${escHtml(meta.label)}', '${escHtml(svc.tat_label)}')">
                 <div class="service-card-check"><i class="bi bi-check-lg"></i></div>
@@ -1277,7 +1310,7 @@
             clearDraft();
             
             // Explicitly clear all inputs in the DOM immediately
-            const allInputs = document.querySelectorAll('.wizard-input, .wizard-select');
+            const allInputs = document.querySelectorAll('.wizard-input, .wizard-select, .wizard-textarea, #weight, input[type="file"]');
             allInputs.forEach(input => {
                 if (input.type === 'checkbox' || input.type === 'radio') input.checked = false;
                 else input.value = '';
@@ -1293,6 +1326,7 @@
         const topbar = document.querySelector('.cust-topbar-actions');
         if (topbar && !document.querySelector('[onclick*="clearBookingForm"]')) {
             const clearBtn = document.createElement('button');
+            clearBtn.type = 'button';
             clearBtn.className = 'btn-outline-admin';
             clearBtn.style.cssText = 'font-size:12px;padding:7px 14px;background:#fee2e2;color:#dc2626;border-color:#fecaca;cursor:pointer;border:1px solid;border-radius:6px;margin-right:8px;';
             clearBtn.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i> Clear Form';
@@ -1311,9 +1345,33 @@
         });
     }
 
+    function syncAllFieldsFromDOM() {
+        syncStep1FromDOM();
+        if (weightInput) state.weight = getWeightInKg();
+        if (piecesInput) state.pieces = parseInt(piecesInput.value, 10) || 1;
+        if (declaredValueInput) state.declaredValue = Math.min(1000, parseFloat(declaredValueInput.value) || 0);
+        if (descriptionInput) state.description = descriptionInput.value.trim();
+        if (customerRefInput) state.customerRef = customerRefInput.value.trim();
+        if (dimL) state.dim_l = parseFloat(dimL.value) || 0;
+        if (dimW) state.dim_w = parseFloat(dimW.value) || 0;
+        if (dimH) state.dim_h = parseFloat(dimH.value) || 0;
+        updateChargeableWeight();
+        syncEwaybillStateFromDOM();
+        if (packingChargeInput) updateCustomerPackingCharge(packingChargeInput.value);
+        const selectedService = document.querySelector('.service-card.selected');
+        if (selectedService) {
+            state.serviceType = selectedService.dataset.service;
+            state.servicePrice = parseFloat(selectedService.dataset.price) || state.servicePrice;
+            state.serviceLabel = selectedService.dataset.label || state.serviceLabel;
+            state.serviceTat = selectedService.dataset.tat || state.serviceTat;
+        }
+        const selectedPayment = document.querySelector('.payment-option.selected');
+        if (selectedPayment) state.paymentMethod = selectedPayment.dataset.payment || state.paymentMethod;
+    }
+
     /* ── Init ── */
-    goToStep(1);
     restoreFormFields();
+    goToStep(1);
     loadPackingCharge();
     addClearButton();
 
