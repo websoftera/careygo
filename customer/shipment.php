@@ -33,6 +33,12 @@ $serviceLabels = ['standard'=>'Standard Express','premium'=>'Premium Express','a
 $statusOrder   = ['booked','picked_up','in_transit','out_for_delivery','delivered'];
 $currentIdx    = array_search($shipment['status'], $statusOrder);
 $statusLabels  = ['booked'=>'Booked','picked_up'=>'Picked Up','in_transit'=>'In Transit','out_for_delivery'=>'Out for Delivery','delivered'=>'Delivered','cancelled'=>'Cancelled'];
+function shipment_weight_label($weight): string {
+    $w = (float)$weight;
+    if ($w > 0 && $w < 1) return number_format($w * 1000, 0) . ' g';
+    if (abs($w - round($w)) < 0.0001) return number_format($w, 0) . ' kg';
+    return rtrim(rtrim(number_format($w, 3, '.', ''), '0'), '.') . ' kg';
+}
 ?>
 
 <div style="max-width:800px;margin:0 auto;">
@@ -135,7 +141,7 @@ $statusLabels  = ['booked'=>'Booked','picked_up'=>'Picked Up','in_transit'=>'In 
                     <div class="shipment-detail-section-title">Shipment Details</div>
                     <div class="detail-row"><span class="detail-label">Service</span><span class="detail-value" style="font-weight:600;"><?= htmlspecialchars($serviceLabels[$shipment['service_type']] ?? $shipment['service_type']) ?></span></div>
                     <div class="detail-row"><span class="detail-label">Actual Weight</span><span class="detail-value"><?= number_format((float)$shipment['weight'], 3) ?> kg</span></div>
-                    <div class="detail-row"><span class="detail-label">Chargeable Weight</span><span class="detail-value"><?= number_format((float)($shipment['chargeable_weight'] ?: $shipment['weight']), 3) ?> kg</span></div>
+                    <div class="detail-row"><span class="detail-label">Chargeable Weight</span><span class="detail-value"><?= shipment_weight_label($shipment['chargeable_weight'] ?: $shipment['weight']) ?></span></div>
                     <div class="detail-row"><span class="detail-label">Pieces</span><span class="detail-value"><?= $shipment['pieces'] ?></span></div>
                     <div class="detail-row"><span class="detail-label">Declared Value</span><span class="detail-value">₹<?= number_format((float)($shipment['declared_value'] ?? 0), 2) ?></span></div>
                     <div class="detail-row"><span class="detail-label">Description</span><span class="detail-value"><?= htmlspecialchars($shipment['description'] ?: '—') ?></span></div>

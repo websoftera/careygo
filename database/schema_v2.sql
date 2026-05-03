@@ -112,6 +112,8 @@ CREATE TABLE IF NOT EXISTS `shipments` (
     -- Additional
     `ewaybill_no`       VARCHAR(100) DEFAULT NULL,
     `packing_material`  TINYINT(1)   NOT NULL DEFAULT 0,
+    `packing_charge`    DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    `tempo_charge`      DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     -- Pricing
     `base_price`        DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     `discount_pct`      DECIMAL(5,2)  NOT NULL DEFAULT 0.00,

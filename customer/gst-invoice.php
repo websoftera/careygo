@@ -34,7 +34,8 @@ $invoiceDate = date('d M Y', strtotime($s['created_at']));
 // Tax calculation (18% GST — 9% CGST + 9% SGST for same-state; 18% IGST for inter-state)
 $totalAmt   = (float) $s['final_price'];
 $packingAmt = (float) ($s['packing_charge'] ?? 0);
-$freightAmt = max(0, $totalAmt - $packingAmt);
+$tempoAmt   = (float) ($s['tempo_charge'] ?? 0);
+$freightAmt = max(0, $totalAmt - $packingAmt - $tempoAmt);
 // Reverse calculate: assume prices are inclusive of GST
 $gstRate  = 0.18;
 $taxable  = round($freightAmt / (1 + $gstRate), 2);
@@ -43,6 +44,11 @@ $packTaxable = $packTax = 0;
 if ($packingAmt > 0) {
     $packTaxable = round($packingAmt / (1 + $gstRate), 2);
     $packTax     = round($packingAmt - $packTaxable, 2);
+}
+$tempoTaxable = $tempoTax = 0;
+if ($tempoAmt > 0) {
+    $tempoTaxable = round($tempoAmt / (1 + $gstRate), 2);
+    $tempoTax     = round($tempoAmt - $tempoTaxable, 2);
 }
 $sameState = strtolower(trim($s['pickup_state'] ?? '')) === strtolower(trim($s['delivery_state'] ?? ''));
 $cgst = $sgst = $igst = 0;
@@ -59,6 +65,13 @@ $serviceLabels = [
     'surface'   => 'Surface Cargo Delivery',
 ];
 $serviceDesc = $serviceLabels[$s['service_type']] ?? ucwords(str_replace('_',' ',$s['service_type']));
+$paymentLabels = ['prepaid' => 'Prepaid', 'cod' => 'POD', 'credit' => 'Credit'];
+function invoice_weight_label($weight): string {
+    $w = (float)$weight;
+    if ($w > 0 && $w < 1) return number_format($w * 1000, 0) . ' g';
+    if (abs($w - round($w)) < 0.0001) return number_format($w, 0) . ' kg';
+    return rtrim(rtrim(number_format($w, 3, '.', ''), '0'), '.') . ' kg';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -74,6 +87,7 @@ $serviceDesc = $serviceLabels[$s['service_type']] ?? ucwords(str_replace('_',' '
 
         /* Header */
         .inv-header { background: #001a93; color: #fff; padding: 28px 32px; display: flex; justify-content: space-between; align-items: flex-start; }
+        .inv-logo { height: 44px; width: auto; display: block; margin-bottom: 10px; }
         .inv-company-name { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
         .inv-company-sub  { font-size: 11px; opacity: .8; margin-top: 4px; line-height: 1.6; }
         .inv-title-block  { text-align: right; }
@@ -82,7 +96,7 @@ $serviceDesc = $serviceLabels[$s['service_type']] ?? ucwords(str_replace('_',' '
 
         /* Body */
         .inv-body { padding: 28px 32px; }
-        .inv-meta-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+        .inv-meta-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
         .inv-meta-block label { font-size: 10px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: .5px; display: block; margin-bottom: 4px; }
         .inv-meta-block p  { font-size: 13px; color: #111827; line-height: 1.6; }
         .inv-meta-block strong { font-weight: 700; }
@@ -93,9 +107,9 @@ $serviceDesc = $serviceLabels[$s['service_type']] ?? ucwords(str_replace('_',' '
         .inv-addr-title { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #6b7280; letter-spacing: .5px; margin-bottom: 8px; }
 
         /* Table */
-        .inv-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        .inv-table th { background: #f3f4f6; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; color: #6b7280; padding: 10px 12px; text-align: left; border-bottom: 2px solid #e5e7eb; }
-        .inv-table td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; vertical-align: top; }
+        .inv-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; }
+        .inv-table th { background: #f3f4f6; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .2px; color: #6b7280; padding: 9px 8px; text-align: left; border-bottom: 2px solid #e5e7eb; }
+        .inv-table td { padding: 9px 8px; border-bottom: 1px solid #f3f4f6; vertical-align: top; word-break: break-word; }
         .inv-table .text-right { text-align: right; }
 
         /* Tax summary */
@@ -108,7 +122,6 @@ $serviceDesc = $serviceLabels[$s['service_type']] ?? ucwords(str_replace('_',' '
 
         /* Footer */
         .inv-footer { padding: 20px 32px; background: #f9fafb; border-top: 1px solid #e5e7eb; font-size: 11px; color: #6b7280; }
-        .inv-note { background: #fef3c7; border: 1px solid #fcd34d; border-radius: 6px; padding: 10px 14px; font-size: 12px; color: #92400e; margin-bottom: 16px; }
 
         /* Print */
         @media print {
@@ -136,6 +149,7 @@ $serviceDesc = $serviceLabels[$s['service_type']] ?? ucwords(str_replace('_',' '
     <!-- Header -->
     <div class="inv-header">
         <div>
+            <img src="../assets/images/Main-Careygo-logo-white.png" alt="Careygo" class="inv-logo">
             <div class="inv-company-name"><?= h($companyName) ?></div>
             <div class="inv-company-sub">
                 <?= h($companyAddr) ?><br>
@@ -162,10 +176,6 @@ $serviceDesc = $serviceLabels[$s['service_type']] ?? ucwords(str_replace('_',' '
                 <label>Invoice Date</label>
                 <p><?= h($invoiceDate) ?></p>
             </div>
-            <div class="inv-meta-block">
-                <label>AWB / Tracking No.</label>
-                <p><strong><?= h($s['tracking_no']) ?></strong></p>
-            </div>
             <?php if ($s['gstin']): ?>
             <div class="inv-meta-block">
                 <label>Customer GSTIN</label>
@@ -180,7 +190,7 @@ $serviceDesc = $serviceLabels[$s['service_type']] ?? ucwords(str_replace('_',' '
             <?php endif; ?>
             <div class="inv-meta-block">
                 <label>Payment Method</label>
-                <p><?= h(ucfirst($s['payment_method'] ?? 'Prepaid')) ?></p>
+                <p><?= h($paymentLabels[$s['payment_method'] ?? 'prepaid'] ?? ucfirst($s['payment_method'] ?? 'Prepaid')) ?></p>
             </div>
         </div>
 
@@ -208,11 +218,11 @@ $serviceDesc = $serviceLabels[$s['service_type']] ?? ucwords(str_replace('_',' '
         <table class="inv-table">
             <thead>
                 <tr>
-                    <th style="width:40px;">#</th>
-                    <th>Description of Service</th>
-                    <th class="text-right">HSN / SAC</th>
-                    <th class="text-right">Weight</th>
-                    <th class="text-right">Taxable Amt</th>
+                    <th style="width:34px;">#</th>
+                    <th style="width:28%;">Description of Service</th>
+                    <th class="text-right" style="width:72px;">HSN / SAC</th>
+                    <th class="text-right" style="width:72px;">Weight</th>
+                    <th class="text-right" style="width:86px;">Taxable Amt</th>
                     <?php if ($sameState): ?>
                     <th class="text-right">CGST 9%</th>
                     <th class="text-right">SGST 9%</th>
@@ -233,7 +243,7 @@ $serviceDesc = $serviceLabels[$s['service_type']] ?? ucwords(str_replace('_',' '
                         </span>
                     </td>
                     <td class="text-right">996812</td>
-                    <td class="text-right"><?= number_format((float)($s['chargeable_weight'] ?: $s['weight']), 3) ?> kg</td>
+                    <td class="text-right"><?= invoice_weight_label($s['chargeable_weight'] ?: $s['weight']) ?></td>
                     <td class="text-right">₹<?= number_format($taxable, 2) ?></td>
                     <?php if ($sameState): ?>
                     <td class="text-right">₹<?= number_format($cgst, 2) ?></td>
@@ -259,25 +269,35 @@ $serviceDesc = $serviceLabels[$s['service_type']] ?? ucwords(str_replace('_',' '
                     <td class="text-right"><strong>₹<?= number_format($packingAmt, 2) ?></strong></td>
                 </tr>
                 <?php endif; ?>
+                <?php if ($tempoAmt > 0): ?>
+                <tr>
+                    <td><?= $packingAmt > 0 ? 3 : 2 ?></td>
+                    <td>Tempo Charges</td>
+                    <td class="text-right">996812</td>
+                    <td class="text-right">-</td>
+                    <td class="text-right">Rs.<?= number_format($tempoTaxable, 2) ?></td>
+                    <?php if ($sameState): ?>
+                    <td class="text-right">Rs.<?= number_format($tempoTax/2, 2) ?></td>
+                    <td class="text-right">Rs.<?= number_format($tempoTax/2, 2) ?></td>
+                    <?php else: ?>
+                    <td class="text-right">Rs.<?= number_format($tempoTax, 2) ?></td>
+                    <?php endif; ?>
+                    <td class="text-right"><strong>Rs.<?= number_format($tempoAmt, 2) ?></strong></td>
+                </tr>
+                <?php endif; ?>
             </tbody>
         </table>
 
         <!-- Totals -->
         <div class="clearfix">
-            <div class="inv-note" style="float:left;max-width:460px;margin-bottom:0;">
-                <strong>Note:</strong> All prices are inclusive of GST @ 18%.<br>
-                SAC Code 996812 — Courier services.<br>
-                <?php if ($s['ewaybill_no']): ?>E-Waybill No: <?= h($s['ewaybill_no']) ?><br><?php endif; ?>
-                Subject to jurisdiction of courts in Mumbai, Maharashtra.
-            </div>
             <div class="inv-totals">
                 <table>
-                    <tr><td>Taxable Amount</td><td class="td-right">₹<?= number_format($taxable + $packTaxable, 2) ?></td></tr>
+                    <tr><td>Taxable Amount</td><td class="td-right">₹<?= number_format($taxable + $packTaxable + $tempoTaxable, 2) ?></td></tr>
                     <?php if ($sameState): ?>
-                    <tr><td>CGST @ 9%</td><td class="td-right">₹<?= number_format($cgst + ($packTax/2), 2) ?></td></tr>
-                    <tr><td>SGST @ 9%</td><td class="td-right">₹<?= number_format($sgst + ($packTax/2), 2) ?></td></tr>
+                    <tr><td>CGST @ 9%</td><td class="td-right">₹<?= number_format($cgst + ($packTax/2) + ($tempoTax/2), 2) ?></td></tr>
+                    <tr><td>SGST @ 9%</td><td class="td-right">₹<?= number_format($sgst + ($packTax/2) + ($tempoTax/2), 2) ?></td></tr>
                     <?php else: ?>
-                    <tr><td>IGST @ 18%</td><td class="td-right">₹<?= number_format($igst + $packTax, 2) ?></td></tr>
+                    <tr><td>IGST @ 18%</td><td class="td-right">₹<?= number_format($igst + $packTax + $tempoTax, 2) ?></td></tr>
                     <?php endif; ?>
                     <tr class="total-row">
                         <td style="padding:10px 12px;">TOTAL AMOUNT</td>

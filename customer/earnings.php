@@ -7,6 +7,13 @@ $activePage = 'earnings';
 
 require_once 'includes/header.php';
 
+function earnings_weight_label($weight): string {
+    $w = (float)$weight;
+    if ($w > 0 && $w < 1) return number_format($w * 1000, 0) . ' g';
+    if (abs($w - round($w)) < 0.0001) return number_format($w, 0) . ' kg';
+    return rtrim(rtrim(number_format($w, 3, '.', ''), '0'), '.') . ' kg';
+}
+
 function ensureCustomerEarningColumns(PDO $pdo): void
 {
     static $done = false;
@@ -133,7 +140,7 @@ try {
                 <tr>
                     <td>
                         <div style="font-size:12px;font-weight:700;color:var(--primary);font-family:'Montserrat',sans-serif;"><?= htmlspecialchars($d['tracking_no']) ?></div>
-                        <div style="font-size:11px;color:var(--muted);"><?= number_format((float)($d['chargeable_weight'] ?: $d['weight']), 3) ?> kg</div>
+                        <div style="font-size:11px;color:var(--muted);"><?= earnings_weight_label($d['chargeable_weight'] ?: $d['weight']) ?></div>
                     </td>
                     <td style="font-size:12px;">
                         <div style="font-weight:600"><?= htmlspecialchars($d['pickup_city']) ?></div>

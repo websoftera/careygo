@@ -25,9 +25,6 @@
                         <input type="text" class="wizard-input" id="rc_pickup_pincode"
                                maxlength="6" inputmode="numeric" pattern="[0-9]{6}" placeholder="Enter 6-digit pincode"
                                oninput="rcResetResults()">
-                        <button class="btn-lookup" id="rc_pickup_btn" onclick="rcLookup('pickup')">
-                            <i class="bi bi-search"></i> Check
-                        </button>
                     </div>
                     <div class="pincode-result" id="rc_pickup_result"></div>
                 </div>
@@ -39,9 +36,6 @@
                         <input type="text" class="wizard-input" id="rc_delivery_pincode"
                                maxlength="6" inputmode="numeric" pattern="[0-9]{6}" placeholder="Enter 6-digit pincode"
                                oninput="rcResetResults()">
-                        <button class="btn-lookup" id="rc_delivery_btn" onclick="rcLookup('delivery')">
-                            <i class="bi bi-search"></i> Check
-                        </button>
                     </div>
                     <div class="pincode-result" id="rc_delivery_result"></div>
                 </div>
@@ -67,7 +61,11 @@
                 </label>
                 <div id="rc_packing_charge_row" style="display:block;margin-top:-4px;margin-bottom:14px;">
                     <label class="rc-label">Packing Material Charge (Rs.)</label>
-                    <input type="number" id="rc_packing_charge" class="wizard-input" min="0" step="0.01" placeholder="0.00" oninput="rcResetResults()">
+                    <input type="number" id="rc_packing_charge" class="wizard-input" min="0" max="9999" step="1" placeholder="0" oninput="rcResetResults()">
+                </div>
+                <div style="margin-top:-4px;margin-bottom:14px;">
+                    <label class="rc-label">Tempo Charge (Rs.)</label>
+                    <input type="number" id="rc_tempo_charge" class="wizard-input" min="0" max="9999" step="1" placeholder="0" oninput="rcResetResults()">
                 </div>
 
                 <!-- Error -->
@@ -209,7 +207,8 @@
         rcResetResults();
     });
     document.getElementById('rc_packing_charge')?.addEventListener('input', e => {
-        rcPackingCharge = Math.max(0, parseFloat(e.target.value || 0) || 0);
+        rcPackingCharge = Math.min(9999, Math.max(0, parseFloat(e.target.value || 0) || 0));
+        if ((parseFloat(e.target.value || 0) || 0) !== rcPackingCharge) e.target.value = rcPackingCharge ? String(rcPackingCharge) : '';
         const hint = document.getElementById('rc_packing_charge_hint');
         if (hint) hint.textContent = rcPackingCharge > 0 ? `(Rs.${rcPackingCharge.toLocaleString('en-IN')})` : '(optional)';
         const chk = document.getElementById('rc_packing_material');
@@ -244,7 +243,7 @@
         fetch(`${RC_URL}/api/pincode.php?pincode=${encodeURIComponent(pin)}`)
             .then(r => r.json())
             .then(data => {
-                if (btn) btn.innerHTML = '<i class="bi bi-search"></i> Check';
+                if (btn) btn.innerHTML = '<i class="bi bi-search"></i>';
                 if (data.success) {
                     const info = data.data;
                     if (res) {
@@ -258,7 +257,7 @@
                     }
                 }
             })
-            .catch(() => { if (btn) btn.innerHTML = '<i class="bi bi-search"></i> Check'; });
+            .catch(() => { if (btn) btn.innerHTML = '<i class="bi bi-search"></i>'; });
     };
 
     /* ── Reset results on input change ── */
@@ -329,7 +328,8 @@
 
         const zoneTxt = zone ? (zoneLabels[zone] || zone) : '';
         const includePacking = !!document.getElementById('rc_packing_material')?.checked;
-        rcPackingCharge = Math.max(0, parseFloat(document.getElementById('rc_packing_charge')?.value || 0) || 0);
+        rcPackingCharge = Math.min(9999, Math.max(0, parseFloat(document.getElementById('rc_packing_charge')?.value || 0) || 0));
+        const rcTempoCharge = Math.min(9999, Math.max(0, parseFloat(document.getElementById('rc_tempo_charge')?.value || 0) || 0));
         if (includePacking && rcPackingCharge <= 0) {
             const errEl = document.getElementById('rc_error');
             if (errEl) { errEl.textContent = 'Enter packing material charge.'; errEl.style.display = 'block'; }
@@ -339,14 +339,15 @@
         const rows = services.map(svc => {
             const m = svcMap[svc.type] || { icon: 'bi-box', label: svc.type };
             const basePrice = parseFloat(svc.price) || 0;
-            const totalPrice = basePrice + packingCharge;
-            if (includePacking) svc.price = totalPrice;
+            const totalPrice = basePrice + packingCharge + rcTempoCharge;
+            svc.price = totalPrice;
+            const chargeableWeight = parseFloat(svc.chargeable_weight || weight) || weight;
             return `<div class="rc-service-row">
                 <div class="rc-service-left">
                     <i class="${m.icon} rc-service-icon"></i>
                     <div>
                         <div class="rc-service-name">${esc(m.label)}</div>
-                        <div class="rc-service-tat"><i class="bi bi-clock me-1"></i>${esc(svc.tat_label)} · Est. ${esc(svc.eta)}</div>
+                        <div class="rc-service-tat"><i class="bi bi-clock me-1"></i>${esc(svc.tat_label)} · Est. ${esc(svc.eta)} � Chargeable ${rcFormatWeight(chargeableWeight)}</div>
                     </div>
                 </div>
                 <div class="rc-service-price">₹${svc.price.toLocaleString('en-IN')}</div>
@@ -359,7 +360,8 @@
                 ${zoneTxt ? `<span class="rc-zone-badge"><i class="bi bi-geo-alt me-1"></i>${esc(zoneTxt)}</span>` : ''}
             </div>
             ${rows}
-            ${includePacking ? `<p class="rc-disclaimer">Packing Material included: ₹${packingCharge.toLocaleString('en-IN')} per shipment.</p>` : ''}
+            ${includePacking ? `<p class="rc-disclaimer">Packing Material included: Rs.${packingCharge.toLocaleString('en-IN')} per shipment.</p>` : ''}
+            ${rcTempoCharge > 0 ? `<p class="rc-disclaimer">Tempo Charge included: Rs.${rcTempoCharge.toLocaleString('en-IN')} per shipment.</p>` : ''}
             <p class="rc-disclaimer">* Estimates only. Final charges may vary based on actual weight &amp; dimensions.</p>`;
     }
 
@@ -368,11 +370,14 @@
         const el = document.getElementById(id);
         el?.addEventListener('input', () => {
             el.value = el.value.replace(/\D/g, '').slice(0, 6);
+            rcResetResults();
+            if (el.value.length === 6) rcLookup(id.includes('pickup') ? 'pickup' : 'delivery');
         });
         el?.addEventListener('paste', e => {
             e.preventDefault();
             el.value = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
             rcResetResults();
+            if (el.value.length === 6) rcLookup(id.includes('pickup') ? 'pickup' : 'delivery');
         });
         el?.addEventListener('keydown', e => {
             if (e.key === 'Enter') rcLookup(id.includes('pickup') ? 'pickup' : 'delivery');
@@ -384,7 +389,7 @@
 
     /* ── Reset modal state on close ── */
     document.getElementById('rateCalcModal')?.addEventListener('hidden.bs.modal', () => {
-        ['rc_pickup_pincode','rc_delivery_pincode','rc_weight'].forEach(id => {
+        ['rc_pickup_pincode','rc_delivery_pincode','rc_weight','rc_tempo_charge'].forEach(id => {
             const el = document.getElementById(id); if (el) el.value = '';
         });
         const packing = document.getElementById('rc_packing_material');
@@ -407,5 +412,12 @@
     function esc(s) {
         return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
+    function rcFormatWeight(kg) {
+        const value = parseFloat(kg) || 0;
+        if (value > 0 && value < 1) return Math.round(value * 1000) + ' g';
+        if (Number.isInteger(value)) return value + ' kg';
+        return value.toFixed(3).replace(/\.?0+$/, '') + ' kg';
+    }
 })();
 </script>
+

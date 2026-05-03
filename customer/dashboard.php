@@ -7,6 +7,13 @@ $activePage = 'dashboard';
 
 require_once 'includes/header.php';
 
+function dashboard_weight_label($weight): string {
+    $w = (float)$weight;
+    if ($w > 0 && $w < 1) return number_format($w * 1000, 0) . ' g';
+    if (abs($w - round($w)) < 0.0001) return number_format($w, 0) . ' kg';
+    return rtrim(rtrim(number_format($w, 3, '.', ''), '0'), '.') . ' kg';
+}
+
 // Stats
 $stats = ['total' => 0, 'in_transit' => 0, 'delivered' => 0, 'booked' => 0];
 $shipments = [];
@@ -136,11 +143,10 @@ $serviceLabels = ['standard'=>'Standard Express','premium'=>'Premium Express','a
                     <div style="color:var(--muted)">→ <?= htmlspecialchars($s['delivery_city']) ?></div>
                 </td>
                 <td style="font-size:12px;"><?= htmlspecialchars($serviceLabels[$s['service_type']] ?? $s['service_type']) ?></td>
-                <td style="font-size:12px;"><?= number_format((float)($s['chargeable_weight'] ?: $s['weight']), 3) ?> kg</td>
+                <td style="font-size:12px;"><?= dashboard_weight_label($s['chargeable_weight'] ?: $s['weight']) ?></td>
                 <td style="font-size:13px;font-weight:700;">₹<?= number_format($s['final_price'], 0) ?></td>
                 <td style="font-size:12px;">
                     <div style="font-weight:700;color:var(--success);">Rs.<?= number_format((float)($s['customer_earning_amount'] ?? 0), 0) ?></div>
-                    <div style="color:var(--muted);"><?= number_format((float)($s['customer_earning_pct'] ?? 0), 2) ?>%</div>
                 </td>
                 <td><span class="badge-status badge-<?= $s['status'] ?>"><?= ucwords(str_replace('_', ' ', $s['status'])) ?></span></td>
                 <td style="font-size:11px;color:var(--muted)"><?= date('d M Y', strtotime($s['created_at'])) ?></td>

@@ -38,7 +38,7 @@ $validZones = ['within_city', 'within_state', 'metro', 'rest_of_india'];
  *   - Fixed slab  (weight_to IS NOT NULL): if weight ≤ weight_to → base_price
  *   - Open slab   (weight_to IS NULL):     base_price + ceil((w − weight_from) / increment_per_kg) × increment_price
  */
-function calculatePrice(float $weight, string $serviceType, PDO $pdo, ?string $zone = null): float
+function pricingSlabs(PDO $pdo, string $serviceType, ?string $zone = null): array
 {
     $order = "ORDER BY CASE WHEN weight_to IS NULL THEN 1 ELSE 0 END ASC,
                        weight_to ASC, weight_from ASC";
@@ -60,7 +60,31 @@ function calculatePrice(float $weight, string $serviceType, PDO $pdo, ?string $z
         );
         $stmt->execute([$serviceType, $targetZone]);
     }
-    $slabs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function slabChargeableWeight(float $weight, array $slabs): float
+{
+    foreach ($slabs as $slab) {
+        $from = (float) $slab['weight_from'];
+        $to   = $slab['weight_to'];
+
+        if ($to !== null) {
+            if ($weight <= (float) $to) {
+                return round((float) $to, 3);
+            }
+        } else {
+            $incPer = max(0.001, (float) $slab['increment_per_kg']);
+            $extra  = max(0, $weight - $from);
+            $blocks = (int) ceil($extra / $incPer);
+            return round($from + ($blocks * $incPer), 3);
+        }
+    }
+    return round($weight, 3);
+}
+
+function calculatePriceFromSlabs(float $weight, array $slabs): float
+{
 
     // ── Apply slab logic ──────────────────────────────────────────────────
     foreach ($slabs as $slab) {
@@ -83,6 +107,11 @@ function calculatePrice(float $weight, string $serviceType, PDO $pdo, ?string $z
     }
 
     return 0.0; // No matching slab
+}
+
+function calculatePrice(float $weight, string $serviceType, PDO $pdo, ?string $zone = null): float
+{
+    return calculatePriceFromSlabs($weight, pricingSlabs($pdo, $serviceType, $zone));
 }
 
 // ── Look up both pincodes ────────────────────────────────────────────────────
@@ -170,7 +199,17 @@ try {
         if ($weight > $maxWeight) continue;
 
         // Calculate price only for the resolved zone. Missing zone pricing hides the service.
-        $price = calculatePrice($weight, $type, $pdo, $zone);
+        $slabs = pricingSlabs($pdo, $type, $zone);
+        if (empty($slabs) && $type === 'premium' && $zone !== 'rest_of_india') {
+            $slabs = pricingSlabs($pdo, $type, 'rest_of_india');
+        }
+        if (empty($slabs) && $type === 'premium') {
+            $slabs = pricingSlabs($pdo, $type, null);
+        }
+        if (empty($slabs)) continue;
+        $chargeableWeight = slabChargeableWeight($weight, $slabs);
+        if ($chargeableWeight > $maxWeight) continue;
+        $price = calculatePriceFromSlabs($weight, $slabs);
 
         if ($price <= 0) continue;
 
@@ -181,6 +220,7 @@ try {
         $services[] = [
             'type'      => $type,
             'price'     => $price,
+            'chargeable_weight' => $chargeableWeight,
             'tat'       => $tat,
             'tat_label' => $tatLabel,
             'eta'       => $eta,

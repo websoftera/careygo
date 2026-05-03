@@ -54,6 +54,7 @@ try {
     $required = [
         'chargeable_weight' => 'DECIMAL(8,3) DEFAULT 0',
         'packing_charge'    => 'DECIMAL(10,2) DEFAULT 0',
+        'tempo_charge'      => 'DECIMAL(10,2) NOT NULL DEFAULT 0.00',
         'photo_address'     => 'VARCHAR(255) DEFAULT NULL',
         'photo_parcel'      => 'VARCHAR(255) DEFAULT NULL',
         'pickup_company_name' => 'VARCHAR(120) DEFAULT NULL',

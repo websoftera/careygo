@@ -6,13 +6,18 @@ class ReceiptPDF extends FPDF
 {
     function Header()
     {
-        $this->SetTextColor(0, 26, 147);
-        $this->SetFont('Arial', 'B', 24);
-        $this->SetXY(10, 7);
-        $this->Cell(43, 10, 'CAREYGO', 0, 0, 'L');
-        $this->SetFont('Arial', 'B', 6);
-        $this->SetXY(51, 6);
-        $this->Cell(8, 4, 'TM', 0, 0, 'L');
+        $logoPath = __DIR__ . '/../assets/images/Main-Careygo-logo-blue.png';
+        if (is_file($logoPath)) {
+            $this->Image($logoPath, 10, 5, 55);
+        } else {
+            $this->SetTextColor(0, 26, 147);
+            $this->SetFont('Arial', 'B', 24);
+            $this->SetXY(10, 7);
+            $this->Cell(43, 10, 'CAREYGO', 0, 0, 'L');
+            $this->SetFont('Arial', 'B', 6);
+            $this->SetXY(51, 6);
+            $this->Cell(8, 4, 'TM', 0, 0, 'L');
+        }
         $this->SetTextColor(0, 0, 0);
 
         // Date Box
@@ -104,7 +109,9 @@ function receipt_ist_timestamp(?string $createdAt): DateTimeImmutable
 function receipt_weight_display($weight): string
 {
     $w = (float)$weight;
-    return number_format($w, 0) . ' kg';
+    if ($w > 0 && $w < 1) return number_format($w * 1000, 0) . ' g';
+    if (abs($w - round($w)) < 0.0001) return number_format($w, 0) . ' kg';
+    return rtrim(rtrim(number_format($w, 3, '.', ''), '0'), '.') . ' kg';
 }
 
 function receipt_has_gst_details(array $shipment): bool
@@ -113,6 +120,11 @@ function receipt_has_gst_details(array $shipment): bool
         || !empty($shipment['gstin'])
         || !empty($shipment['pickup_gstin'])
         || !empty($shipment['delivery_gstin']);
+}
+
+function receipt_payment_label(?string $method): string
+{
+    return ['prepaid' => 'Prepaid', 'cod' => 'POD', 'credit' => 'Credit'][$method ?: 'prepaid'] ?? ucfirst((string)$method);
 }
 
 function receipt_gst_summary(array $shipment): array
@@ -161,13 +173,6 @@ function generateReceiptPDF($shipment)
     $pdf->SetFont('Arial', 'B', 8);
     $pdf->Cell(94, 6, 'Non Negotiable Consignment Note / Subject to Vadodara jurisdiction only.', 0, 0, 'L');
     
-    $pdf->SetXY(106, 31);
-    $pdf->SetFont('Arial', '', 6);
-    $disclaimer2 = $hasGstDetails
-        ? "GST details captured on this receipt. Tax invoice details are shown where applicable for\nCareygo or its channel partner as the case may be."
-        : "The Consignment note is not a tax invoice. A tax invoice will be made eligible for Careygo or its\nchannel partner as the case may be urgent request.";
-    $pdf->MultiCell(93, 3, $disclaimer2, 0, 'L');
-
     $pdf->SetDrawColor(155, 155, 155);
     $pdf->SetLineWidth(0.2);
 
@@ -329,21 +334,21 @@ function generateReceiptPDF($shipment)
     $pdf->Line(10, 113, 200, 113);
     
     // ----------- BOX 3 -----------
-    $pdf->SetFont('Arial', '', 8);
-    $pdf->SetXY(15, 105);
-    $pdf->Cell(22, 5, 'Total Num Pcs:');
+    $pdf->SetFont('Arial', '', 7.5);
+    $pdf->SetXY(12, 105);
+    $pdf->Cell(25, 5, 'Pcs:');
     $pdf->SetFont('Arial', 'B', 9);
-    $pdf->Cell(18, 5, $shipment['pieces'], 'B', 0, 'C'); // Underlined & Centered
+    $pdf->Cell(15, 5, $shipment['pieces'], 'B', 0, 'C'); // Underlined & Centered
     
-    $pdf->SetFont('Arial', '', 8);
+    $pdf->SetFont('Arial', '', 7.5);
     $pdf->Cell(20, 5, 'Actual Wt:');
     $pdf->SetFont('Arial', 'B', 8);
-    $pdf->Cell(18, 5, receipt_weight_display($shipment['weight']), 'B', 0, 'C');
-    $pdf->SetFont('Arial', '', 8);
+    $pdf->Cell(19, 5, receipt_weight_display($shipment['weight']), 'B', 0, 'C');
+    $pdf->SetFont('Arial', '', 7.5);
     $pdf->Cell(15, 5, 'Chg Wt:');
     $pdf->SetFont('Arial', 'B', 8);
     $receiptWeight = (float)($shipment['chargeable_weight'] ?? 0) > 0 ? (float)$shipment['chargeable_weight'] : (float)$shipment['weight'];
-    $pdf->Cell(18, 5, receipt_weight_display($receiptWeight), 'B', 0, 'C');
+    $pdf->Cell(19, 5, receipt_weight_display($receiptWeight), 'B', 0, 'C');
 
     // ----------- BOX 4 Top -----------
     $pdf->SetFont('Arial', '', 8);
@@ -372,9 +377,9 @@ function generateReceiptPDF($shipment)
 
     // ----------- BOX 4 Bottom -----------
     // Value text
-    $pdf->SetFont('Arial', '', 8);
+    $pdf->SetFont('Arial', '', 7);
     $pdf->SetXY(107, 118);
-    $pdf->Cell(65, 5, 'Total Value of Consignment for carriage/E-Way bill:');
+    $pdf->MultiCell(62, 4, 'Total Value of Consignment for carriage / E-Way bill:', 0, 'L');
     
     // Rs Box Separator
     $pdf->Line(172, 113, 172, 128); 
@@ -382,7 +387,7 @@ function generateReceiptPDF($shipment)
     $pdf->SetXY(175, 117);
     $pdf->Cell(20, 8, 'Rs. ' . number_format((float)$shipment['declared_value'], 0), 0, 0, 'C');
 
-    // Row 5: Total/Mode (Left) & Mode/Barcode (Right) - y: 128 to 158
+    // Row 5: Total/Mode (Left) & Mode (Right) - y: 128 to 158
     $pdf->Line(10, 158, 200, 158);
     $pdf->Line(10, 143, 105, 143); // Split Left Box 7
     
@@ -395,16 +400,11 @@ function generateReceiptPDF($shipment)
     $pdf->SetFont('Arial', '', 6);
     $pdf->SetXY(15, 139);
     $pdf->Cell(85, 3, receipt_amount_words((float)$shipment['final_price']), 0, 0, 'L');
-    if ($hasGstDetails && $gstSummary) {
+    if (!empty($shipment['tempo_charge']) && (float)$shipment['tempo_charge'] > 0) {
         $pdf->SetFont('Arial', '', 6.5);
         $pdf->SetXY(15, 142);
-        $taxText = 'Taxable Rs. ' . number_format($gstSummary['taxable'], 2) . ' | ';
-        $taxText .= $gstSummary['same_state']
-            ? 'CGST Rs. ' . number_format($gstSummary['cgst'], 2) . ' + SGST Rs. ' . number_format($gstSummary['sgst'], 2)
-            : 'IGST Rs. ' . number_format($gstSummary['igst'], 2);
-        $pdf->Cell(85, 3, $taxText, 0, 0, 'L');
+        $pdf->Cell(85, 3, 'Tempo Charges: Rs. ' . number_format((float)$shipment['tempo_charge'], 0), 0, 0, 'L');
     }
-    
     // Box 7 (Payment Mode)
     $pdf->SetFont('Arial', 'B', 8);
     $pdf->SetXY(15, 145);
@@ -412,8 +412,10 @@ function generateReceiptPDF($shipment)
     
     $isCash = ($shipment['payment_method'] === 'cod');
     $isUpi  = ($shipment['payment_method'] === 'prepaid'); 
-    $pdf->checkbox(22, 152, $isCash, 'Cash');
-    $pdf->checkbox(45, 152, $isUpi, 'UPI');
+    $isCredit = ($shipment['payment_method'] === 'credit');
+    $pdf->checkbox(18, 152, $isCash, 'POD');
+    $pdf->checkbox(40, 152, $isUpi, 'Prepaid');
+    $pdf->checkbox(70, 152, $isCredit, 'Credit');
 
     // ----------- BOX 6 -----------
     $pdf->SetFont('Arial', '', 8);
@@ -429,17 +431,6 @@ function generateReceiptPDF($shipment)
     $pdf->checkbox(126, 138, $isPrem, 'Premium Express', 3.5);
     $pdf->checkbox(164, 132, $isAir, 'Air Cargo', 3.5);
     $pdf->checkbox(164, 138, $isSurf, 'Surface Cargo', 3.5);
-
-    $pdf->SetXY(110, 144);
-    $pdf->Cell(30, 5, 'Consignment Number:');
-    
-    // Mock Barcode Render
-    $pdf->SetFont('Courier', 'B', 14);
-    $pdf->SetXY(110, 149);
-    $pdf->Cell(85, 6, '| | ' . $shipment['tracking_no'] . ' | |', 0, 1, 'C');
-    $pdf->SetFont('Arial', '', 8);
-    $pdf->SetXY(110, 154);
-    $pdf->Cell(85, 4, $shipment['tracking_no'], 0, 0, 'C');
 
     // Row 6: Risk (Left) & Sign (Right) - y: 158 to 220
     

@@ -73,6 +73,9 @@ function ensureEarningColumns(PDO $pdo): void
         if (!in_array('delivery_email', $shipmentCols, true)) {
             $pdo->exec("ALTER TABLE shipments ADD COLUMN delivery_email VARCHAR(191) DEFAULT NULL");
         }
+        if (!in_array('tempo_charge', $shipmentCols, true)) {
+            $pdo->exec("ALTER TABLE shipments ADD COLUMN tempo_charge DECIMAL(10,2) NOT NULL DEFAULT 0.00");
+        }
         $pdo->exec("CREATE TABLE IF NOT EXISTS customer_earning_slabs (
             id INT UNSIGNED NOT NULL AUTO_INCREMENT,
             customer_id INT UNSIGNED NOT NULL,
@@ -149,6 +152,49 @@ function findCustomerEarningPct(PDO $pdo, int $customerId, string $serviceType, 
     return $fallbackPct;
 }
 
+function shipmentPricingSlabs(PDO $pdo, string $serviceType, string $zone): array
+{
+    $sql = "SELECT * FROM pricing_slabs
+            WHERE service_type = ? AND zone = ?
+            ORDER BY CASE WHEN weight_to IS NULL THEN 1 ELSE 0 END ASC,
+                     weight_to ASC, weight_from ASC";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$serviceType, $zone]);
+    $slabs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    if (empty($slabs) && $serviceType === 'premium' && $zone !== 'rest_of_india') {
+        $stmt->execute([$serviceType, 'rest_of_india']);
+        $slabs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    if (empty($slabs) && $serviceType === 'premium') {
+        $stmt = $pdo->prepare("SELECT * FROM pricing_slabs
+            WHERE service_type = ? AND zone IS NULL
+            ORDER BY CASE WHEN weight_to IS NULL THEN 1 ELSE 0 END ASC,
+                     weight_to ASC, weight_from ASC");
+        $stmt->execute([$serviceType]);
+        $slabs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    return $slabs;
+}
+
+function shipmentSlabChargeableWeight(float $weight, array $slabs): float
+{
+    foreach ($slabs as $slab) {
+        $from = (float)$slab['weight_from'];
+        $to = $slab['weight_to'];
+        if ($to !== null) {
+            if ($weight <= (float)$to) {
+                return round((float)$to, 3);
+            }
+        } else {
+            $incPer = max(0.001, (float)$slab['increment_per_kg']);
+            $extra = max(0, $weight - $from);
+            $blocks = (int)ceil($extra / $incPer);
+            return round($from + ($blocks * $incPer), 3);
+        }
+    }
+    return round($weight, 3);
+}
+
 ensureEarningColumns($pdo);
 
 // Verify customer is approved
@@ -219,6 +265,7 @@ if ($method === 'POST') {
         $ewaybillNo       = trim($body['ewaybill_no']      ?? '');
         $packingMaterial  = (int)    ($body['packing_material']  ?? 0);
         $packingCharge    = (float)  ($body['packing_charge']   ?? 0);
+        $tempoCharge      = (float)  ($body['tempo_charge']     ?? 0);
         $photoAddress     = trim($body['photo_address']    ?? '');
         $photoParcel      = trim($body['photo_parcel']     ?? '');
 
@@ -253,10 +300,17 @@ if ($method === 'POST') {
             if ($packingCharge <= 0) {
                 json_response(['success' => false, 'message' => 'Packing material charge is required.'], 422);
             }
+            if ($packingCharge > 9999) {
+                json_response(['success' => false, 'message' => 'Packing material charge cannot exceed Rs. 9999.'], 422);
+            }
         } else {
             $packingCharge = 0.0;
         }
-        $finalPrice = round($basePrice + $packingCharge, 2);
+        $tempoCharge = round(max(0.0, $tempoCharge), 2);
+        if ($tempoCharge > 9999) {
+            json_response(['success' => false, 'message' => 'Tempo charge cannot exceed Rs. 9999.'], 422);
+        }
+        $finalPrice = round($basePrice + $packingCharge + $tempoCharge, 2);
 
         // Validation
         $allowed = ['standard','premium','air_cargo','surface'];
@@ -264,7 +318,13 @@ if ($method === 'POST') {
             json_response(['success' => false, 'message' => 'Invalid service type.'], 422);
         }
         if ($weight <= 0) json_response(['success' => false, 'message' => 'Invalid weight.'], 422);
-        if ($chargeableWeight <= 0) $chargeableWeight = $weight;
+        $shipmentZone = resolveShipmentZone($pdo, $pickupPincode, $delivPincode, $pickupCity, $pickupState, $delivCity, $delivState);
+        $rawChargeableWeight = max($weight, $volWeight, $chargeableWeight);
+        $pricingSlabs = shipmentPricingSlabs($pdo, $serviceType, $shipmentZone);
+        if (empty($pricingSlabs)) {
+            json_response(['success' => false, 'message' => 'Pricing is not available for the selected service and route.'], 422);
+        }
+        $chargeableWeight = shipmentSlabChargeableWeight($rawChargeableWeight, $pricingSlabs);
         if ($declaredValue <= 0) {
             json_response(['success' => false, 'message' => 'Total value of consignment is required.'], 422);
         }
@@ -311,7 +371,6 @@ if ($method === 'POST') {
         }
         if (!in_array($paymentMethod, ['prepaid','cod','credit'])) $paymentMethod = 'prepaid';
 
-        $shipmentZone = resolveShipmentZone($pdo, $pickupPincode, $delivPincode, $pickupCity, $pickupState, $delivCity, $delivState);
         $customerEarningPct = findCustomerEarningPct($pdo, $userId, $serviceType, $shipmentZone, $chargeableWeight, $customerEarningPct);
         $customerEarningAmount = round($finalPrice * $customerEarningPct / 100);
 
@@ -335,7 +394,7 @@ if ($method === 'POST') {
                 pickup_name, pickup_company_name, pickup_phone, pickup_email, pickup_address, pickup_city, pickup_state, pickup_pincode, pickup_gstin,
                 delivery_name, delivery_company_name, delivery_phone, delivery_email, delivery_address, delivery_city, delivery_state, delivery_pincode, delivery_gstin,
                 service_type, weight, chargeable_weight, volumetric_weight, length, width, height, declared_value, pieces, description, customer_ref,
-                ewaybill_no, packing_material, packing_charge, photo_address, photo_parcel,
+                ewaybill_no, packing_material, packing_charge, tempo_charge, photo_address, photo_parcel,
                 base_price, discount_pct, discount_amount, final_price,
                 customer_earning_pct, customer_earning_amount,
                 payment_method, risk_surcharge, gst_invoice, gstin, pan_number,
@@ -345,7 +404,7 @@ if ($method === 'POST') {
                 ?, ?, ?, ?, ?, ?, ?, ?, ?,
                 ?, ?, ?, ?, ?, ?, ?, ?, ?,
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?,
                 ?, ?, ?, ?,
                 ?, ?,
                 ?, ?, ?, ?, ?,
@@ -357,7 +416,7 @@ if ($method === 'POST') {
             $pickupName, $pickupCompany, $pickupPhone, $pickupEmail, $pickupFull, $pickupCity, $pickupState, $pickupPincode, $pickupGstin,
             $delivName, $delivCompany, $delivPhone, $delivEmail, $delivFull, $delivCity, $delivState, $delivPincode, $delivGstin,
             $serviceType, $weight, $chargeableWeight, $volWeight, $length, $width, $height, $declaredValue, $pieces, $description, $customerRef,
-            $ewaybillNo, $packingMaterial, $packingCharge, $photoAddress ?: null, $photoParcel ?: null,
+            $ewaybillNo, $packingMaterial, $packingCharge, $tempoCharge, $photoAddress ?: null, $photoParcel ?: null,
             $basePrice, $discountPct, $discountAmt, $finalPrice,
             $customerEarningPct, $customerEarningAmount,
             $paymentMethod, $riskSurcharge, $gstInvoice, $gstin, $panNumber,
@@ -413,6 +472,7 @@ if ($method === 'POST') {
                 'chargeable_weight'   => $chargeableWeight,
                 'packing_material'    => $packingMaterial,
                 'packing_charge'      => $packingCharge,
+                'tempo_charge'        => $tempoCharge,
                 'gst_invoice'         => $gstInvoice,
                 'gstin'               => $gstin,
                 'pan_number'          => $panNumber,

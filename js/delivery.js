@@ -35,11 +35,13 @@
             servicePrice: 0,
             serviceLabel: '',
             serviceTat: '',
+            serviceChargeableWeight: 0,
             ewaybillOpt: 'skip',
             ewaybillNo: '',
             riskSurcharge: 'owner',
             packingMaterial: false,
             packingCharge: 0,
+            tempoCharge: 0,
             availablePackingCharge: 0,
             paymentMethod: 'prepaid',
             dim_l: 0,
@@ -269,6 +271,13 @@
             }
             if (state.packingMaterial && (!state.packingCharge || state.packingCharge <= 0)) {
                 showErr('packing_charge', 'Packing material charge is required');
+                ok = false;
+            } else if (state.packingCharge > 9999) {
+                showErr('packing_charge', 'Packing material charge cannot exceed Rs. 9999');
+                ok = false;
+            }
+            if (state.tempoCharge > 9999) {
+                showErr('tempo_charge', 'Tempo charge cannot exceed Rs. 9999');
                 ok = false;
             }
             // Photo uploads mandatory
@@ -662,13 +671,19 @@
         const actual = state.weight || 0;
         const vol    = state.volumetricWeight || 0;
         state.chargeableWeight = Math.max(actual, vol);
+        state.serviceChargeableWeight = 0;
+        updateChargeableWeightDisplay();
+    }
 
+    function updateChargeableWeightDisplay() {
+        const actual = state.weight || 0;
         // Update chargeable weight display in step 2 if it exists
         const cwEl = document.getElementById('chargeable_weight_display');
         if (cwEl) {
-            if (state.chargeableWeight > 0) {
-                cwEl.value = state.chargeableWeight.toFixed(3) + ' kg';
-                cwEl.style.background = state.chargeableWeight > actual ? '#fef3c7' : '#f0fdf4';
+            const displayWeight = state.serviceChargeableWeight || state.chargeableWeight || 0;
+            if (displayWeight > 0) {
+                cwEl.value = formatWeightSmart(displayWeight);
+                cwEl.style.background = displayWeight > actual ? '#fef3c7' : '#f0fdf4';
             } else {
                 cwEl.value = '';
             }
@@ -713,7 +728,7 @@
         const container = document.getElementById('services_container');
         if (!container) return;
 
-        const chargeableWeight = state.chargeableWeight || state.weight;
+        const chargeableWeight = state.serviceChargeableWeight || state.chargeableWeight || state.weight;
 
         const serviceMap = {
             standard:  { icon: 'bi-truck',         label: 'Standard Express', code: 'STD-EXP' },
@@ -738,7 +753,7 @@
                 <div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#92400e;">
                     <i class="bi bi-info-circle me-1"></i>
                     <strong>Volumetric weight (${volWt.toFixed(3)} kg) exceeds actual weight (${state.weight.toFixed(3)} kg).</strong>
-                    Priced on chargeable weight: <strong>${chargeableWeight.toFixed(3)} kg</strong>
+                    Priced on chargeable weight: <strong>${formatWeightSmart(chargeableWeight)}</strong>
                 </div>`;
         }
 
@@ -765,7 +780,7 @@
             const etaDate = etaParts.length > 1 ? etaParts.slice(1).join(', ') : svc.eta;
 
             return `
-            <div class="service-card" data-service="${svc.type}" data-price="${svc.price}" data-label="${escHtml(meta.label)}" data-tat="${escHtml(svc.tat_label)}"
+            <div class="service-card" data-service="${svc.type}" data-price="${svc.price}" data-chargeable-weight="${svc.chargeable_weight || chargeableWeight}" data-label="${escHtml(meta.label)}" data-tat="${escHtml(svc.tat_label)}"
                  style="border-left:4px solid ${tatBorder};"
                  onclick="selectService('${svc.type}', ${svc.price}, '${escHtml(meta.label)}', '${escHtml(svc.tat_label)}')">
                 <div class="service-card-check"><i class="bi bi-check-lg"></i></div>
@@ -794,7 +809,7 @@
                 </div>
                 <div class="service-card-meta" style="margin-top:4px;">
                     <div class="service-card-meta-item" style="font-size:12px;color:#6b7280;">
-                        <i class="bi bi-weight"></i> Chargeable: <strong>${chargeableWeight.toFixed(3)} kg</strong>
+                        <i class="bi bi-weight"></i> Chargeable: <strong>${formatWeightSmart(parseFloat(svc.chargeable_weight || chargeableWeight) || chargeableWeight)}</strong>
                     </div>
                 </div>
             </div>`;
@@ -807,10 +822,14 @@
 
     window.selectService = function (type, price, label, tat) {
         document.querySelectorAll('.service-card').forEach(c => c.classList.toggle('selected', c.dataset.service === type));
+        const selectedCard = document.querySelector(`.service-card[data-service="${type}"]`);
         state.serviceType  = type;
         state.servicePrice = price;
         state.serviceLabel = label;
         state.serviceTat   = tat;
+        state.serviceChargeableWeight = parseFloat(selectedCard?.dataset.chargeableWeight || 0) || state.chargeableWeight || state.weight;
+        state.chargeableWeight = state.serviceChargeableWeight;
+        updateChargeableWeightDisplay();
     };
 
     /* ── Step 4: Options ── */
@@ -839,6 +858,7 @@
     const packingWrap = document.getElementById('packing_material_wrap');
     const packingChargeInput = document.getElementById('packing_charge');
     const packingChargeRow = document.getElementById('packing_charge_row');
+    const tempoChargeInput = document.getElementById('tempo_charge');
     if (packingChargeRow) packingChargeRow.style.display = 'block';
     function formatMoney(amount) {
         return (Number(amount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -865,7 +885,8 @@
             });
     }
     function updateCustomerPackingCharge(value) {
-        const parsed = Math.max(0, parseFloat(value || 0) || 0);
+        const parsed = Math.min(9999, Math.max(0, parseFloat(value || 0) || 0));
+        if (packingChargeInput && parsed !== (parseFloat(value || 0) || 0)) packingChargeInput.value = parsed ? String(parsed) : '';
         state.packingCharge = parsed;
         const hint = document.getElementById('packing_charge_hint');
         if (hint) hint.textContent = state.packingMaterial && parsed > 0 ? `(Rs.${formatMoney(parsed)})` : '(optional)';
@@ -903,6 +924,12 @@
         const hasCharge = state.packingCharge > 0;
         state.packingMaterial = hasCharge;
         packingWrap && packingWrap.classList.toggle('checked', hasCharge);
+    });
+    tempoChargeInput && tempoChargeInput.addEventListener('input', () => {
+        const raw = parseFloat(tempoChargeInput.value || 0) || 0;
+        const parsed = Math.min(9999, Math.max(0, raw));
+        if (raw !== parsed) tempoChargeInput.value = parsed ? String(parsed) : '';
+        state.tempoCharge = parsed;
     });
 
     function showPackingChargePopup() {
@@ -1065,10 +1092,10 @@
         if (wEl) wEl.textContent = `${state.weight.toFixed(3)} kg`;
 
         // Chargeable weight
-        const chargeableWeight = state.chargeableWeight || state.weight;
+        const chargeableWeight = state.serviceChargeableWeight || state.chargeableWeight || state.weight;
         const cwEl = document.getElementById('summary_chargeable_weight');
         if (cwEl) {
-            cwEl.textContent = `${chargeableWeight.toFixed(3)} kg`;
+            cwEl.textContent = formatWeightSmart(chargeableWeight);
             if (chargeableWeight > state.weight) {
                 cwEl.style.color = '#d97706';
                 cwEl.style.fontWeight = '600';
@@ -1093,13 +1120,16 @@
         }
 
         // Pricing (no discount)
-        const totalPrice = state.servicePrice + (state.packingMaterial ? state.packingCharge : 0);
+        const totalPrice = state.servicePrice + (state.packingMaterial ? state.packingCharge : 0) + (state.tempoCharge || 0);
 
         const priceEl = document.getElementById('summary_base_price');
         if (priceEl) priceEl.textContent = `₹${state.servicePrice.toLocaleString('en-IN')}`;
 
         const packPriceEl = document.getElementById('summary_packing_price');
         if (packPriceEl) packPriceEl.textContent = state.packingMaterial ? `₹${state.packingCharge.toLocaleString('en-IN')}` : '—';
+
+        const tempoPriceEl = document.getElementById('summary_tempo_price');
+        if (tempoPriceEl) tempoPriceEl.textContent = state.tempoCharge > 0 ? `Rs.${state.tempoCharge.toLocaleString('en-IN')}` : '-';
 
         const finalEl = document.getElementById('summary_final_price');
         if (finalEl) finalEl.textContent = `₹${totalPrice.toLocaleString('en-IN')}`;
@@ -1153,7 +1183,7 @@
             delivery:           state.delivery,
             delivery_email:     state.delivery.email || '',
             weight:             state.weight,
-            chargeable_weight:  state.chargeableWeight || state.weight,
+            chargeable_weight:  state.serviceChargeableWeight || state.chargeableWeight || state.weight,
             pieces:             state.pieces,
             declared_value:     state.declaredValue,
             description:        state.description,
@@ -1162,6 +1192,7 @@
             base_price:         state.servicePrice,
             packing_material:   state.packingMaterial ? 1 : 0,
             packing_charge:     state.packingMaterial ? state.packingCharge : 0,
+            tempo_charge:       state.tempoCharge || 0,
             final_price:        totalPrice,
             ewaybill_no:        state.ewaybillOpt === 'enter' ? state.ewaybillNo : '',
             risk_surcharge:     state.riskSurcharge,
@@ -1223,6 +1254,13 @@
         return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
+    function formatWeightSmart(kg) {
+        const value = parseFloat(kg) || 0;
+        if (value > 0 && value < 1) return `${Math.round(value * 1000)} g`;
+        if (Number.isInteger(value)) return `${value} kg`;
+        return `${value.toFixed(3).replace(/\.?0+$/, '')} kg`;
+    }
+
     /* ── Restore form fields from state ── */
     function restoreFormFields() {
         ['pincode', 'name', 'company', 'phone', 'email', 'gstin', 'addr1', 'addr2', 'city', 'state'].forEach(f => {
@@ -1276,6 +1314,7 @@
             if (packingChargeInput && state.packingCharge > 0) packingChargeInput.value = state.packingCharge;
             updateCustomerPackingCharge(state.packingCharge);
         }
+        if (tempoChargeInput && state.tempoCharge > 0) tempoChargeInput.value = state.tempoCharge;
 
         if (state.paymentMethod) {
             const paymentBtn = document.querySelector(`[data-payment="${state.paymentMethod}"]`);
@@ -1358,10 +1397,13 @@
         updateChargeableWeight();
         syncEwaybillStateFromDOM();
         if (packingChargeInput) updateCustomerPackingCharge(packingChargeInput.value);
+        if (tempoChargeInput) state.tempoCharge = Math.min(9999, Math.max(0, parseFloat(tempoChargeInput.value || 0) || 0));
         const selectedService = document.querySelector('.service-card.selected');
         if (selectedService) {
             state.serviceType = selectedService.dataset.service;
             state.servicePrice = parseFloat(selectedService.dataset.price) || state.servicePrice;
+            state.serviceChargeableWeight = parseFloat(selectedService.dataset.chargeableWeight || 0) || state.serviceChargeableWeight;
+            state.chargeableWeight = state.serviceChargeableWeight || state.chargeableWeight;
             state.serviceLabel = selectedService.dataset.label || state.serviceLabel;
             state.serviceTat = selectedService.dataset.tat || state.serviceTat;
         }

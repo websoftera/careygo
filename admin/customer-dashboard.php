@@ -31,6 +31,13 @@ try {
 } catch (Exception $e) {}
 
 require_once 'includes/header.php';
+
+function admin_customer_weight_label($weight): string {
+    $w = (float)$weight;
+    if ($w > 0 && $w < 1) return number_format($w * 1000, 0) . ' g';
+    if (abs($w - round($w)) < 0.0001) return number_format($w, 0) . ' kg';
+    return rtrim(rtrim(number_format($w, 3, '.', ''), '0'), '.') . ' kg';
+}
 ?>
 
 <div class="page-header">
@@ -63,11 +70,10 @@ require_once 'includes/header.php';
                 <td style="font-weight:700;color:var(--primary);"><?= htmlspecialchars($s['tracking_no']) ?></td>
                 <td><?= htmlspecialchars($s['pickup_city']) ?> -> <?= htmlspecialchars($s['delivery_city']) ?></td>
                 <td><?= htmlspecialchars($serviceLabels[$s['service_type']] ?? $s['service_type']) ?></td>
-                <td><?= number_format((float)($s['chargeable_weight'] ?: $s['weight']), 0) ?> kg</td>
+                <td><?= admin_customer_weight_label($s['chargeable_weight'] ?: $s['weight']) ?></td>
                 <td>Rs.<?= number_format((float)$s['final_price'], 0) ?></td>
                 <td>
                     <div style="font-weight:700;color:var(--success);">Rs.<?= number_format((float)($s['customer_earning_amount'] ?? 0), 0) ?></div>
-                    <div style="font-size:11px;color:var(--muted);"><?= number_format((float)($s['customer_earning_pct'] ?? 0), 2) ?>%</div>
                 </td>
                 <td><span class="badge-status badge-<?= $s['status'] ?>"><?= ucwords(str_replace('_',' ', $s['status'])) ?></span></td>
                 <td><?= date('d M Y', strtotime($s['created_at'])) ?></td>
