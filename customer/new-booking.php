@@ -276,7 +276,7 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                         </div>
 
                         <div class="wizard-section-label">Dimensions (in CM) <span class="opt">(optional — max: L 130 × W 60 × H 60)</span></div>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap:12px; margin-bottom:8px;">
+                        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:12px; margin-bottom:16px;">
                             <div class="wizard-form-group mb-0">
                                 <label class="wizard-label">Length</label>
                                 <input type="number" class="wizard-input" id="dim_l" placeholder="L" min="0" max="130">
@@ -296,12 +296,7 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                                 <label class="wizard-label">Vol. Weight</label>
                                 <input type="text" class="wizard-input" id="vol_weight_display" placeholder="0.000 kg" readonly style="background:#f8f9fa;">
                             </div>
-                            <div class="wizard-form-group mb-0">
-                                <label class="wizard-label" style="color:#d97706;font-weight:600;">Chargeable Wt.</label>
-                                <input type="text" class="wizard-input" id="chargeable_weight_display" placeholder="0.000 kg" readonly style="background:#fef3c7;font-weight:600;">
-                            </div>
                         </div>
-                        <p style="font-size:11px;color:#6b7280;margin-bottom:16px;">Chargeable weight = max(Actual weight, Volumetric weight). Pricing is based on chargeable weight.</p>
 
                         <div class="form-grid-2">
                             <div class="wizard-form-group">
