@@ -178,7 +178,10 @@
         });
         if (progressBar) progressBar.style.width = `${((n - 1) / (state.totalSteps - 1)) * 100}%`;
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        if (n === 5) buildSummary();
+        if (n === 5) {
+            if (tempoChargeInput) state.tempoCharge = Math.min(9999, Math.max(0, parseFloat(tempoChargeInput.value) || 0));
+            buildSummary();
+        }
     }
 
     /* ── Validate step ── */
@@ -299,7 +302,7 @@
                 if (creditClientInput) state.creditClientName = creditClientInput.value.trim();
                 if (creditRequestorInput) state.creditRequestorName = creditRequestorInput.value.trim();
                 if (!state.creditClientName) { showErr('credit_client_name', 'Client Name is required'); ok = false; }
-                if (!state.creditRequestorName) { showErr('credit_requestor_name', 'Requestor Name is required'); ok = false; }
+                if (!state.creditRequestorName) { showErr('credit_requestor_name', 'Contact Person is required'); ok = false; }
             }
         }
 
@@ -1195,6 +1198,7 @@
     /* ── Final submit ── */
     const submitBtn = document.getElementById('submit_booking');
     submitBtn && submitBtn.addEventListener('click', () => {
+        syncAllFieldsFromDOM();
         if (!validateStep(6)) return;
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Booking...';
@@ -1268,7 +1272,7 @@
 
     function showFormError(msg) {
         const el = document.getElementById('form_error');
-        if (el) { el.textContent = msg; el.style.display = 'block'; setTimeout(() => { el.style.display = 'none'; }, 5000); }
+        if (el) { el.textContent = msg; el.style.display = 'block'; }
         else alert(msg);
     }
 

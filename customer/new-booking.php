@@ -574,8 +574,8 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                                     <div class="wizard-error" id="err_credit_client_name"></div>
                                 </div>
                                 <div>
-                                    <label class="wizard-label">Requestor Name <span class="req">*</span></label>
-                                    <input type="text" class="wizard-input" id="credit_requestor_name" placeholder="Enter requestor name" maxlength="191" autocomplete="off">
+                                    <label class="wizard-label">Contact Person <span class="req">*</span></label>
+                                    <input type="text" class="wizard-input" id="credit_requestor_name" placeholder="Enter contact person name" maxlength="191" autocomplete="off">
                                     <div class="wizard-error" id="err_credit_requestor_name"></div>
                                 </div>
                             </div>
