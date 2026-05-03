@@ -207,8 +207,8 @@ function generateReceiptPDF($shipment)
 
     $pdf->SetFont('Arial', '', 8);
     $pdf->Cell(12, 5, "Email:");
-    $pdf->SetFont('Arial', 'B', 8);
-    $pdf->Cell(45, 5, '  ' . htmlspecialchars(substr($shipment['pickup_email'] ?? $shipment['customer_email'] ?? '', 0, 28)), 'B', 0, 'L');
+    $pdf->SetFont('Arial', 'B', 7);
+    $pdf->Cell(32, 5, '  ' . htmlspecialchars(substr($shipment['pickup_email'] ?? $shipment['customer_email'] ?? '', 0, 28)), 'B', 0, 'L');
 
     // Address
     $pdf->SetXY($x, $y+=$lineH);
@@ -284,8 +284,8 @@ function generateReceiptPDF($shipment)
 
     $pdf->SetFont('Arial', '', 8);
     $pdf->Cell(12, 5, "Email:");
-    $pdf->SetFont('Arial', 'B', 8);
-    $pdf->Cell(44, 5, '  ' . htmlspecialchars(substr($shipment['delivery_email'] ?? '', 0, 28)), 'B', 0, 'L');
+    $pdf->SetFont('Arial', 'B', 7);
+    $pdf->Cell(32, 5, '  ' . htmlspecialchars(substr($shipment['delivery_email'] ?? '', 0, 28)), 'B', 0, 'L');
 
     // Address
     $pdf->SetXY($x, $y+=$lineH);
@@ -459,8 +459,8 @@ function generateReceiptPDF($shipment)
     // ----------- BOX 8 -----------
     
     // Column grid
-    $pdf->Line(60, 158, 60, 220); // vertical 1
-    $pdf->Line(85, 158, 85, 220); // vertical 2
+    $pdf->Line(60, 158, 60, 209); // vertical 1
+    $pdf->Line(85, 158, 85, 209); // vertical 2
     $pdf->Line(60, 189, 105, 189); // horizontal crossing columns
 
     // Left label
