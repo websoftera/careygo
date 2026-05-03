@@ -129,7 +129,6 @@ try {
                     <th>Route</th>
                     <th>Service</th>
                     <th>Booking Amount</th>
-                    <th>Earning %</th>
                     <th>Earning</th>
                     <th>Status</th>
                     <th>Date</th>
@@ -148,7 +147,6 @@ try {
                     </td>
                     <td style="font-size:12px;"><?= htmlspecialchars($serviceLabels[$d['service_type']] ?? $d['service_type']) ?></td>
                     <td style="font-size:13px;font-weight:700;">Rs.<?= number_format((float)$d['final_price'], 0) ?></td>
-                    <td style="font-size:12px;font-weight:700;"><?= number_format((float)($d['customer_earning_pct'] ?? 0), 2) ?>%</td>
                     <td style="font-size:13px;font-weight:800;color:var(--success);">Rs.<?= number_format((float)($d['customer_earning_amount'] ?? 0), 0) ?></td>
                     <td><span class="badge-status badge-<?= $d['status'] ?>"><?= ucwords(str_replace('_', ' ', $d['status'])) ?></span></td>
                     <td style="font-size:11px;color:var(--muted)"><?= date('d M Y', strtotime($d['created_at'])) ?></td>

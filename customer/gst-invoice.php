@@ -29,7 +29,7 @@ $companyPhone   = '+91-XXXXX-XXXXX';
 
 // Invoice number: INV-<shipment_id>-<year>
 $invoiceNo   = 'INV-' . str_pad($s['id'], 6, '0', STR_PAD_LEFT) . '-' . date('Y', strtotime($s['created_at']));
-$invoiceDate = date('d M Y', strtotime($s['created_at']));
+$invoiceDate = date('d', strtotime($s['created_at'])) . ' ' . strtoupper(date('M', strtotime($s['created_at']))) . ' ' . date('Y', strtotime($s['created_at']));
 
 // Tax calculation (18% GST — 9% CGST + 9% SGST for same-state; 18% IGST for inter-state)
 $totalAmt   = (float) $s['final_price'];
@@ -192,6 +192,16 @@ function invoice_weight_label($weight): string {
                 <label>Payment Method</label>
                 <p><?= h($paymentLabels[$s['payment_method'] ?? 'prepaid'] ?? ucfirst($s['payment_method'] ?? 'Prepaid')) ?></p>
             </div>
+            <?php if (($s['payment_method'] ?? '') === 'credit' && !empty($s['credit_client_name'])): ?>
+            <div class="inv-meta-block">
+                <label>Client Name</label>
+                <p><strong><?= h($s['credit_client_name']) ?></strong></p>
+            </div>
+            <div class="inv-meta-block">
+                <label>Requestor Name</label>
+                <p><?= h($s['credit_requestor_name'] ?? '—') ?></p>
+            </div>
+            <?php endif; ?>
         </div>
 
         <!-- Bill-to / Ship-to -->

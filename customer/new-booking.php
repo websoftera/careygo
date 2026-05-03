@@ -569,6 +569,23 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                             <i class="bi bi-building-check payment-option-icon"></i>
                         </div>
 
+                        <!-- Credit Account extra fields -->
+                        <div id="credit_fields_wrap" style="display:none;margin-top:16px;padding:16px;background:#f0f4ff;border-radius:12px;border:1.5px solid #c7d2fe;">
+                            <div class="wizard-section-label" style="margin-top:0;">Credit Account Details</div>
+                            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:8px;">
+                                <div>
+                                    <label class="wizard-label">Client Name <span class="req">*</span></label>
+                                    <input type="text" class="wizard-input" id="credit_client_name" placeholder="Enter client name" maxlength="191" autocomplete="off">
+                                    <div class="wizard-error" id="err_credit_client_name"></div>
+                                </div>
+                                <div>
+                                    <label class="wizard-label">Requestor Name <span class="req">*</span></label>
+                                    <input type="text" class="wizard-input" id="credit_requestor_name" placeholder="Enter requestor name" maxlength="191" autocomplete="off">
+                                    <div class="wizard-error" id="err_credit_requestor_name"></div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div id="form_error" class="alert alert-danger mt-3" style="display:none;font-size:13px;border-radius:10px;"></div>
                         <div class="wizard-error" id="err_payment_error"></div>
 

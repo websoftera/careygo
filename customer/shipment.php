@@ -153,9 +153,22 @@ function shipment_weight_label($weight): string {
                 <div class="shipment-detail-section">
                     <div class="shipment-detail-section-title">Payment Details</div>
                     <div class="summary-pricing">
-                        <div class="pricing-row"><span>Base Price</span><span>₹<?= number_format((float)$shipment['base_price'], 2) ?></span></div>
+                        <div class="pricing-row"><span>Base Freight</span><span>₹<?= number_format((float)$shipment['base_price'], 2) ?></span></div>
+                        <?php if ((float)($shipment['packing_charge'] ?? 0) > 0): ?>
+                        <div class="pricing-row"><span>Packing Charges</span><span>₹<?= number_format((float)$shipment['packing_charge'], 2) ?></span></div>
+                        <?php endif; ?>
+                        <?php if ((float)($shipment['tempo_charge'] ?? 0) > 0): ?>
+                        <div class="pricing-row"><span>Tempo Charges</span><span>₹<?= number_format((float)$shipment['tempo_charge'], 2) ?></span></div>
+                        <?php endif; ?>
                         <div class="pricing-row total"><span>Total Amount</span><span>₹<?= number_format((float)$shipment['final_price'], 2) ?></span></div>
                     </div>
+                    <div style="margin-top:10px;font-size:12px;color:var(--muted);">
+                        Payment: <strong style="color:var(--text);"><?= htmlspecialchars(ucfirst($shipment['payment_method'] ?? 'prepaid')) ?></strong>
+                    </div>
+                    <?php if (($shipment['payment_method'] ?? '') === 'credit' && !empty($shipment['credit_client_name'])): ?>
+                    <div class="detail-row" style="margin-top:8px;"><span class="detail-label">Client Name</span><span class="detail-value"><?= htmlspecialchars($shipment['credit_client_name']) ?></span></div>
+                    <div class="detail-row"><span class="detail-label">Requestor Name</span><span class="detail-value"><?= htmlspecialchars($shipment['credit_requestor_name'] ?? '—') ?></span></div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

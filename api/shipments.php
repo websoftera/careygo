@@ -76,6 +76,12 @@ function ensureEarningColumns(PDO $pdo): void
         if (!in_array('tempo_charge', $shipmentCols, true)) {
             $pdo->exec("ALTER TABLE shipments ADD COLUMN tempo_charge DECIMAL(10,2) NOT NULL DEFAULT 0.00");
         }
+        if (!in_array('credit_client_name', $shipmentCols, true)) {
+            $pdo->exec("ALTER TABLE shipments ADD COLUMN credit_client_name VARCHAR(191) DEFAULT NULL");
+        }
+        if (!in_array('credit_requestor_name', $shipmentCols, true)) {
+            $pdo->exec("ALTER TABLE shipments ADD COLUMN credit_requestor_name VARCHAR(191) DEFAULT NULL");
+        }
         $pdo->exec("CREATE TABLE IF NOT EXISTS customer_earning_slabs (
             id INT UNSIGNED NOT NULL AUTO_INCREMENT,
             customer_id INT UNSIGNED NOT NULL,
@@ -278,9 +284,11 @@ if ($method === 'POST') {
         $finalPrice       = (float)  ($body['final_price']      ?? $basePrice);
         $discountPct      = 0;  // Discount removed
         $discountAmt      = 0;
-        $paymentMethod    = trim($body['payment_method']   ?? 'prepaid');
-        $gstInvoice       = 1;
-        $gstin            = trim($body['gstin']            ?? '');
+        $paymentMethod       = trim($body['payment_method']      ?? 'prepaid');
+        $creditClientName    = trim($body['credit_client_name']   ?? '');
+        $creditRequestorName = trim($body['credit_requestor_name'] ?? '');
+        $gstInvoice          = 1;
+        $gstin               = trim($body['gstin']                ?? '');
         $panNumber        = trim($body['pan_number']       ?? '');
         $riskSurcharge    = 'owner';
         $franchiseeId     = 'PNQ01';
@@ -311,6 +319,18 @@ if ($method === 'POST') {
             json_response(['success' => false, 'message' => 'Tempo charge cannot exceed Rs. 9999.'], 422);
         }
         $finalPrice = round($basePrice + $packingCharge + $tempoCharge, 2);
+
+        if ($paymentMethod === 'credit') {
+            if ($creditClientName === '') {
+                json_response(['success' => false, 'message' => 'Client Name is required for Credit Account payments.'], 422);
+            }
+            if ($creditRequestorName === '') {
+                json_response(['success' => false, 'message' => 'Requestor Name is required for Credit Account payments.'], 422);
+            }
+        } else {
+            $creditClientName    = null;
+            $creditRequestorName = null;
+        }
 
         // Validation
         $allowed = ['standard','premium','air_cargo','surface'];
@@ -397,7 +417,7 @@ if ($method === 'POST') {
                 ewaybill_no, packing_material, packing_charge, tempo_charge, photo_address, photo_parcel,
                 base_price, discount_pct, discount_amount, final_price,
                 customer_earning_pct, customer_earning_amount,
-                payment_method, risk_surcharge, gst_invoice, gstin, pan_number,
+                payment_method, credit_client_name, credit_requestor_name, risk_surcharge, gst_invoice, gstin, pan_number,
                 status, estimated_delivery, created_at
             ) VALUES (
                 ?, ?,
@@ -407,7 +427,7 @@ if ($method === 'POST') {
                 ?, ?, ?, ?, ?, ?,
                 ?, ?, ?, ?,
                 ?, ?,
-                ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?, ?,
                 'booked', ?, ?
             )
         ");
@@ -419,7 +439,7 @@ if ($method === 'POST') {
             $ewaybillNo, $packingMaterial, $packingCharge, $tempoCharge, $photoAddress ?: null, $photoParcel ?: null,
             $basePrice, $discountPct, $discountAmt, $finalPrice,
             $customerEarningPct, $customerEarningAmount,
-            $paymentMethod, $riskSurcharge, $gstInvoice, $gstin, $panNumber,
+            $paymentMethod, $creditClientName, $creditRequestorName, $riskSurcharge, $gstInvoice, $gstin, $panNumber,
             $etaDate, $createdAtSql,
         ]);
 
@@ -482,8 +502,10 @@ if ($method === 'POST') {
                 'length'              => $length,
                 'width'               => $width,
                 'height'              => $height,
-                'payment_method'      => $paymentMethod,
-                'created_at'          => $createdAtSql,
+                'payment_method'         => $paymentMethod,
+                'credit_client_name'     => $creditClientName,
+                'credit_requestor_name'  => $creditRequestorName,
+                'created_at'             => $createdAtSql,
                 'estimated_delivery'  => $etaDate,
                 'delivery_email'      => $delivEmail,
                 'franchisee_id'       => $franchiseeId,

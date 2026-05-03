@@ -223,9 +223,11 @@ function viewShipment(id) {
             <div class="col-md-6">
                 <div class="detail-row"><span class="detail-label">Declared Value</span><span class="detail-value">₹${parseFloat(s.declared_value||0).toLocaleString('en-IN')}</span></div>
                 <div class="detail-row"><span class="detail-label">Base Price</span><span class="detail-value">₹${parseFloat(s.base_price).toLocaleString('en-IN')}</span></div>
-                <div class="detail-row"><span class="detail-label">Discount</span><span class="detail-value">${s.discount_pct}% (₹${parseFloat(s.discount_amount).toLocaleString('en-IN')})</span></div>
+                ${parseFloat(s.packing_charge||0)>0 ? `<div class="detail-row"><span class="detail-label">Packing Charges</span><span class="detail-value">₹${parseFloat(s.packing_charge).toLocaleString('en-IN')}</span></div>` : ''}
+                ${parseFloat(s.tempo_charge||0)>0 ? `<div class="detail-row"><span class="detail-label">Tempo Charges</span><span class="detail-value">₹${parseFloat(s.tempo_charge).toLocaleString('en-IN')}</span></div>` : ''}
                 <div class="detail-row"><span class="detail-label">Final Price</span><span class="detail-value" style="font-weight:700;">₹${parseFloat(s.final_price).toLocaleString('en-IN')}</span></div>
                 <div class="detail-row"><span class="detail-label">Payment</span><span class="detail-value">${escH(s.payment_method)}</span></div>
+                ${s.payment_method==='credit' && s.credit_client_name ? `<div class="detail-row"><span class="detail-label">Client Name</span><span class="detail-value">${escH(s.credit_client_name)}</span></div><div class="detail-row"><span class="detail-label">Requestor Name</span><span class="detail-value">${escH(s.credit_requestor_name||'—')}</span></div>` : ''}
                 <div class="detail-row"><span class="detail-label">E-Waybill</span><span class="detail-value">${escH(s.ewaybill_no||'—')}</span></div>
             </div>
         </div>`;

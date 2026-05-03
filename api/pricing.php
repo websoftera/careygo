@@ -186,8 +186,9 @@ if (false) try {
 } catch (Exception $e) {}
 
 try {
+    // Max weight caps per service (enforced after slab lookup)
     $serviceConstraints = [
-        'standard'  => 2.000,
+        'standard'  => 60.000,
         'premium'   => 60.000,
         'air_cargo' => 60.000,
         'surface'   => 60.000,
@@ -198,12 +199,10 @@ try {
         $maxWeight = $serviceConstraints[$type] ?? PHP_FLOAT_MAX;
         if ($weight > $maxWeight) continue;
 
-        // Calculate price only for the resolved zone. Missing zone pricing hides the service.
+        // 2. Fetch zone-specific slabs; fall back to global (NULL-zone) slabs if none exist.
+        //    This ensures any service with globally-defined slabs appears for all routes.
         $slabs = pricingSlabs($pdo, $type, $zone);
-        if (empty($slabs) && $type === 'premium' && $zone !== 'rest_of_india') {
-            $slabs = pricingSlabs($pdo, $type, 'rest_of_india');
-        }
-        if (empty($slabs) && $type === 'premium') {
+        if (empty($slabs)) {
             $slabs = pricingSlabs($pdo, $type, null);
         }
         if (empty($slabs)) continue;

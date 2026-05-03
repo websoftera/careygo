@@ -44,6 +44,8 @@
             tempoCharge: 0,
             availablePackingCharge: 0,
             paymentMethod: 'prepaid',
+            creditClientName: '',
+            creditRequestorName: '',
             dim_l: 0,
             dim_w: 0,
             dim_h: 0,
@@ -293,6 +295,12 @@
 
         if (n === 6) {
             if (!state.paymentMethod) { showErr('payment_error', 'Select a payment method'); ok = false; }
+            if (state.paymentMethod === 'credit') {
+                if (creditClientInput) state.creditClientName = creditClientInput.value.trim();
+                if (creditRequestorInput) state.creditRequestorName = creditRequestorInput.value.trim();
+                if (!state.creditClientName) { showErr('credit_client_name', 'Client Name is required'); ok = false; }
+                if (!state.creditRequestorName) { showErr('credit_requestor_name', 'Requestor Name is required'); ok = false; }
+            }
         }
 
         return ok;
@@ -925,12 +933,14 @@
         state.packingMaterial = hasCharge;
         packingWrap && packingWrap.classList.toggle('checked', hasCharge);
     });
-    tempoChargeInput && tempoChargeInput.addEventListener('input', () => {
+    function syncTempoCharge() {
         const raw = parseFloat(tempoChargeInput.value || 0) || 0;
         const parsed = Math.min(9999, Math.max(0, raw));
         if (raw !== parsed) tempoChargeInput.value = parsed ? String(parsed) : '';
         state.tempoCharge = parsed;
-    });
+    }
+    tempoChargeInput && tempoChargeInput.addEventListener('input', syncTempoCharge);
+    tempoChargeInput && tempoChargeInput.addEventListener('change', syncTempoCharge);
 
     function showPackingChargePopup() {
         loadPackingCharge().then(displayPackingModal);
@@ -1162,13 +1172,25 @@
     }
 
     /* ── Step 6: Payment options ── */
+    const creditFieldsWrap = document.getElementById('credit_fields_wrap');
+    const creditClientInput = document.getElementById('credit_client_name');
+    const creditRequestorInput = document.getElementById('credit_requestor_name');
+
+    function toggleCreditFields() {
+        if (creditFieldsWrap) creditFieldsWrap.style.display = state.paymentMethod === 'credit' ? 'block' : 'none';
+    }
+
     document.querySelectorAll('.payment-option').forEach(opt => {
         opt.addEventListener('click', () => {
             document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
             opt.classList.add('selected');
             state.paymentMethod = opt.dataset.payment;
+            toggleCreditFields();
         });
     });
+
+    creditClientInput && creditClientInput.addEventListener('input', () => { state.creditClientName = creditClientInput.value.trim(); });
+    creditRequestorInput && creditRequestorInput.addEventListener('input', () => { state.creditRequestorName = creditRequestorInput.value.trim(); });
 
     /* ── Final submit ── */
     const submitBtn = document.getElementById('submit_booking');
@@ -1177,7 +1199,7 @@
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Booking...';
 
-        const totalPrice = state.servicePrice + (state.packingMaterial ? state.packingCharge : 0);
+        const totalPrice = state.servicePrice + (state.packingMaterial ? state.packingCharge : 0) + (state.tempoCharge || 0);
         const payload = {
             pickup:             state.pickup,
             delivery:           state.delivery,
@@ -1200,8 +1222,10 @@
             width:              state.dim_w || 0,
             height:             state.dim_h || 0,
             volumetric_weight:  state.volumetricWeight || 0,
-            payment_method:     state.paymentMethod,
-            gst_invoice:        1,
+            payment_method:          state.paymentMethod,
+            credit_client_name:      state.paymentMethod === 'credit' ? state.creditClientName    : '',
+            credit_requestor_name:   state.paymentMethod === 'credit' ? state.creditRequestorName : '',
+            gst_invoice:             1,
             gstin:              state.pickup.gstin || state.delivery.gstin,
             pan_number:         '',
             photo_address:      state.photoAddressId || '',
@@ -1320,6 +1344,9 @@
             const paymentBtn = document.querySelector(`[data-payment="${state.paymentMethod}"]`);
             if (paymentBtn) paymentBtn.click();
         }
+        if (creditClientInput && state.creditClientName) creditClientInput.value = state.creditClientName;
+        if (creditRequestorInput && state.creditRequestorName) creditRequestorInput.value = state.creditRequestorName;
+        toggleCreditFields();
 
         // Restore photo upload status
         if (state.photoAddressId) {
@@ -1409,6 +1436,8 @@
         }
         const selectedPayment = document.querySelector('.payment-option.selected');
         if (selectedPayment) state.paymentMethod = selectedPayment.dataset.payment || state.paymentMethod;
+        if (creditClientInput) state.creditClientName = creditClientInput.value.trim();
+        if (creditRequestorInput) state.creditRequestorName = creditRequestorInput.value.trim();
     }
 
     /* ── Init ── */
