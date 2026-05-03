@@ -160,25 +160,28 @@ function findCustomerEarningPct(PDO $pdo, int $customerId, string $serviceType, 
 
 function shipmentPricingSlabs(PDO $pdo, string $serviceType, string $zone): array
 {
-    $sql = "SELECT * FROM pricing_slabs
-            WHERE service_type = ? AND zone = ?
-            ORDER BY CASE WHEN weight_to IS NULL THEN 1 ELSE 0 END ASC,
-                     weight_to ASC, weight_from ASC";
-    $stmt = $pdo->prepare($sql);
+    $order = "ORDER BY CASE WHEN weight_to IS NULL THEN 1 ELSE 0 END ASC,
+                       weight_to ASC, weight_from ASC";
+
+    // 1. Try exact zone match
+    $stmt = $pdo->prepare("SELECT * FROM pricing_slabs WHERE service_type = ? AND zone = ? $order");
     $stmt->execute([$serviceType, $zone]);
     $slabs = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    if (empty($slabs) && $serviceType === 'premium' && $zone !== 'rest_of_india') {
-        $stmt->execute([$serviceType, 'rest_of_india']);
-        $slabs = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-    if (empty($slabs) && $serviceType === 'premium') {
-        $stmt = $pdo->prepare("SELECT * FROM pricing_slabs
-            WHERE service_type = ? AND zone IS NULL
-            ORDER BY CASE WHEN weight_to IS NULL THEN 1 ELSE 0 END ASC,
-                     weight_to ASC, weight_from ASC");
+
+    // 2. Try rest_of_india if no match for the specific zone
+    if (empty($slabs) && $zone !== 'rest_of_india') {
+        $stmt = $pdo->prepare("SELECT * FROM pricing_slabs WHERE service_type = ? AND zone = 'rest_of_india' $order");
         $stmt->execute([$serviceType]);
         $slabs = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    // 3. Fall back to NULL-zone (global) slabs — mirrors api/pricing.php fallback
+    if (empty($slabs)) {
+        $stmt = $pdo->prepare("SELECT * FROM pricing_slabs WHERE service_type = ? AND zone IS NULL $order");
+        $stmt->execute([$serviceType]);
+        $slabs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     return $slabs;
 }
 
