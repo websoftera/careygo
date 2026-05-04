@@ -367,9 +367,10 @@ function generateReceiptPDF($shipment)
     receipt_value_cell($pdf, 13, 5, receipt_weight_display($shipment['weight']));
     $pdf->SetFont('Arial', '', 6.5);
     $pdf->Cell(5, 5, ' | ', 0, 0, 'C');
-    $pdf->Cell(21, 5, 'Chargeable Weight:');
-    $pdf->SetFont('Arial', 'B', 8);
-    receipt_value_cell($pdf, 16, 5, receipt_weight_display($receiptWeight));
+$pdf->Cell(21, 5, 'Chargeable Weight:');
+$pdf->SetFont('Arial', 'B', 8);
+$pdf->Cell(2, 5, '');
+receipt_value_cell($pdf, 16, 5, receipt_weight_display($receiptWeight));
 
     // ----------- BOX 4 Top -----------
     $pdf->SetFont('Arial', '', 8);
@@ -406,7 +407,7 @@ function generateReceiptPDF($shipment)
     $pdf->Line(172, 113, 172, 128); 
     $pdf->SetFont('Arial', 'B', 9);
     $pdf->SetXY(172, 117);
-    $pdf->Cell(26, 8, 'â‚¹' . number_format((float)$shipment['declared_value'], 0), 0, 0, 'C');
+$pdf->Cell(26, 8, 'Rs. ' . number_format((float)$shipment['declared_value'], 0), 0, 0, 'C');
 
     // Row 5: Total/Mode (Left) & Mode (Right) - y: 128 to 158
     $pdf->Line(10, 158, 200, 158);
@@ -418,14 +419,14 @@ function generateReceiptPDF($shipment)
     $pdf->SetXY(15, 130);
     $pdf->Cell(22, 5, 'Total Amount:');
     $pdf->SetFont('Arial', 'B', 9);
-    $pdf->Cell(50, 5, 'â‚¹' . number_format((float)$shipment['final_price'], 0), 0, 0, 'L');
+$pdf->Cell(50, 5, 'Rs. ' . number_format((float)$shipment['final_price'], 0), 0, 0, 'L');
     $pdf->SetFont('Arial', '', 7);
     $pdf->SetXY(15, 136);
     $pdf->Cell(85, 4, receipt_amount_words((float)$shipment['final_price']), 0, 0, 'L');
     if (!empty($shipment['tempo_charge']) && (float)$shipment['tempo_charge'] > 0) {
         $pdf->SetFont('Arial', '', 7);
         $pdf->SetXY(15, 140);
-        $pdf->Cell(85, 3, 'Tempo Charges: â‚¹' . number_format((float)$shipment['tempo_charge'], 0), 0, 0, 'L');
+        $pdf->Cell(85, 3, 'Tempo Charges: Rs. ' . number_format((float)$shipment['tempo_charge'], 0), 0, 0, 'L');
     }
     // Box 7 (Payment Mode)
     $pdf->SetFont('Arial', 'B', 8);
@@ -484,7 +485,7 @@ function generateReceiptPDF($shipment)
     $pdf->Cell(50, 5, 'Owner Risk', 0, 0, 'C');
     $pdf->SetFont('Arial', '', 6.2);
     $pdf->SetXY(13, 168);
-    $ownerRiskNote = "All consignments are accepted for carriage at the owner's risk. The Company shall not be liable for any loss, damage, deterioration, leakage, or breakage, howsoever caused, whether in transit or otherwise. Carriage is subject to the terms, conditions, and limitations of the respective freight forwarder, carrier, or airline, as applicable. The Company's liability, if any, is limited to ₹100 per kg or the actual value of the consignment, whichever is lower, unless the shipment is declared and insured at the time of booking and expressly accepted by the Company in writing.";
+    $ownerRiskNote = "All consignments are accepted for carriage at the owner's risk. The Company shall not be liable for any loss, damage, deterioration, leakage, or breakage, howsoever caused, whether in transit or otherwise. Carriage is subject to the terms, conditions, and limitations of the respective freight forwarder, carrier, or airline, as applicable. The Company's liability, if any, is limited to Rs.100 per kg or the actual value of the consignment, whichever is lower, unless the shipment is declared and insured at the time of booking and expressly accepted by the Company in writing.";
     $pdf->MultiCell(72, 3.6, $ownerRiskNote, 0, 'L');
     $pdf->SetFont('Arial', '', 6.5);
     $pdf->SetXY(91, 174);
