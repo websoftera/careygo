@@ -195,7 +195,12 @@ function receipt_value_cell(ReceiptPDF $pdf, float $w, float $h, string $text, s
 
 function receipt_barcode_payload(array $shipment): string
 {
-    $tracking = strtoupper((string)($shipment['tracking_no'] ?? ''));
+    $tracking = strtoupper(trim((string)($shipment['tracking_no'] ?? '')));
+    // Legacy tracking numbers are pure digits (Unix timestamp); prefix with CGO
+    // so the barcode decodes to something identifiable, not a raw number.
+    if ($tracking !== '' && ctype_digit($tracking)) {
+        $tracking = 'CGO' . $tracking;
+    }
     $tracking = preg_replace('/\s+/', '', $tracking);
     return preg_replace('/[^A-Z0-9.\-\/+$%]/', '', $tracking);
 }
