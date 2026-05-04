@@ -207,7 +207,7 @@ function generateReceiptPDF($shipment)
 
     $pdf->SetFont('Arial', '', 8);
     $pdf->Cell(12, 5, "Email:");
-    $pdf->SetFont('Arial', 'B', 7);
+    $pdf->SetFont('Arial', '', 6);
     $pdf->Cell(32, 5, '  ' . htmlspecialchars(substr($shipment['pickup_email'] ?? $shipment['customer_email'] ?? '', 0, 28)), 'B', 0, 'L');
 
     // Address
@@ -284,7 +284,7 @@ function generateReceiptPDF($shipment)
 
     $pdf->SetFont('Arial', '', 8);
     $pdf->Cell(12, 5, "Email:");
-    $pdf->SetFont('Arial', 'B', 7);
+    $pdf->SetFont('Arial', '', 6);
     $pdf->Cell(32, 5, '  ' . htmlspecialchars(substr($shipment['delivery_email'] ?? '', 0, 28)), 'B', 0, 'L');
 
     // Address
@@ -471,9 +471,9 @@ function generateReceiptPDF($shipment)
     $pdf->SetXY(13, 168);
     $ownerRiskNote = "All consignments are accepted for carriage at the owner's risk. The Company shall not be liable for any loss, damage, deterioration, leakage, or breakage, howsoever caused, whether in transit or otherwise. Carriage is subject to the terms, conditions, and limitations of the respective freight forwarder, carrier, or airline, as applicable. The Company's liability, if any, is limited to Rs.100 per kg or the actual value of the consignment, whichever is lower, unless the shipment is declared and insured at the time of booking and expressly accepted by the Company in writing.";
     $pdf->MultiCell(44, 3, $ownerRiskNote, 0, 'L');
-    $pdf->SetXY(75, 185);
-    $pdf->Cell(22, 5, 'Accepted', 0, 0, 'C');
-    $pdf->checkbox(94, 184, true, '', 6);
+    $pdf->SetXY(86, 182);
+    $pdf->Cell(12, 5, 'Accepted', 0, 0, 'L');
+    $pdf->checkbox(97, 181, true, '', 6);
 
     // ----------- BOX 9 -----------
     $pdf->SetFont('Arial', 'B', 9);
@@ -514,7 +514,7 @@ function generateReceiptPDF($shipment)
     $pdf->SetFont('Arial', 'B', 6.5);
     $pdf->Cell(185, 4, 'BOOKING FRANCHISEE: SAMRUDDHI ENTERPRISES', 0, 0, 'L');
     $pdf->SetXY(12, 216);
-    $pdf->SetFont('Arial', '', 6);
+    $pdf->SetFont('Arial', '', 5.5);
     $pdf->Cell(185, 4, 'D/1, Airport Road, Kasturba Housing Society, Vishrantwadi, Pune - 411015  |  Mobile: 93215 95882', 0, 0, 'L');
 
     // ----------- FOOTER BAND -----------
