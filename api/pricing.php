@@ -70,14 +70,17 @@ function slabChargeableWeight(float $weight, array $slabs): float
         $to   = $slab['weight_to'];
 
         if ($to !== null) {
-            if ($weight <= (float) $to) {
-                return round((float) $to, 3);
+            $toF = (float) $to;
+            if ($weight > $from && $weight <= $toF) {
+                return round($toF, 3);
             }
         } else {
-            $incPer = max(0.001, (float) $slab['increment_per_kg']);
-            $extra  = max(0, $weight - $from);
-            $blocks = (int) ceil($extra / $incPer);
-            return round($from + ($blocks * $incPer), 3);
+            if ($weight > $from) {
+                $incPer = max(0.001, (float) $slab['increment_per_kg']);
+                $extra  = max(0, $weight - $from);
+                $blocks = (int) ceil($extra / $incPer);
+                return round($from + ($blocks * $incPer), 3);
+            }
         }
     }
     return round($weight, 3);
@@ -85,28 +88,26 @@ function slabChargeableWeight(float $weight, array $slabs): float
 
 function calculatePriceFromSlabs(float $weight, array $slabs): float
 {
-
-    // ── Apply slab logic ──────────────────────────────────────────────────
     foreach ($slabs as $slab) {
         $from = (float) $slab['weight_from'];
         $to   = $slab['weight_to'];
 
         if ($to !== null) {
-            // Fixed-price slab
-            if ($weight <= (float) $to) {
+            if ($weight > $from && $weight <= (float) $to) {
                 return (float) $slab['base_price'];
             }
         } else {
-            // Open-ended incremental slab
-            $incPer = max(0.001, (float) $slab['increment_per_kg']);
-            $extra  = max(0, $weight - $from);
-            $blocks = (int) ceil($extra / $incPer);
-            $inc    = ($slab['increment_price'] !== null) ? (float) $slab['increment_price'] : 0;
-            return round((float) $slab['base_price'] + ($blocks * $inc), 2);
+            if ($weight > $from) {
+                $incPer = max(0.001, (float) $slab['increment_per_kg']);
+                $extra  = max(0, $weight - $from);
+                $blocks = (int) ceil($extra / $incPer);
+                $inc    = ($slab['increment_price'] !== null) ? (float) $slab['increment_price'] : 0;
+                return round((float) $slab['base_price'] + ($blocks * $inc), 2);
+            }
         }
     }
 
-    return 0.0; // No matching slab
+    return 0.0;
 }
 
 function calculatePrice(float $weight, string $serviceType, PDO $pdo, ?string $zone = null): float

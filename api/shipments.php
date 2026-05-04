@@ -132,8 +132,8 @@ function findCustomerEarningPct(PDO $pdo, int $customerId, string $serviceType, 
         INNER JOIN customer_earning_slabs ces ON ces.pricing_slab_id = ps.id AND ces.customer_id = ?
         WHERE ps.service_type = ? AND ps.zone = ?
           AND (
-              (ps.weight_to IS NOT NULL AND ? <= ps.weight_to)
-              OR ps.weight_to IS NULL
+              (ps.weight_to IS NOT NULL AND ? > ps.weight_from AND ? <= ps.weight_to)
+              OR (ps.weight_to IS NULL AND ? > ps.weight_from)
           )
         ORDER BY CASE WHEN ps.weight_to IS NULL THEN 1 ELSE 0 END ASC,
                  ps.weight_to ASC, ps.weight_from ASC
@@ -141,13 +141,13 @@ function findCustomerEarningPct(PDO $pdo, int $customerId, string $serviceType, 
 
     try {
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$customerId, $serviceType, $zone, $weight]);
+        $stmt->execute([$customerId, $serviceType, $zone, $weight, $weight, $weight]);
         $pct = $stmt->fetchColumn();
         if ($pct !== false && is_numeric($pct)) {
             return max(0.0, min(100.0, (float)$pct));
         }
         if ($zone !== 'rest_of_india') {
-            $stmt->execute([$customerId, $serviceType, 'rest_of_india', $weight]);
+            $stmt->execute([$customerId, $serviceType, 'rest_of_india', $weight, $weight, $weight]);
             $pct = $stmt->fetchColumn();
             if ($pct !== false && is_numeric($pct)) {
                 return max(0.0, min(100.0, (float)$pct));
@@ -189,16 +189,19 @@ function shipmentSlabChargeableWeight(float $weight, array $slabs): float
 {
     foreach ($slabs as $slab) {
         $from = (float)$slab['weight_from'];
-        $to = $slab['weight_to'];
+        $to   = $slab['weight_to'];
         if ($to !== null) {
-            if ($weight <= (float)$to) {
-                return round((float)$to, 3);
+            $toF = (float)$to;
+            if ($weight > $from && $weight <= $toF) {
+                return round($toF, 3);
             }
         } else {
-            $incPer = max(0.001, (float)$slab['increment_per_kg']);
-            $extra = max(0, $weight - $from);
-            $blocks = (int)ceil($extra / $incPer);
-            return round($from + ($blocks * $incPer), 3);
+            if ($weight > $from) {
+                $incPer = max(0.001, (float)$slab['increment_per_kg']);
+                $extra  = max(0, $weight - $from);
+                $blocks = (int)ceil($extra / $incPer);
+                return round($from + ($blocks * $incPer), 3);
+            }
         }
     }
     return round($weight, 3);
