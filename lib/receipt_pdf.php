@@ -582,7 +582,7 @@ $pdf->currencyCell(50, 5, (float)$shipment['final_price']);
     // Signature Border
     $pdf->SetDrawColor(0,0,0);
     $pdf->SetLineWidth(0.3);
-    $pdf->Rect(145, 174, 50, 22, 'D');
+    $pdf->Rect(145, 174, 50, 19, 'D');
 
     // OTP
     $pdf->SetFont('Arial', 'B', 9);
