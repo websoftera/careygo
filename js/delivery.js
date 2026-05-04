@@ -880,7 +880,7 @@
         state.availablePackingCharge = parsed;
         if (state.packingMaterial) state.packingCharge = parsed;
         const hint = document.getElementById('packing_charge_hint');
-        if (hint) hint.textContent = `(â‚¹${formatMoney(parsed)})`;
+        if (hint) hint.textContent = `(₹${formatMoney(parsed)})`;
     }
 
     function loadPackingCharge() {

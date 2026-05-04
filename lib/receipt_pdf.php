@@ -59,6 +59,53 @@ class ReceiptPDF extends FPDF
         $this->Cell($w, $h, $text, $border, 0, $align);
         $this->cMargin = $oldMargin;
     }
+
+    function rupeeSymbol($x, $y, $size = 3)
+    {
+        $oldLineWidth = $this->LineWidth;
+        $this->SetDrawColor(0, 0, 0);
+        $this->SetLineWidth(max(0.16, $size * 0.07));
+        $top = $y + ($size * 0.23);
+        $mid = $y + ($size * 0.43);
+        $left = $x + ($size * 0.15);
+        $right = $x + ($size * 0.88);
+        $stem = $x + ($size * 0.38);
+        $bottom = $y + ($size * 0.95);
+
+        $this->Line($left, $top, $right, $top);
+        $this->Line($left, $mid, $right, $mid);
+        $this->Line($stem, $top, $stem, $bottom);
+        $this->Line($stem, $mid, $right, $bottom);
+        $this->SetLineWidth($oldLineWidth);
+    }
+
+    function currencyCell($w, $h, $amount, $border = 0, $align = 'L', $decimals = 0)
+    {
+        $x = $this->GetX();
+        $y = $this->GetY();
+        if ($border) {
+            $this->Cell($w, $h, '', $border, 0, 'L');
+            $this->SetXY($x, $y);
+        }
+
+        $text = number_format((float)$amount, (int)$decimals);
+        $symbolSize = min(3.4, max(2.7, $h * 0.62));
+        $gap = 1.1;
+        $contentWidth = $symbolSize + $gap + $this->GetStringWidth($text);
+        if ($align === 'C') {
+            $startX = $x + max(0, ($w - $contentWidth) / 2);
+        } elseif ($align === 'R') {
+            $startX = $x + max(0, $w - $contentWidth);
+        } else {
+            $startX = $x;
+        }
+
+        $symbolY = $y + max(0, ($h - $symbolSize) / 2);
+        $this->rupeeSymbol($startX, $symbolY, $symbolSize);
+        $this->SetXY($startX + $symbolSize + $gap, $y);
+        $this->Cell(max(0, $w - ($startX - $x) - $symbolSize - $gap), $h, $text, 0, 0, 'L');
+        $this->SetXY($x + $w, $y);
+    }
 }
 
 function receipt_upper(?string $value): string
@@ -405,9 +452,9 @@ receipt_value_cell($pdf, 16, 5, receipt_weight_display($receiptWeight));
     
     // Amount box separator
     $pdf->Line(172, 113, 172, 128); 
-    $pdf->SetFont('Arial', 'B', 9);
-    $pdf->SetXY(172, 117);
-$pdf->Cell(26, 8, 'Rs. ' . number_format((float)$shipment['declared_value'], 0), 0, 0, 'C');
+$pdf->SetFont('Arial', 'B', 9);
+$pdf->SetXY(172, 117);
+$pdf->currencyCell(26, 8, (float)$shipment['declared_value'], 0, 'C');
 
     // Row 5: Total/Mode (Left) & Mode (Right) - y: 128 to 158
     $pdf->Line(10, 158, 200, 158);
@@ -416,17 +463,18 @@ $pdf->Cell(26, 8, 'Rs. ' . number_format((float)$shipment['declared_value'], 0),
     // ----------- BOX 7 -----------
     // Box y=128 to y=143 (15mm). Center content vertically.
     $pdf->SetFont('Arial', '', 8);
-    $pdf->SetXY(15, 130);
-    $pdf->Cell(22, 5, 'Total Amount:');
-    $pdf->SetFont('Arial', 'B', 9);
-$pdf->Cell(50, 5, 'Rs. ' . number_format((float)$shipment['final_price'], 0), 0, 0, 'L');
+$pdf->SetXY(15, 130);
+$pdf->Cell(22, 5, 'Total Amount:');
+$pdf->SetFont('Arial', 'B', 9);
+$pdf->currencyCell(50, 5, (float)$shipment['final_price']);
     $pdf->SetFont('Arial', '', 7);
     $pdf->SetXY(15, 136);
     $pdf->Cell(85, 4, receipt_amount_words((float)$shipment['final_price']), 0, 0, 'L');
     if (!empty($shipment['tempo_charge']) && (float)$shipment['tempo_charge'] > 0) {
         $pdf->SetFont('Arial', '', 7);
         $pdf->SetXY(15, 140);
-        $pdf->Cell(85, 3, 'Tempo Charges: Rs. ' . number_format((float)$shipment['tempo_charge'], 0), 0, 0, 'L');
+        $pdf->Cell(22, 3, 'Tempo Charges:', 0, 0, 'L');
+        $pdf->currencyCell(30, 3, (float)$shipment['tempo_charge']);
     }
     // Box 7 (Payment Mode)
     $pdf->SetFont('Arial', 'B', 8);
@@ -485,7 +533,7 @@ $pdf->Cell(50, 5, 'Rs. ' . number_format((float)$shipment['final_price'], 0), 0,
     $pdf->Cell(50, 5, 'Owner Risk', 0, 0, 'C');
     $pdf->SetFont('Arial', '', 6.2);
     $pdf->SetXY(13, 168);
-    $ownerRiskNote = "All consignments are accepted for carriage at the owner's risk. The Company shall not be liable for any loss, damage, deterioration, leakage, or breakage, howsoever caused, whether in transit or otherwise. Carriage is subject to the terms, conditions, and limitations of the respective freight forwarder, carrier, or airline, as applicable. The Company's liability, if any, is limited to Rs.100 per kg or the actual value of the consignment, whichever is lower, unless the shipment is declared and insured at the time of booking and expressly accepted by the Company in writing.";
+    $ownerRiskNote = "All consignments are accepted for carriage at the owner's risk. The Company shall not be liable for any loss, damage, deterioration, leakage, or breakage, howsoever caused, whether in transit or otherwise. Carriage is subject to the terms, conditions, and limitations of the respective freight forwarder, carrier, or airline, as applicable. The Company's liability, if any, is limited to Rupees 100 per kg or the actual value of the consignment, whichever is lower, unless the shipment is declared and insured at the time of booking and expressly accepted by the Company in writing.";
     $pdf->MultiCell(72, 3.6, $ownerRiskNote, 0, 'L');
     $pdf->SetFont('Arial', '', 6.5);
     $pdf->SetXY(91, 174);
