@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
+define('FPDF_FONTPATH', __DIR__ . '/fpdf/font/');
 require_once __DIR__ . '/fpdf/fpdf.php';
 
 class ReceiptPDF extends FPDF
@@ -60,52 +61,15 @@ class ReceiptPDF extends FPDF
         $this->cMargin = $oldMargin;
     }
 
-    function rupeeSymbol($x, $y, $size = 3)
-    {
-        $oldLineWidth = $this->LineWidth;
-        $this->SetDrawColor(0, 0, 0);
-        $this->SetLineWidth(max(0.16, $size * 0.07));
-        $top = $y + ($size * 0.23);
-        $mid = $y + ($size * 0.43);
-        $left = $x + ($size * 0.12);
-        $right = $x + ($size * 0.9);
-        $knee = $x + ($size * 0.42);
-        $bottomRight = $x + ($size * 0.84);
-        $bottom = $y + ($size * 0.95);
-
-        $this->Line($left, $top, $right, $top);
-        $this->Line($left, $mid, $right - ($size * 0.15), $mid);
-        $this->Line($left + ($size * 0.08), $top, $knee, $mid);
-        $this->Line($knee, $mid, $bottomRight, $bottom);
-        $this->SetLineWidth($oldLineWidth);
-    }
-
     function currencyCell($w, $h, $amount, $border = 0, $align = 'L', $decimals = 0)
     {
-        $x = $this->GetX();
-        $y = $this->GetY();
-        if ($border) {
-            $this->Cell($w, $h, '', $border, 0, 'L');
-            $this->SetXY($x, $y);
-        }
-
-        $text = number_format((float)$amount, (int)$decimals);
-        $symbolSize = min(3.4, max(2.7, $h * 0.62));
-        $gap = 1.8;
-        $contentWidth = $symbolSize + $gap + $this->GetStringWidth($text);
-        if ($align === 'C') {
-            $startX = $x + max(0, ($w - $contentWidth) / 2);
-        } elseif ($align === 'R') {
-            $startX = $x + max(0, $w - $contentWidth);
-        } else {
-            $startX = $x;
-        }
-
-        $symbolY = $y + max(0, ($h - $symbolSize) / 2);
-        $this->rupeeSymbol($startX, $symbolY, $symbolSize);
-        $this->SetXY($startX + $symbolSize + $gap, $y);
-        $this->Cell(max(0, $w - ($startX - $x) - $symbolSize - $gap), $h, $text, 0, 0, 'L');
-        $this->SetXY($x + $w, $y);
+        // Use embedded Arial with rupee glyph at chr(128) (U+20B9 = ₹)
+        $savedStyle = $this->FontStyle;
+        $savedSize  = $this->FontSizePt;
+        $this->SetFont('ArialRupee', $savedStyle === 'B' ? 'B' : '', $savedSize);
+        $text = chr(128) . ' ' . number_format((float)$amount, (int)$decimals);
+        $this->Cell($w, $h, $text, $border, 0, $align);
+        $this->SetFont('Arial', $savedStyle, $savedSize);
     }
 
     function code39($x, $y, $code, $barWidth = 0.22, $barHeight = 6, $maxWidth = null)
@@ -270,6 +234,8 @@ function receipt_gst_summary(array $shipment): array
 function generateReceiptPDF($shipment)
 {
     $pdf = new ReceiptPDF('P', 'mm', 'A4');
+    $pdf->AddFont('ArialRupee', '',  'arialrupee.php');
+    $pdf->AddFont('ArialRupee', 'B', 'arialrupeeb.php');
     $pdf->AddPage();
     $pdf->SetAutoPageBreak(false);
     $hasGstDetails = receipt_has_gst_details($shipment);
