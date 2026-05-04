@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/fpdf/fpdf.php';
 
@@ -90,7 +90,7 @@ class ReceiptPDF extends FPDF
 
         $text = number_format((float)$amount, (int)$decimals);
         $symbolSize = min(3.4, max(2.7, $h * 0.62));
-        $gap = 1.1;
+        $gap = 1.8;
         $contentWidth = $symbolSize + $gap + $this->GetStringWidth($text);
         if ($align === 'C') {
             $startX = $x + max(0, ($w - $contentWidth) / 2);

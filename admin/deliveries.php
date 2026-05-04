@@ -123,7 +123,7 @@ require_once 'includes/header.php';
                         </span>
                     </td>
                     <td style="font-size:12px;"><?= number_format((float)$s['weight'], 3) ?> kg</td>
-                    <td style="font-size:13px;font-weight:600;">₹<?= number_format($s['final_price'], 0) ?></td>
+                    <td style="font-size:13px;font-weight:600;">₹ <?= number_format($s['final_price'], 0) ?></td>
                     <td>
                         <select class="filter-select" style="min-width:130px;font-size:11px;padding:4px 8px;border-radius:8px;" onchange="updateShipmentStatus(<?= $s['id'] ?>, this.value, this)">
                             <?php foreach ($statusList as $st): ?>
@@ -221,11 +221,11 @@ function viewShipment(id) {
                 <div class="detail-row"><span class="detail-label">Description</span><span class="detail-value">${escH(s.description||'—')}</span></div>
             </div>
             <div class="col-md-6">
-                <div class="detail-row"><span class="detail-label">Declared Value</span><span class="detail-value">₹${parseFloat(s.declared_value||0).toLocaleString('en-IN')}</span></div>
-                <div class="detail-row"><span class="detail-label">Base Price</span><span class="detail-value">₹${parseFloat(s.base_price).toLocaleString('en-IN')}</span></div>
-                ${parseFloat(s.packing_charge||0)>0 ? `<div class="detail-row"><span class="detail-label">Packing Charges</span><span class="detail-value">₹${parseFloat(s.packing_charge).toLocaleString('en-IN')}</span></div>` : ''}
-                ${parseFloat(s.tempo_charge||0)>0 ? `<div class="detail-row"><span class="detail-label">Tempo Charges</span><span class="detail-value">₹${parseFloat(s.tempo_charge).toLocaleString('en-IN')}</span></div>` : ''}
-                <div class="detail-row"><span class="detail-label">Final Price</span><span class="detail-value" style="font-weight:700;">₹${parseFloat(s.final_price).toLocaleString('en-IN')}</span></div>
+                <div class="detail-row"><span class="detail-label">Declared Value</span><span class="detail-value">₹ ${parseFloat(s.declared_value||0).toLocaleString('en-IN')}</span></div>
+                <div class="detail-row"><span class="detail-label">Base Price</span><span class="detail-value">₹ ${parseFloat(s.base_price).toLocaleString('en-IN')}</span></div>
+                ${parseFloat(s.packing_charge||0)>0 ? `<div class="detail-row"><span class="detail-label">Packing Charges</span><span class="detail-value">₹ ${parseFloat(s.packing_charge).toLocaleString('en-IN')}</span></div>` : ''}
+                ${parseFloat(s.tempo_charge||0)>0 ? `<div class="detail-row"><span class="detail-label">Tempo Charges</span><span class="detail-value">₹ ${parseFloat(s.tempo_charge).toLocaleString('en-IN')}</span></div>` : ''}
+                <div class="detail-row"><span class="detail-label">Final Price</span><span class="detail-value" style="font-weight:700;">₹ ${parseFloat(s.final_price).toLocaleString('en-IN')}</span></div>
                 <div class="detail-row"><span class="detail-label">Payment</span><span class="detail-value">${escH(s.payment_method)}</span></div>
                 ${s.payment_method==='credit' && s.credit_client_name ? `<div class="detail-row"><span class="detail-label">Client Name</span><span class="detail-value">${escH(s.credit_client_name)}</span></div><div class="detail-row"><span class="detail-label">Requestor Name</span><span class="detail-value">${escH(s.credit_requestor_name||'—')}</span></div>` : ''}
                 <div class="detail-row"><span class="detail-label">E-Waybill</span><span class="detail-value">${escH(s.ewaybill_no||'—')}</span></div>

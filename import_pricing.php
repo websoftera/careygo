@@ -161,7 +161,7 @@ $zones = ['within_city', 'within_state', 'metro', 'rest_of_india'];
                             echo "<td><strong>$serviceType</strong></td>";
                             echo "<td>All Zones</td>";
                             echo "<td>{$weightFrom}kg - {$weightTo}</td>";
-                            echo "<td>₹{$basePrice}</td>";
+                            echo "<td>₹ {$basePrice}</td>";
                             echo "<td><span class='status status-ok'>$type</span></td>";
                             echo "</tr>";
                         }
@@ -193,21 +193,21 @@ $zones = ['within_city', 'within_state', 'metro', 'rest_of_india'];
                 <h6>📋 Pricing Data Summary</h6>
                 <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin-top: 10px;">
                     <strong>Standard Express:</strong><br>
-                    • 0-250gm: ₹100 (fixed)<br>
-                    • 250-500gm: ₹110 (fixed)<br>
-                    • 500gm+: ₹60 + ₹60/kg<br>
+                    • 0-250gm: ₹ 100 (fixed)<br>
+                    • 250-500gm: ₹ 110 (fixed)<br>
+                    • 500gm+: ₹ 60 + ₹ 60/kg<br>
                     <br>
                     <strong>Premium Express:</strong><br>
-                    • 0-250gm: ₹245 (fixed)<br>
-                    • 250-500gm: ₹260 (fixed)<br>
-                    • 500gm+: ₹100 + ₹100/kg<br>
+                    • 0-250gm: ₹ 245 (fixed)<br>
+                    • 250-500gm: ₹ 260 (fixed)<br>
+                    • 500gm+: ₹ 100 + ₹ 100/kg<br>
                     <br>
                     <strong>Air Cargo:</strong><br>
                     • No pricing configured (add as needed)<br>
                     <br>
                     <strong>Surface Cargo:</strong><br>
-                    • 2.0-2.5kg: ₹225 (fixed)<br>
-                    • 3.0kg+: ₹75/kg (incremental)<br>
+                    • 2.0-2.5kg: ₹ 225 (fixed)<br>
+                    • 3.0kg+: ₹ 75/kg (incremental)<br>
                 </div>
             </div>
         </div>

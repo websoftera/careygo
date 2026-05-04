@@ -76,7 +76,7 @@ require_once 'includes/header.php';
         <div class="stat-card">
             <div class="stat-icon green"><i class="bi bi-currency-rupee"></i></div>
             <div class="stat-info">
-                <div class="stat-value">₹<?= number_format($stats['revenue'], 0) ?></div>
+                <div class="stat-value">₹ <?= number_format($stats['revenue'], 0) ?></div>
                 <div class="stat-label">Total Revenue</div>
             </div>
         </div>
@@ -194,7 +194,7 @@ require_once 'includes/header.php';
                             </td>
                             <td style="font-size:12px"><?= htmlspecialchars($s['pickup_city']) ?> → <?= htmlspecialchars($s['delivery_city']) ?></td>
                             <td><span class="badge-status badge-<?= $s['status'] ?>"><?= ucwords(str_replace('_', ' ', $s['status'])) ?></span></td>
-                            <td style="font-size:13px;font-weight:600">₹<?= number_format($s['final_price'], 0) ?></td>
+                            <td style="font-size:13px;font-weight:600">₹ <?= number_format($s['final_price'], 0) ?></td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>

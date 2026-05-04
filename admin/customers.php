@@ -156,7 +156,7 @@ require_once 'includes/header.php';
                         <input type="number" class="form-control" id="earning_pct_input" min="0" max="100" step="0.01" placeholder="0.00">
                         <span class="input-group-text">%</span>
                     </div>
-                    <div class="form-text">Example: booking amount ₹100 with 10% earning gives ₹10 earning.</div>
+                    <div class="form-text">Example: booking amount ₹ 100 with 10% earning gives ₹ 10 earning.</div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -223,7 +223,7 @@ function viewCustomer(id) {
             <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value">${escH(c.phone)}</span></div>
             <div class="detail-row"><span class="detail-label">Company</span><span class="detail-value">${escH(c.company_name||'—')}</span></div>
             <div class="detail-row"><span class="detail-label">Default Earning %</span><span class="detail-value"><strong>${Number(c.customer_earning_pct || 0).toFixed(2)}%</strong></span></div>
-            <div class="detail-row"><span class="detail-label">Total Earnings</span><span class="detail-value"><strong>₹${Number(c.total_earnings || 0).toFixed(0)}</strong></span></div>
+            <div class="detail-row"><span class="detail-label">Total Earnings</span><span class="detail-value"><strong>₹ ${Number(c.total_earnings || 0).toFixed(0)}</strong></span></div>
             <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value"><span class="badge-status badge-${c.status}">${c.status}</span></span></div>
             <div class="detail-row"><span class="detail-label">Total Shipments</span><span class="detail-value"><strong>${c.total_shipments||0}</strong></span></div>
             <div class="detail-row"><span class="detail-label">Registered</span><span class="detail-value">${new Date(c.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</span></div>

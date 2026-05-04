@@ -177,11 +177,11 @@ require_once 'includes/header.php';
                             <?php endif; ?>
                         </td>
                         <td style="font-size:13px;font-weight:700;color:var(--primary);">
-                            ₹<?= number_format((float)$slab['base_price'], 2) ?>
+                            ₹ <?= number_format((float)$slab['base_price'], 2) ?>
                         </td>
                         <td style="font-size:13px;">
                             <?= $slab['increment_price'] !== null
-                                ? '₹' . number_format((float)$slab['increment_price'], 2)
+                                ? '₹ ' . number_format((float)$slab['increment_price'], 2)
                                 : '<span style="color:var(--muted)">—</span>' ?>
                         </td>
                         <td style="font-size:13px;">
@@ -368,7 +368,7 @@ function savePackingCharge() {
     .then(data => {
         btn.disabled = false;
         btn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Save Charge';
-        if (data.success) showToast(`Packing charge set to ₹${parseFloat(val).toFixed(2)}`, 'success');
+        if (data.success) showToast(`Packing charge set to ₹ ${parseFloat(val).toFixed(2)}`, 'success');
         else showToast(data.message || 'Save failed', 'error');
     })
     .catch(() => {

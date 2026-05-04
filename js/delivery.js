@@ -246,7 +246,7 @@
             if (!state.declaredValue || state.declaredValue <= 0) {
                 showErr('declared_value', 'Total value of consignment is required'); ok = false;
             } else if (state.declaredValue > 1000) {
-                showErr('declared_value', 'Total value of consignment cannot exceed ₹1000'); ok = false;
+                showErr('declared_value', 'Total value of consignment cannot exceed ₹ 1000'); ok = false;
             }
 
             // Dimension limits (only if dimensions are entered)
@@ -278,11 +278,11 @@
                 showErr('packing_charge', 'Packing material charge is required');
                 ok = false;
             } else if (state.packingCharge > 9999) {
-                showErr('packing_charge', 'Packing material charge cannot exceed ₹9999');
+                showErr('packing_charge', 'Packing material charge cannot exceed ₹ 9999');
                 ok = false;
             }
             if (state.tempoCharge > 9999) {
-                showErr('tempo_charge', 'Tempo charge cannot exceed ₹9999');
+                showErr('tempo_charge', 'Tempo charge cannot exceed ₹ 9999');
                 ok = false;
             }
             // Photo uploads mandatory
@@ -801,7 +801,7 @@
                         <div class="service-card-code">${meta.code}</div>
                     </div>
                     <div style="text-align:right">
-                        <div class="service-card-price">₹${svc.price.toLocaleString('en-IN')}</div>
+                        <div class="service-card-price">₹ ${svc.price.toLocaleString('en-IN')}</div>
                         <div class="service-card-price-label">${escHtml(zoneLabel)}</div>
                     </div>
                 </div>
@@ -880,7 +880,7 @@
         state.availablePackingCharge = parsed;
         if (state.packingMaterial) state.packingCharge = parsed;
         const hint = document.getElementById('packing_charge_hint');
-        if (hint) hint.textContent = `(₹${formatMoney(parsed)})`;
+        if (hint) hint.textContent = `(₹ ${formatMoney(parsed)})`;
     }
 
     function loadPackingCharge() {
@@ -900,7 +900,7 @@
         if (packingChargeInput && parsed !== (parseFloat(value || 0) || 0)) packingChargeInput.value = parsed ? String(parsed) : '';
         state.packingCharge = parsed;
         const hint = document.getElementById('packing_charge_hint');
-        if (hint) hint.textContent = state.packingMaterial && parsed > 0 ? `(₹${formatMoney(parsed)})` : '(optional)';
+        if (hint) hint.textContent = state.packingMaterial && parsed > 0 ? `(₹ ${formatMoney(parsed)})` : '(optional)';
     }
     function setCustomerPackingSelected(selected) {
         state.packingMaterial = !!selected;
@@ -968,7 +968,7 @@
                 </div>
                 <div style="background:#f0fdf4;border-radius:10px;padding:14px;margin-bottom:16px;text-align:center;">
                     <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">Additional Charge</div>
-                    <div style="font-size:28px;font-weight:800;color:#166534;">₹${charge.toLocaleString('en-IN')}</div>
+                    <div style="font-size:28px;font-weight:800;color:#166534;">₹ ${charge.toLocaleString('en-IN')}</div>
                     <div style="font-size:11px;color:#6b7280;">per shipment (incl. GST)</div>
                 </div>
                 <p style="font-size:13px;color:#374151;margin-bottom:20px;">
@@ -977,7 +977,7 @@
                 <div style="display:flex;gap:10px;">
                     <button onclick="confirmPackingMaterial(${charge})"
                             style="flex:1;background:#001a93;color:#fff;border:none;border-radius:8px;padding:10px;font-size:14px;font-weight:600;cursor:pointer;">
-                        <i class="bi bi-check-circle me-1"></i> Add Packing (₹${charge})
+                        <i class="bi bi-check-circle me-1"></i> Add Packing (₹ ${charge})
                     </button>
                     <button onclick="document.getElementById('packingChargeModal').remove()"
                             style="flex:0;background:#f3f4f6;color:#374151;border:none;border-radius:8px;padding:10px 16px;font-size:14px;cursor:pointer;">
@@ -1140,22 +1140,22 @@
         const totalPrice = state.servicePrice + (state.packingMaterial ? state.packingCharge : 0) + (state.tempoCharge || 0);
 
         const priceEl = document.getElementById('summary_base_price');
-        if (priceEl) priceEl.textContent = `₹${state.servicePrice.toLocaleString('en-IN')}`;
+        if (priceEl) priceEl.textContent = `₹ ${state.servicePrice.toLocaleString('en-IN')}`;
 
         const packPriceEl = document.getElementById('summary_packing_price');
-        if (packPriceEl) packPriceEl.textContent = state.packingMaterial ? `₹${state.packingCharge.toLocaleString('en-IN')}` : '—';
+        if (packPriceEl) packPriceEl.textContent = state.packingMaterial ? `₹ ${state.packingCharge.toLocaleString('en-IN')}` : '—';
 
         const tempoPriceEl = document.getElementById('summary_tempo_price');
-        if (tempoPriceEl) tempoPriceEl.textContent = state.tempoCharge > 0 ? `₹${state.tempoCharge.toLocaleString('en-IN')}` : '-';
+        if (tempoPriceEl) tempoPriceEl.textContent = state.tempoCharge > 0 ? `₹ ${state.tempoCharge.toLocaleString('en-IN')}` : '-';
 
         const finalEl = document.getElementById('summary_final_price');
-        if (finalEl) finalEl.textContent = `₹${totalPrice.toLocaleString('en-IN')}`;
+        if (finalEl) finalEl.textContent = `₹ ${totalPrice.toLocaleString('en-IN')}`;
 
         // Store final price in state
         state.finalPrice = totalPrice;
 
         const packEl = document.getElementById('summary_packing');
-        if (packEl) packEl.textContent = state.packingMaterial ? `Yes (+₹${state.packingCharge})` : 'No';
+        if (packEl) packEl.textContent = state.packingMaterial ? `Yes (+₹ ${state.packingCharge})` : 'No';
 
         // Booking photos
         const photosWrap = document.getElementById('summary_photos_wrap');

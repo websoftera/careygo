@@ -186,7 +186,7 @@
         .then(data => {
             rcPackingCharge = Math.max(0, parseFloat(data.value || 0) || 0);
             const hint = document.getElementById('rc_packing_charge_hint');
-            if (hint) hint.textContent = `(₹${rcPackingCharge.toLocaleString('en-IN')})`;
+            if (hint) hint.textContent = `(₹ ${rcPackingCharge.toLocaleString('en-IN')})`;
         })
         .catch(() => {});
 
@@ -210,7 +210,7 @@
         rcPackingCharge = Math.min(9999, Math.max(0, parseFloat(e.target.value || 0) || 0));
         if ((parseFloat(e.target.value || 0) || 0) !== rcPackingCharge) e.target.value = rcPackingCharge ? String(rcPackingCharge) : '';
         const hint = document.getElementById('rc_packing_charge_hint');
-        if (hint) hint.textContent = rcPackingCharge > 0 ? `(₹${rcPackingCharge.toLocaleString('en-IN')})` : '(optional)';
+        if (hint) hint.textContent = rcPackingCharge > 0 ? `(₹ ${rcPackingCharge.toLocaleString('en-IN')})` : '(optional)';
         const chk = document.getElementById('rc_packing_material');
         if (chk) {
             chk.checked = rcPackingCharge > 0;
@@ -350,7 +350,7 @@
                         <div class="rc-service-tat"><i class="bi bi-clock me-1"></i>${esc(svc.tat_label)} · Est. ${esc(svc.eta)} · Chargeable ${rcFormatWeight(chargeableWeight)}</div>
                     </div>
                 </div>
-                <div class="rc-service-price">₹${svc.price.toLocaleString('en-IN')}</div>
+                <div class="rc-service-price">₹ ${svc.price.toLocaleString('en-IN')}</div>
             </div>`;
         }).join('');
 
@@ -360,8 +360,8 @@
                 ${zoneTxt ? `<span class="rc-zone-badge"><i class="bi bi-geo-alt me-1"></i>${esc(zoneTxt)}</span>` : ''}
             </div>
             ${rows}
-            ${includePacking ? `<p class="rc-disclaimer">Packing Material included: ₹${packingCharge.toLocaleString('en-IN')} per shipment.</p>` : ''}
-            ${rcTempoCharge > 0 ? `<p class="rc-disclaimer">Tempo Charge included: ₹${rcTempoCharge.toLocaleString('en-IN')} per shipment.</p>` : ''}
+            ${includePacking ? `<p class="rc-disclaimer">Packing Material included: ₹ ${packingCharge.toLocaleString('en-IN')} per shipment.</p>` : ''}
+            ${rcTempoCharge > 0 ? `<p class="rc-disclaimer">Tempo Charge included: ₹ ${rcTempoCharge.toLocaleString('en-IN')} per shipment.</p>` : ''}
             <p class="rc-disclaimer">* Estimates only. Final charges may vary based on actual weight &amp; dimensions.</p>`;
     }
 

@@ -108,7 +108,7 @@ function h(string $s): string
 function formatINR(float $amount, bool $symbol = true): string
 {
     $formatted = number_format($amount, 2, '.', ',');
-    return $symbol ? '₹' . $formatted : $formatted;
+    return $symbol ? '₹ ' . $formatted : $formatted;
 }
 
 /**

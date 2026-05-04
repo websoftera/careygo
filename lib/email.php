@@ -160,7 +160,7 @@ class EmailService
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Total Amount:</span>
-                    <span class="detail-value" style="font-weight: 700; color: #001A93;">₹{$price}</span>
+                    <span class="detail-value" style="font-weight: 700; color: #001A93;">₹ {$price}</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Estimated Delivery:</span>
@@ -518,7 +518,7 @@ HTML;
                         </tr>
                         <tr>
                             <td><strong>Declared Value</strong></td>
-                            <td class="text-right amount">₹{$declaredValue}</td>
+                            <td class="text-right amount">₹ {$declaredValue}</td>
                         </tr>
                     </table>
                 </div>
@@ -531,15 +531,15 @@ HTML;
                     <table class="table">
                         <tr>
                             <td><strong>Base Price</strong></td>
-                            <td class="text-right">₹{$basePrice}</td>
+                            <td class="text-right">₹ {$basePrice}</td>
                         </tr>
                         <tr>
                             <td><strong>Discount ({$discount})</strong></td>
-                            <td class="text-right">- ₹{$discountAmt}</td>
+                            <td class="text-right">- ₹ {$discountAmt}</td>
                         </tr>
                         <tr class="total-row">
                             <td><strong>Total Amount</strong></td>
-                            <td class="text-right amount">₹{$finalPrice}</td>
+                            <td class="text-right amount">₹ {$finalPrice}</td>
                         </tr>
                     </table>
                 </div>

@@ -254,14 +254,14 @@ function invoice_weight_label($weight): string {
                     </td>
                     <td class="text-right">996812</td>
                     <td class="text-right"><?= invoice_weight_label($s['chargeable_weight'] ?: $s['weight']) ?></td>
-                    <td class="text-right">₹<?= number_format($taxable, 2) ?></td>
+                    <td class="text-right">₹ <?= number_format($taxable, 2) ?></td>
                     <?php if ($sameState): ?>
-                    <td class="text-right">₹<?= number_format($cgst, 2) ?></td>
-                    <td class="text-right">₹<?= number_format($sgst, 2) ?></td>
+                    <td class="text-right">₹ <?= number_format($cgst, 2) ?></td>
+                    <td class="text-right">₹ <?= number_format($sgst, 2) ?></td>
                     <?php else: ?>
-                    <td class="text-right">₹<?= number_format($igst, 2) ?></td>
+                    <td class="text-right">₹ <?= number_format($igst, 2) ?></td>
                     <?php endif; ?>
-                    <td class="text-right"><strong>₹<?= number_format($freightAmt, 2) ?></strong></td>
+                    <td class="text-right"><strong>₹ <?= number_format($freightAmt, 2) ?></strong></td>
                 </tr>
                 <?php if ($packingAmt > 0): ?>
                 <tr>
@@ -269,14 +269,14 @@ function invoice_weight_label($weight): string {
                     <td>Packing Material & Labour</td>
                     <td class="text-right">996812</td>
                     <td class="text-right">—</td>
-                    <td class="text-right">₹<?= number_format($packTaxable, 2) ?></td>
+                    <td class="text-right">₹ <?= number_format($packTaxable, 2) ?></td>
                     <?php if ($sameState): ?>
-                    <td class="text-right">₹<?= number_format($packTax/2, 2) ?></td>
-                    <td class="text-right">₹<?= number_format($packTax/2, 2) ?></td>
+                    <td class="text-right">₹ <?= number_format($packTax/2, 2) ?></td>
+                    <td class="text-right">₹ <?= number_format($packTax/2, 2) ?></td>
                     <?php else: ?>
-                    <td class="text-right">₹<?= number_format($packTax, 2) ?></td>
+                    <td class="text-right">₹ <?= number_format($packTax, 2) ?></td>
                     <?php endif; ?>
-                    <td class="text-right"><strong>₹<?= number_format($packingAmt, 2) ?></strong></td>
+                    <td class="text-right"><strong>₹ <?= number_format($packingAmt, 2) ?></strong></td>
                 </tr>
                 <?php endif; ?>
                 <?php if ($tempoAmt > 0): ?>
@@ -285,14 +285,14 @@ function invoice_weight_label($weight): string {
                     <td>Tempo Charges</td>
                     <td class="text-right">996812</td>
                     <td class="text-right">-</td>
-                    <td class="text-right">₹<?= number_format($tempoTaxable, 2) ?></td>
+                    <td class="text-right">₹ <?= number_format($tempoTaxable, 2) ?></td>
                     <?php if ($sameState): ?>
-                    <td class="text-right">₹<?= number_format($tempoTax/2, 2) ?></td>
-                    <td class="text-right">₹<?= number_format($tempoTax/2, 2) ?></td>
+                    <td class="text-right">₹ <?= number_format($tempoTax/2, 2) ?></td>
+                    <td class="text-right">₹ <?= number_format($tempoTax/2, 2) ?></td>
                     <?php else: ?>
-                    <td class="text-right">₹<?= number_format($tempoTax, 2) ?></td>
+                    <td class="text-right">₹ <?= number_format($tempoTax, 2) ?></td>
                     <?php endif; ?>
-                    <td class="text-right"><strong>₹<?= number_format($tempoAmt, 2) ?></strong></td>
+                    <td class="text-right"><strong>₹ <?= number_format($tempoAmt, 2) ?></strong></td>
                 </tr>
                 <?php endif; ?>
             </tbody>
@@ -302,16 +302,16 @@ function invoice_weight_label($weight): string {
         <div class="clearfix">
             <div class="inv-totals">
                 <table>
-                    <tr><td>Taxable Amount</td><td class="td-right">₹<?= number_format($taxable + $packTaxable + $tempoTaxable, 2) ?></td></tr>
+                    <tr><td>Taxable Amount</td><td class="td-right">₹ <?= number_format($taxable + $packTaxable + $tempoTaxable, 2) ?></td></tr>
                     <?php if ($sameState): ?>
-                    <tr><td>CGST @ 9%</td><td class="td-right">₹<?= number_format($cgst + ($packTax/2) + ($tempoTax/2), 2) ?></td></tr>
-                    <tr><td>SGST @ 9%</td><td class="td-right">₹<?= number_format($sgst + ($packTax/2) + ($tempoTax/2), 2) ?></td></tr>
+                    <tr><td>CGST @ 9%</td><td class="td-right">₹ <?= number_format($cgst + ($packTax/2) + ($tempoTax/2), 2) ?></td></tr>
+                    <tr><td>SGST @ 9%</td><td class="td-right">₹ <?= number_format($sgst + ($packTax/2) + ($tempoTax/2), 2) ?></td></tr>
                     <?php else: ?>
-                    <tr><td>IGST @ 18%</td><td class="td-right">₹<?= number_format($igst + $packTax + $tempoTax, 2) ?></td></tr>
+                    <tr><td>IGST @ 18%</td><td class="td-right">₹ <?= number_format($igst + $packTax + $tempoTax, 2) ?></td></tr>
                     <?php endif; ?>
                     <tr class="total-row">
                         <td style="padding:10px 12px;">TOTAL AMOUNT</td>
-                        <td class="td-right" style="padding:10px 12px;">₹<?= number_format($totalAmt, 2) ?></td>
+                        <td class="td-right" style="padding:10px 12px;">₹ <?= number_format($totalAmt, 2) ?></td>
                     </tr>
                 </table>
             </div>

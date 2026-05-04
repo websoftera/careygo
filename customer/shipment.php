@@ -143,7 +143,7 @@ function shipment_weight_label($weight): string {
                     <div class="detail-row"><span class="detail-label">Actual Weight</span><span class="detail-value"><?= number_format((float)$shipment['weight'], 3) ?> kg</span></div>
                     <div class="detail-row"><span class="detail-label">Chargeable Weight</span><span class="detail-value"><?= shipment_weight_label($shipment['chargeable_weight'] ?: $shipment['weight']) ?></span></div>
                     <div class="detail-row"><span class="detail-label">Pieces</span><span class="detail-value"><?= $shipment['pieces'] ?></span></div>
-                    <div class="detail-row"><span class="detail-label">Declared Value</span><span class="detail-value">₹<?= number_format((float)($shipment['declared_value'] ?? 0), 2) ?></span></div>
+                    <div class="detail-row"><span class="detail-label">Declared Value</span><span class="detail-value">₹ <?= number_format((float)($shipment['declared_value'] ?? 0), 2) ?></span></div>
                     <div class="detail-row"><span class="detail-label">Description</span><span class="detail-value"><?= htmlspecialchars($shipment['description'] ?: '—') ?></span></div>
                 </div>
             </div>
@@ -153,14 +153,14 @@ function shipment_weight_label($weight): string {
                 <div class="shipment-detail-section">
                     <div class="shipment-detail-section-title">Payment Details</div>
                     <div class="summary-pricing">
-                        <div class="pricing-row"><span>Base Freight</span><span>₹<?= number_format((float)$shipment['base_price'], 2) ?></span></div>
+                        <div class="pricing-row"><span>Base Freight</span><span>₹ <?= number_format((float)$shipment['base_price'], 2) ?></span></div>
                         <?php if ((float)($shipment['packing_charge'] ?? 0) > 0): ?>
-                        <div class="pricing-row"><span>Packing Charges</span><span>₹<?= number_format((float)$shipment['packing_charge'], 2) ?></span></div>
+                        <div class="pricing-row"><span>Packing Charges</span><span>₹ <?= number_format((float)$shipment['packing_charge'], 2) ?></span></div>
                         <?php endif; ?>
                         <?php if ((float)($shipment['tempo_charge'] ?? 0) > 0): ?>
-                        <div class="pricing-row"><span>Tempo Charges</span><span>₹<?= number_format((float)$shipment['tempo_charge'], 2) ?></span></div>
+                        <div class="pricing-row"><span>Tempo Charges</span><span>₹ <?= number_format((float)$shipment['tempo_charge'], 2) ?></span></div>
                         <?php endif; ?>
-                        <div class="pricing-row total"><span>Total Amount</span><span>₹<?= number_format((float)$shipment['final_price'], 2) ?></span></div>
+                        <div class="pricing-row total"><span>Total Amount</span><span>₹ <?= number_format((float)$shipment['final_price'], 2) ?></span></div>
                     </div>
                     <div style="margin-top:10px;font-size:12px;color:var(--muted);">
                         Payment: <strong style="color:var(--text);"><?= htmlspecialchars(ucfirst($shipment['payment_method'] ?? 'prepaid')) ?></strong>
