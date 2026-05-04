@@ -106,6 +106,43 @@ class ReceiptPDF extends FPDF
         $this->Cell(max(0, $w - ($startX - $x) - $symbolSize - $gap), $h, $text, 0, 0, 'L');
         $this->SetXY($x + $w, $y);
     }
+
+    function code39($x, $y, $code, $barWidth = 0.22, $barHeight = 6)
+    {
+        $patterns = [
+            '0' => 'nnnwwnwnn', '1' => 'wnnwnnnnw', '2' => 'nnwwnnnnw', '3' => 'wnwwnnnnn',
+            '4' => 'nnnwwnnnw', '5' => 'wnnwwnnnn', '6' => 'nnwwwnnnn', '7' => 'nnnwnnwnw',
+            '8' => 'wnnwnnwnn', '9' => 'nnwwnnwnn', 'A' => 'wnnnnwnnw', 'B' => 'nnwnnwnnw',
+            'C' => 'wnwnnwnnn', 'D' => 'nnnnwwnnw', 'E' => 'wnnnwwnnn', 'F' => 'nnwnwwnnn',
+            'G' => 'nnnnnwwnw', 'H' => 'wnnnnwwnn', 'I' => 'nnwnnwwnn', 'J' => 'nnnnwwwnn',
+            'K' => 'wnnnnnnww', 'L' => 'nnwnnnnww', 'M' => 'wnwnnnnwn', 'N' => 'nnnnwnnww',
+            'O' => 'wnnnwnnwn', 'P' => 'nnwnwnnwn', 'Q' => 'nnnnnnwww', 'R' => 'wnnnnnwwn',
+            'S' => 'nnwnnnwwn', 'T' => 'nnnnwnwwn', 'U' => 'wwnnnnnnw', 'V' => 'nwwnnnnnw',
+            'W' => 'wwwnnnnnn', 'X' => 'nwnnwnnnw', 'Y' => 'wwnnwnnnn', 'Z' => 'nwwnwnnnn',
+            '-' => 'nwnnnnwnw', '.' => 'wwnnnnwnn', ' ' => 'nwwnnnwnn', '$' => 'nwnwnwnnn',
+            '/' => 'nwnwnnnwn', '+' => 'nwnnnwnwn', '%' => 'nnnwnwnwn', '*' => 'nwnnwnwnn',
+        ];
+
+        $code = '*' . strtoupper((string)$code) . '*';
+        $cursor = $x;
+        $this->SetFillColor(0, 0, 0);
+
+        for ($i = 0, $len = strlen($code); $i < $len; $i++) {
+            $char = $code[$i];
+            if (!isset($patterns[$char])) {
+                continue;
+            }
+            $pattern = $patterns[$char];
+            for ($j = 0; $j < 9; $j++) {
+                $width = ($pattern[$j] === 'w') ? $barWidth * 2.4 : $barWidth;
+                if ($j % 2 === 0) {
+                    $this->Rect($cursor, $y, $width, $barHeight, 'F');
+                }
+                $cursor += $width;
+            }
+            $cursor += $barWidth;
+        }
+    }
 }
 
 function receipt_upper(?string $value): string
@@ -172,6 +209,13 @@ function receipt_weight_display($weight): string
 function receipt_value_cell(ReceiptPDF $pdf, float $w, float $h, string $text, string $border = 'B', string $align = 'L'): void
 {
     $pdf->valueCell($w, $h, $text, $border, $align);
+}
+
+function receipt_barcode_payload(array $shipment): string
+{
+    $tracking = strtoupper((string)($shipment['tracking_no'] ?? ''));
+    $tracking = preg_replace('/[^A-Z0-9 .\-\/+$%]/', '', $tracking);
+    return trim('CAREYGO AWB ' . $tracking);
 }
 
 function receipt_has_gst_details(array $shipment): bool
@@ -512,11 +556,12 @@ $pdf->currencyCell(50, 5, (float)$shipment['final_price']);
     $pdf->checkbox(164, 132, $isAir, 'Air Cargo', 3.5);
     $pdf->checkbox(164, 138, $isSurf, 'Surface Cargo', 3.5);
 
-    // AWB Number
+    // Barcode + AWB Number
+    $pdf->code39(110, 147.5, receipt_barcode_payload($shipment), 0.17, 6);
     $pdf->SetFont('Arial', '', 8);
-    $pdf->SetXY(110, 148);
+    $pdf->SetXY(110, 155.2);
     $pdf->Cell(15, 5, 'AWB No:');
-    $pdf->SetFont('Arial', 'B', 9);
+    $pdf->SetFont('Arial', 'B', 10.5);
     $pdf->Cell(75, 5, $shipment['tracking_no'] ?? '', 0, 0, 'L');
 
     // Row 6: Risk (Left) & Sign (Right) - y: 164 to 220
