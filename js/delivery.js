@@ -944,6 +944,7 @@
     }
     tempoChargeInput && tempoChargeInput.addEventListener('input', syncTempoCharge);
     tempoChargeInput && tempoChargeInput.addEventListener('change', syncTempoCharge);
+    tempoChargeInput && tempoChargeInput.addEventListener('blur', syncTempoCharge);
 
     function showPackingChargePopup() {
         loadPackingCharge().then(displayPackingModal);
@@ -1131,6 +1132,9 @@
                 ? `${state.volumetricWeight.toFixed(3)} kg`
                 : '—';
         }
+
+        // Re-read tempo charge from DOM as final source of truth
+        if (tempoChargeInput) state.tempoCharge = Math.min(9999, Math.max(0, parseFloat(tempoChargeInput.value || 0) || 0));
 
         // Pricing (no discount)
         const totalPrice = state.servicePrice + (state.packingMaterial ? state.packingCharge : 0) + (state.tempoCharge || 0);
