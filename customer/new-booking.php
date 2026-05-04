@@ -300,7 +300,7 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
 
                         <div class="form-grid-2">
                             <div class="wizard-form-group">
-                                <label class="wizard-label">Total Value of Consignment (Rs.) <span class="req">*</span></label>
+                                <label class="wizard-label">Total Value of Consignment (₹) <span class="req">*</span></label>
                                 <input type="number" class="wizard-input" id="declared_value" min="0" max="1000" step="0.01" placeholder="0.00">
                                 <div class="wizard-error" id="err_declared_value"></div>
                             </div>
@@ -393,12 +393,12 @@ if (!$user || $user['status'] !== 'approved') { header('Location: pending.php');
                         </label>
                         <div style="display:grid;grid-template-columns:repeat(2,minmax(0,320px));gap:12px;margin-top:12px;">
                             <div id="packing_charge_row" style="display:block;">
-                                <label class="wizard-label">Packing Material Charge (Rs.) <span class="req">*</span></label>
+                                <label class="wizard-label">Packing Material Charge (₹) <span class="req">*</span></label>
                                 <input type="number" class="wizard-input" id="packing_charge" min="0" max="9999" step="1" placeholder="0">
                                 <div class="wizard-error" id="err_packing_charge"></div>
                             </div>
                             <div>
-                                <label class="wizard-label">Tempo Charge (Rs.)</label>
+                                <label class="wizard-label">Tempo Charge (₹)</label>
                                 <input type="number" class="wizard-input" id="tempo_charge" min="0" max="9999" step="1" placeholder="0">
                                 <div class="wizard-error" id="err_tempo_charge"></div>
                             </div>

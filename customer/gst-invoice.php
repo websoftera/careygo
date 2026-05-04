@@ -285,14 +285,14 @@ function invoice_weight_label($weight): string {
                     <td>Tempo Charges</td>
                     <td class="text-right">996812</td>
                     <td class="text-right">-</td>
-                    <td class="text-right">Rs.<?= number_format($tempoTaxable, 2) ?></td>
+                    <td class="text-right">₹<?= number_format($tempoTaxable, 2) ?></td>
                     <?php if ($sameState): ?>
-                    <td class="text-right">Rs.<?= number_format($tempoTax/2, 2) ?></td>
-                    <td class="text-right">Rs.<?= number_format($tempoTax/2, 2) ?></td>
+                    <td class="text-right">₹<?= number_format($tempoTax/2, 2) ?></td>
+                    <td class="text-right">₹<?= number_format($tempoTax/2, 2) ?></td>
                     <?php else: ?>
-                    <td class="text-right">Rs.<?= number_format($tempoTax, 2) ?></td>
+                    <td class="text-right">₹<?= number_format($tempoTax, 2) ?></td>
                     <?php endif; ?>
-                    <td class="text-right"><strong>Rs.<?= number_format($tempoAmt, 2) ?></strong></td>
+                    <td class="text-right"><strong>₹<?= number_format($tempoAmt, 2) ?></strong></td>
                 </tr>
                 <?php endif; ?>
             </tbody>

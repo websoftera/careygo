@@ -97,7 +97,7 @@ try {
     <div class="col-6 col-md-3">
         <div class="cust-stat-card">
             <div class="cust-stat-icon purple"><i class="bi bi-cash-coin"></i></div>
-            <div><div class="cust-stat-value">Rs.<?= number_format($kpis['earnings'], 0) ?></div><div class="cust-stat-label">Total Earnings</div></div>
+            <div><div class="cust-stat-value">₹<?= number_format($kpis['earnings'], 0) ?></div><div class="cust-stat-label">Total Earnings</div></div>
         </div>
     </div>
 </div>
@@ -146,8 +146,8 @@ try {
                         <div style="color:var(--muted)">to <?= htmlspecialchars($d['delivery_city']) ?></div>
                     </td>
                     <td style="font-size:12px;"><?= htmlspecialchars($serviceLabels[$d['service_type']] ?? $d['service_type']) ?></td>
-                    <td style="font-size:13px;font-weight:700;">Rs.<?= number_format((float)$d['final_price'], 0) ?></td>
-                    <td style="font-size:13px;font-weight:800;color:var(--success);">Rs.<?= number_format((float)($d['customer_earning_amount'] ?? 0), 0) ?></td>
+                    <td style="font-size:13px;font-weight:700;">₹<?= number_format((float)$d['final_price'], 0) ?></td>
+                    <td style="font-size:13px;font-weight:800;color:var(--success);">₹<?= number_format((float)($d['customer_earning_amount'] ?? 0), 0) ?></td>
                     <td><span class="badge-status badge-<?= $d['status'] ?>"><?= ucwords(str_replace('_', ' ', $d['status'])) ?></span></td>
                     <td style="font-size:11px;color:var(--muted)"><?= date('d M Y', strtotime($d['created_at'])) ?></td>
                 </tr>

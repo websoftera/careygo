@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/fpdf/fpdf.php';
 
@@ -50,6 +50,14 @@ class ReceiptPDF extends FPDF
             $this->SetXY($x + $size + 2, $y);
             $this->Cell(35, $size, $label, 0, 0, 'L');
         }
+    }
+
+    function valueCell($w, $h, $text, $border = 'B', $align = 'L')
+    {
+        $oldMargin = $this->cMargin;
+        $this->cMargin = 0;
+        $this->Cell($w, $h, $text, $border, 0, $align);
+        $this->cMargin = $oldMargin;
     }
 }
 
@@ -112,6 +120,11 @@ function receipt_weight_display($weight): string
     if ($w > 0 && $w < 1) return number_format($w * 1000, 0) . ' g';
     if (abs($w - round($w)) < 0.0001) return number_format($w, 0) . ' kg';
     return rtrim(rtrim(number_format($w, 3, '.', ''), '0'), '.') . ' kg';
+}
+
+function receipt_value_cell(ReceiptPDF $pdf, float $w, float $h, string $text, string $border = 'B', string $align = 'L'): void
+{
+    $pdf->valueCell($w, $h, $text, $border, $align);
 }
 
 function receipt_has_gst_details(array $shipment): bool
@@ -189,26 +202,26 @@ function generateReceiptPDF($shipment)
     $pdf->SetFont('Arial', '', 8);
     $pdf->Cell(42, 5, "Sender's [Consigner] Name:");
     $pdf->SetFont('Arial', 'B', 8);
-    $pdf->Cell(50, 5, '  ' . htmlspecialchars(substr(receipt_upper($shipment['pickup_name']),0,28)), 'B', 0, 'L');
+    receipt_value_cell($pdf, 50, 5, htmlspecialchars(substr(receipt_upper($shipment['pickup_name']),0,28)));
 
     // Company Name
     $pdf->SetXY($x, $y+=$lineH);
     $pdf->SetFont('Arial', '', 8);
     $pdf->Cell(25, 5, "Company Name:");
     $pdf->SetFont('Arial', 'B', 8);
-    $pdf->Cell(67, 5, '  ' . htmlspecialchars(substr(receipt_upper($shipment['pickup_company_name'] ?? ''),0,35)), 'B', 0, 'L');
+    receipt_value_cell($pdf, 67, 5, htmlspecialchars(substr(receipt_upper($shipment['pickup_company_name'] ?? ''),0,35)));
 
     // Phone
     $pdf->SetXY($x, $y+=$lineH);
     $pdf->SetFont('Arial', '', 8);
     $pdf->Cell(12, 5, "Phone:");
     $pdf->SetFont('Arial', 'B', 8);
-    $pdf->Cell(35, 5, '  ' . htmlspecialchars($shipment['pickup_phone']), 'B', 0, 'L');
+    receipt_value_cell($pdf, 35, 5, htmlspecialchars($shipment['pickup_phone']));
 
     $pdf->SetFont('Arial', '', 8);
     $pdf->Cell(12, 5, "Email:");
     $pdf->SetFont('Arial', '', 6);
-    $pdf->Cell(32, 5, '  ' . htmlspecialchars(substr($shipment['pickup_email'] ?? $shipment['customer_email'] ?? '', 0, 28)), 'B', 0, 'L');
+    receipt_value_cell($pdf, 32, 5, htmlspecialchars(substr($shipment['pickup_email'] ?? $shipment['customer_email'] ?? '', 0, 28)));
 
     // Address
     $pdf->SetXY($x, $y+=$lineH);
@@ -216,35 +229,35 @@ function generateReceiptPDF($shipment)
     $pdf->Cell(15, 5, "Address:");
     $pdf->SetFont('Arial', 'B', 8);
     $addr1 = htmlspecialchars(receipt_upper($shipment['pickup_address']));
-    $pdf->Cell(77, 5, '  ' . substr($addr1, 0, 42), 'B', 0, 'L');
+    receipt_value_cell($pdf, 77, 5, substr($addr1, 0, 42));
     
     $addr1_line2 = strlen($addr1)>42 ? substr($addr1, 42, 42) : '';
     $addr1_line3 = strlen($addr1)>84 ? substr($addr1, 84, 42) : '';
     $pdf->SetXY($x, $y+=$lineH);
     $pdf->Cell(15, 5, "");
-    $pdf->Cell(77, 5, ' ' . $addr1_line2, $addr1_line2 !== '' ? 'B' : '', 0, 'L');
+    receipt_value_cell($pdf, 77, 5, $addr1_line2, $addr1_line2 !== '' ? 'B' : '');
 
     $pdf->SetXY($x, $y+=$lineH);
     $pdf->Cell(15, 5, "");
-    $pdf->Cell(77, 5, ' ' . $addr1_line3, $addr1_line3 !== '' ? 'B' : '', 0, 'L');
+    receipt_value_cell($pdf, 77, 5, $addr1_line3, $addr1_line3 !== '' ? 'B' : '');
 
     // City/State/PIN
     $pdf->SetXY($x, $y+=$lineH);
     $pdf->SetFont('Arial', '', 8);
     $pdf->Cell(8, 5, "City:");
     $pdf->SetFont('Arial', 'B', 8);
-    $pdf->Cell(25, 5, '  ' . htmlspecialchars(receipt_upper($shipment['pickup_city'])), 'B', 0, 'C');
+    receipt_value_cell($pdf, 25, 5, htmlspecialchars(receipt_upper($shipment['pickup_city'])));
     $pdf->SetFont('Arial', '', 8);
     $pdf->Cell(10, 5, "State:");
     $pdf->SetFont('Arial', 'B', 8);
-    $pdf->Cell(20, 5, '  ' . htmlspecialchars(receipt_upper($shipment['pickup_state'])), 'B', 0, 'C');
+    receipt_value_cell($pdf, 20, 5, htmlspecialchars(receipt_upper($shipment['pickup_state'])));
     $pdf->SetFont('Arial', '', 8);
     $pdf->SetXY($x, $y+=$lineH);
     $pdf->SetFont('Arial', '', 8);
     $pdf->Cell(18, 5, "PIN Code:");
     $pdf->SetFont('Arial', 'B', 8);
     $pdf->SetTextColor(0, 26, 147);
-    $pdf->Cell(30, 5, '  ' . htmlspecialchars($shipment['pickup_pincode']), 'B', 0, 'C');
+    receipt_value_cell($pdf, 30, 5, htmlspecialchars($shipment['pickup_pincode']));
     $pdf->SetTextColor(0, 0, 0);
 
     // GSTIN
@@ -253,7 +266,7 @@ function generateReceiptPDF($shipment)
     $pdf->Cell(25, 5, "Sender's GSTIN*:");
     $pdf->SetFont('Arial', 'B', 8);
     $senderGstin = !empty($shipment['pickup_gstin']) ? $shipment['pickup_gstin'] : ($shipment['gstin'] ?? '');
-    $pdf->Cell(35, 5, '  ' . htmlspecialchars($senderGstin), 'B', 0, 'C');
+    receipt_value_cell($pdf, 35, 5, htmlspecialchars($senderGstin));
     $pdf->SetFont('Arial', '', 6);
     $pdf->Cell(32, 5, "*Where Applicable", 0, 0, 'R');
 
@@ -266,26 +279,26 @@ function generateReceiptPDF($shipment)
     $pdf->SetFont('Arial', '', 8);
     $pdf->Cell(45, 5, "Recipient's [Consignee] Name:");
     $pdf->SetFont('Arial', 'B', 8);
-    $pdf->Cell(46, 5, '  ' . htmlspecialchars(substr(receipt_upper($shipment['delivery_name']),0,25)), 'B', 0, 'L');
+    receipt_value_cell($pdf, 46, 5, htmlspecialchars(substr(receipt_upper($shipment['delivery_name']),0,25)));
 
     // Company Name
     $pdf->SetXY($x, $y+=$lineH);
     $pdf->SetFont('Arial', '', 8);
     $pdf->Cell(25, 5, "Company Name:");
     $pdf->SetFont('Arial', 'B', 8);
-    $pdf->Cell(66, 5, '  ' . htmlspecialchars(substr(receipt_upper($shipment['delivery_company_name'] ?? ''),0,35)), 'B', 0, 'L');
+    receipt_value_cell($pdf, 66, 5, htmlspecialchars(substr(receipt_upper($shipment['delivery_company_name'] ?? ''),0,35)));
 
     // Phone
     $pdf->SetXY($x, $y+=$lineH);
     $pdf->SetFont('Arial', '', 8);
     $pdf->Cell(12, 5, "Phone:");
     $pdf->SetFont('Arial', 'B', 8);
-    $pdf->Cell(35, 5, '  ' . htmlspecialchars($shipment['delivery_phone']), 'B', 0, 'L');
+    receipt_value_cell($pdf, 35, 5, htmlspecialchars($shipment['delivery_phone']));
 
     $pdf->SetFont('Arial', '', 8);
     $pdf->Cell(12, 5, "Email:");
     $pdf->SetFont('Arial', '', 6);
-    $pdf->Cell(32, 5, '  ' . htmlspecialchars(substr($shipment['delivery_email'] ?? '', 0, 28)), 'B', 0, 'L');
+    receipt_value_cell($pdf, 32, 5, htmlspecialchars(substr($shipment['delivery_email'] ?? '', 0, 28)));
 
     // Address
     $pdf->SetXY($x, $y+=$lineH);
@@ -293,35 +306,35 @@ function generateReceiptPDF($shipment)
     $pdf->Cell(15, 5, "Address:");
     $pdf->SetFont('Arial', 'B', 8);
     $addr2 = htmlspecialchars(receipt_upper($shipment['delivery_address']));
-    $pdf->Cell(76, 5, '  ' . substr($addr2, 0, 42), 'B', 0, 'L');
+    receipt_value_cell($pdf, 76, 5, substr($addr2, 0, 42));
     
     $addr2_line2 = strlen($addr2)>42 ? substr($addr2, 42, 42) : '';
     $addr2_line3 = strlen($addr2)>84 ? substr($addr2, 84, 42) : '';
     $pdf->SetXY($x, $y+=$lineH);
     $pdf->Cell(15, 5, "");
-    $pdf->Cell(76, 5, ' ' . $addr2_line2, $addr2_line2 !== '' ? 'B' : '', 0, 'L');
+    receipt_value_cell($pdf, 76, 5, $addr2_line2, $addr2_line2 !== '' ? 'B' : '');
 
     $pdf->SetXY($x, $y+=$lineH);
     $pdf->Cell(15, 5, "");
-    $pdf->Cell(76, 5, ' ' . $addr2_line3, $addr2_line3 !== '' ? 'B' : '', 0, 'L');
+    receipt_value_cell($pdf, 76, 5, $addr2_line3, $addr2_line3 !== '' ? 'B' : '');
 
     // City/State/PIN
     $pdf->SetXY($x, $y+=$lineH);
     $pdf->SetFont('Arial', '', 8);
     $pdf->Cell(8, 5, "City:");
     $pdf->SetFont('Arial', 'B', 8);
-    $pdf->Cell(25, 5, '  ' . htmlspecialchars(receipt_upper($shipment['delivery_city'])), 'B', 0, 'C');
+    receipt_value_cell($pdf, 25, 5, htmlspecialchars(receipt_upper($shipment['delivery_city'])));
     $pdf->SetFont('Arial', '', 8);
     $pdf->Cell(10, 5, "State:");
     $pdf->SetFont('Arial', 'B', 8);
-    $pdf->Cell(20, 5, '  ' . htmlspecialchars(receipt_upper($shipment['delivery_state'])), 'B', 0, 'C');
+    receipt_value_cell($pdf, 20, 5, htmlspecialchars(receipt_upper($shipment['delivery_state'])));
     $pdf->SetFont('Arial', '', 8);
     $pdf->SetXY($x, $y+=$lineH);
     $pdf->SetFont('Arial', '', 8);
     $pdf->Cell(18, 5, "PIN Code:");
     $pdf->SetFont('Arial', 'B', 8);
     $pdf->SetTextColor(0, 26, 147);
-    $pdf->Cell(30, 5, '  ' . htmlspecialchars($shipment['delivery_pincode']), 'B', 0, 'C');
+    receipt_value_cell($pdf, 30, 5, htmlspecialchars($shipment['delivery_pincode']));
     $pdf->SetTextColor(0, 0, 0);
 
     // GSTIN
@@ -330,7 +343,7 @@ function generateReceiptPDF($shipment)
     $pdf->Cell(28, 5, "Recipient's GSTIN*:");
     $pdf->SetFont('Arial', 'B', 8);
     $recipientGstin = $shipment['delivery_gstin'] ?? '';
-    $pdf->Cell(32, 5, '  ' . htmlspecialchars($recipientGstin), 'B', 0, 'C');
+    receipt_value_cell($pdf, 32, 5, htmlspecialchars($recipientGstin));
     $pdf->SetFont('Arial', '', 6);
     $pdf->Cell(31, 5, "*Where Applicable", 0, 0, 'R');
 
@@ -339,28 +352,31 @@ function generateReceiptPDF($shipment)
     
     // ----------- BOX 3 -----------
     $receiptWeight = (float)($shipment['chargeable_weight'] ?? 0) > 0 ? (float)$shipment['chargeable_weight'] : (float)$shipment['weight'];
-    $pdf->SetXY(12, 107);
+    $box3Top = 103;
+    $box3Height = 10;
+    $box3CellHeight = 5;
+    $pdf->SetXY(12, $box3Top + (($box3Height - $box3CellHeight) / 2));
     $pdf->SetFont('Arial', '', 6.5);
     $pdf->Cell(6, 5, 'Pcs:');
     $pdf->SetFont('Arial', 'B', 8);
-    $pdf->Cell(8, 5, $shipment['pieces'], 'B', 0, 'C');
+    receipt_value_cell($pdf, 8, 5, (string)$shipment['pieces']);
     $pdf->SetFont('Arial', '', 6.5);
     $pdf->Cell(5, 5, ' | ', 0, 0, 'C');
     $pdf->Cell(17, 5, 'Actual Weight:');
     $pdf->SetFont('Arial', 'B', 8);
-    $pdf->Cell(13, 5, receipt_weight_display($shipment['weight']), 'B', 0, 'C');
+    receipt_value_cell($pdf, 13, 5, receipt_weight_display($shipment['weight']));
     $pdf->SetFont('Arial', '', 6.5);
     $pdf->Cell(5, 5, ' | ', 0, 0, 'C');
     $pdf->Cell(21, 5, 'Chargeable Weight:');
     $pdf->SetFont('Arial', 'B', 8);
-    $pdf->Cell(16, 5, receipt_weight_display($receiptWeight), 'B', 0, 'C');
+    receipt_value_cell($pdf, 16, 5, receipt_weight_display($receiptWeight));
 
     // ----------- BOX 4 Top -----------
     $pdf->SetFont('Arial', '', 8);
     $pdf->SetXY(107, 105);
     $pdf->Cell(32, 5, 'Description of Content:');
     $pdf->SetFont('Arial', 'B', 8);
-    $pdf->Cell(58, 5, '  ' . htmlspecialchars(substr(receipt_upper($shipment['description']?:'NO DESCRIPTION'), 0, 35)), 'B', 0, 'L');
+    receipt_value_cell($pdf, 58, 5, htmlspecialchars(substr(receipt_upper($shipment['description']?:'NO DESCRIPTION'), 0, 35)));
 
     // Row 4: Enclosures (Left) & Total Value (Right) - y: 113 to 128
     $pdf->Line(10, 128, 200, 128);
@@ -386,11 +402,11 @@ function generateReceiptPDF($shipment)
     $pdf->SetXY(107, 118);
     $pdf->MultiCell(62, 4, 'Total Value of Consignment for carriage / E-Way bill:', 0, 'L');
     
-    // Rs Box Separator
+    // Amount box separator
     $pdf->Line(172, 113, 172, 128); 
     $pdf->SetFont('Arial', 'B', 9);
     $pdf->SetXY(172, 117);
-    $pdf->Cell(26, 8, 'Rs. ' . number_format((float)$shipment['declared_value'], 0), 0, 0, 'C');
+    $pdf->Cell(26, 8, 'â‚¹' . number_format((float)$shipment['declared_value'], 0), 0, 0, 'C');
 
     // Row 5: Total/Mode (Left) & Mode (Right) - y: 128 to 158
     $pdf->Line(10, 158, 200, 158);
@@ -402,14 +418,14 @@ function generateReceiptPDF($shipment)
     $pdf->SetXY(15, 130);
     $pdf->Cell(22, 5, 'Total Amount:');
     $pdf->SetFont('Arial', 'B', 9);
-    $pdf->Cell(50, 5, 'Rs. ' . number_format((float)$shipment['final_price'], 0), 0, 0, 'L');
+    $pdf->Cell(50, 5, 'â‚¹' . number_format((float)$shipment['final_price'], 0), 0, 0, 'L');
     $pdf->SetFont('Arial', '', 7);
     $pdf->SetXY(15, 136);
     $pdf->Cell(85, 4, receipt_amount_words((float)$shipment['final_price']), 0, 0, 'L');
     if (!empty($shipment['tempo_charge']) && (float)$shipment['tempo_charge'] > 0) {
         $pdf->SetFont('Arial', '', 7);
         $pdf->SetXY(15, 140);
-        $pdf->Cell(85, 3, 'Tempo Charges: Rs. ' . number_format((float)$shipment['tempo_charge'], 0), 0, 0, 'L');
+        $pdf->Cell(85, 3, 'Tempo Charges: â‚¹' . number_format((float)$shipment['tempo_charge'], 0), 0, 0, 'L');
     }
     // Box 7 (Payment Mode)
     $pdf->SetFont('Arial', 'B', 8);
@@ -425,11 +441,11 @@ function generateReceiptPDF($shipment)
 
     // Credit account details
     if ($isCredit && !empty($shipment['credit_client_name'])) {
-        $pdf->SetFont('Arial', '', 6);
-        $pdf->SetXY(15, 157);
-        $pdf->Cell(85, 3, 'Client: ' . $shipment['credit_client_name'], 0, 0, 'L');
-        $pdf->SetXY(15, 160);
-        $pdf->Cell(85, 3, 'Requestor: ' . ($shipment['credit_requestor_name'] ?? ''), 0, 0, 'L');
+        $pdf->SetFont('Arial', '', 5.5);
+        $pdf->SetXY(15, 154);
+        $pdf->Cell(85, 2.5, 'Client: ' . $shipment['credit_client_name'], 0, 0, 'L');
+        $pdf->SetXY(15, 156.5);
+        $pdf->Cell(85, 2.5, 'Requestor: ' . ($shipment['credit_requestor_name'] ?? ''), 0, 0, 'L');
     }
 
     // ----------- BOX 6 -----------
@@ -458,22 +474,22 @@ function generateReceiptPDF($shipment)
     
     // ----------- BOX 8 -----------
     
-    // Column grid
-    $pdf->Line(60, 158, 60, 209); // vertical 1
-    $pdf->Line(85, 158, 85, 209); // vertical 2
-    $pdf->Line(60, 189, 105, 189); // horizontal crossing columns
+    // Column grid: keep a compact Accepted area and give Owner Risk more text width.
+    $pdf->Line(90, 158, 90, 209);
+    $pdf->Line(90, 189, 105, 189);
 
     // Left label
     $pdf->SetFont('Arial', 'B', 9);
     $pdf->SetXY(10, 162);
     $pdf->Cell(50, 5, 'Owner Risk', 0, 0, 'C');
-    $pdf->SetFont('Arial', '', 5.5);
+    $pdf->SetFont('Arial', '', 6.2);
     $pdf->SetXY(13, 168);
-    $ownerRiskNote = "All consignments are accepted for carriage at the owner's risk. The Company shall not be liable for any loss, damage, deterioration, leakage, or breakage, howsoever caused, whether in transit or otherwise. Carriage is subject to the terms, conditions, and limitations of the respective freight forwarder, carrier, or airline, as applicable. The Company's liability, if any, is limited to Rs.100 per kg or the actual value of the consignment, whichever is lower, unless the shipment is declared and insured at the time of booking and expressly accepted by the Company in writing.";
-    $pdf->MultiCell(44, 3, $ownerRiskNote, 0, 'L');
-    $pdf->SetXY(86, 182);
-    $pdf->Cell(12, 5, 'Accepted', 0, 0, 'L');
-    $pdf->checkbox(97, 181, true, '', 6);
+    $ownerRiskNote = "All consignments are accepted for carriage at the owner's risk. The Company shall not be liable for any loss, damage, deterioration, leakage, or breakage, howsoever caused, whether in transit or otherwise. Carriage is subject to the terms, conditions, and limitations of the respective freight forwarder, carrier, or airline, as applicable. The Company's liability, if any, is limited to ₹100 per kg or the actual value of the consignment, whichever is lower, unless the shipment is declared and insured at the time of booking and expressly accepted by the Company in writing.";
+    $pdf->MultiCell(72, 3.6, $ownerRiskNote, 0, 'L');
+    $pdf->SetFont('Arial', '', 6.5);
+    $pdf->SetXY(91, 174);
+    $pdf->Cell(13, 4, 'Accepted', 0, 0, 'C');
+    $pdf->checkbox(95, 181, true, '', 6);
 
     // ----------- BOX 9 -----------
     $pdf->SetFont('Arial', 'B', 9);
@@ -497,12 +513,12 @@ function generateReceiptPDF($shipment)
     $pdf->SetXY(110, 195);
     $pdf->Cell(10, 5, 'Date:');
     $pdf->SetFont('Arial', '', 9);
-    $pdf->Cell(22, 5, $dateCreated->format('d-m-Y'), 'B', 0, 'C');
+    receipt_value_cell($pdf, 22, 5, $dateCreated->format('d-m-Y'));
     $pdf->Cell(4, 5, ''); // pure space
     $pdf->SetFont('Arial', 'B', 9);
     $pdf->Cell(10, 5, 'Time:');
     $pdf->SetFont('Arial', '', 9);
-    $pdf->Cell(16, 5, $dateCreated->format('h:i'), 'B', 0, 'C');
+    receipt_value_cell($pdf, 16, 5, $dateCreated->format('h:i'));
     $pdf->Cell(8, 5, $dateCreated->format('A'), 0, 0, 'R');
 
     $pdf->SetXY(110, 204);

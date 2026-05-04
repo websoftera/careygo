@@ -146,7 +146,7 @@ require_once 'includes/header.php';
                         <th>Weight From</th>
                         <th>Weight To</th>
                         <th>Base Price</th>
-                        <th>Increment Rs.</th>
+                        <th>Increment ₹</th>
                         <th>Per (kg)</th>
                         <th>Type</th>
                         <th>Earning %</th>
@@ -160,8 +160,8 @@ require_once 'includes/header.php';
                     <tr>
                         <td><?= htmlspecialchars(fmtWeightLabel($slab['weight_from'])) ?></td>
                         <td><?= htmlspecialchars(fmtWeightLabel($slab['weight_to'])) ?></td>
-                        <td style="font-weight:700;color:var(--primary);">Rs.<?= number_format((float)$slab['base_price'], 2) ?></td>
-                        <td><?= $slab['increment_price'] !== null ? 'Rs.' . number_format((float)$slab['increment_price'], 2) : '<span style="color:var(--muted)">-</span>' ?></td>
+                        <td style="font-weight:700;color:var(--primary);">₹<?= number_format((float)$slab['base_price'], 2) ?></td>
+                        <td><?= $slab['increment_price'] !== null ? '₹' . number_format((float)$slab['increment_price'], 2) : '<span style="color:var(--muted)">-</span>' ?></td>
                         <td><?= number_format((float)$slab['increment_per_kg'], 3) ?> kg</td>
                         <td>
                             <?= $slab['weight_to'] === null

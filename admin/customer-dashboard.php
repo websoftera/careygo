@@ -71,9 +71,9 @@ function admin_customer_weight_label($weight): string {
                 <td><?= htmlspecialchars($s['pickup_city']) ?> -> <?= htmlspecialchars($s['delivery_city']) ?></td>
                 <td><?= htmlspecialchars($serviceLabels[$s['service_type']] ?? $s['service_type']) ?></td>
                 <td><?= admin_customer_weight_label($s['chargeable_weight'] ?: $s['weight']) ?></td>
-                <td>Rs.<?= number_format((float)$s['final_price'], 0) ?></td>
+                <td>₹<?= number_format((float)$s['final_price'], 0) ?></td>
                 <td>
-                    <div style="font-weight:700;color:var(--success);">Rs.<?= number_format((float)($s['customer_earning_amount'] ?? 0), 0) ?></div>
+                    <div style="font-weight:700;color:var(--success);">₹<?= number_format((float)($s['customer_earning_amount'] ?? 0), 0) ?></div>
                     <div style="font-size:11px;color:var(--muted);"><?= number_format((float)($s['customer_earning_pct'] ?? 0), 2) ?>%</div>
                 </td>
                 <td><span class="badge-status badge-<?= $s['status'] ?>"><?= ucwords(str_replace('_',' ', $s['status'])) ?></span></td>

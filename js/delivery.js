@@ -246,7 +246,7 @@
             if (!state.declaredValue || state.declaredValue <= 0) {
                 showErr('declared_value', 'Total value of consignment is required'); ok = false;
             } else if (state.declaredValue > 1000) {
-                showErr('declared_value', 'Total value of consignment cannot exceed Rs. 1000'); ok = false;
+                showErr('declared_value', 'Total value of consignment cannot exceed ₹1000'); ok = false;
             }
 
             // Dimension limits (only if dimensions are entered)
@@ -278,11 +278,11 @@
                 showErr('packing_charge', 'Packing material charge is required');
                 ok = false;
             } else if (state.packingCharge > 9999) {
-                showErr('packing_charge', 'Packing material charge cannot exceed Rs. 9999');
+                showErr('packing_charge', 'Packing material charge cannot exceed ₹9999');
                 ok = false;
             }
             if (state.tempoCharge > 9999) {
-                showErr('tempo_charge', 'Tempo charge cannot exceed Rs. 9999');
+                showErr('tempo_charge', 'Tempo charge cannot exceed ₹9999');
                 ok = false;
             }
             // Photo uploads mandatory
@@ -900,7 +900,7 @@
         if (packingChargeInput && parsed !== (parseFloat(value || 0) || 0)) packingChargeInput.value = parsed ? String(parsed) : '';
         state.packingCharge = parsed;
         const hint = document.getElementById('packing_charge_hint');
-        if (hint) hint.textContent = state.packingMaterial && parsed > 0 ? `(Rs.${formatMoney(parsed)})` : '(optional)';
+        if (hint) hint.textContent = state.packingMaterial && parsed > 0 ? `(₹${formatMoney(parsed)})` : '(optional)';
     }
     function setCustomerPackingSelected(selected) {
         state.packingMaterial = !!selected;
@@ -1146,7 +1146,7 @@
         if (packPriceEl) packPriceEl.textContent = state.packingMaterial ? `₹${state.packingCharge.toLocaleString('en-IN')}` : '—';
 
         const tempoPriceEl = document.getElementById('summary_tempo_price');
-        if (tempoPriceEl) tempoPriceEl.textContent = state.tempoCharge > 0 ? `Rs.${state.tempoCharge.toLocaleString('en-IN')}` : '-';
+        if (tempoPriceEl) tempoPriceEl.textContent = state.tempoCharge > 0 ? `₹${state.tempoCharge.toLocaleString('en-IN')}` : '-';
 
         const finalEl = document.getElementById('summary_final_price');
         if (finalEl) finalEl.textContent = `₹${totalPrice.toLocaleString('en-IN')}`;

@@ -315,14 +315,14 @@ if ($method === 'POST') {
                 json_response(['success' => false, 'message' => 'Packing material charge is required.'], 422);
             }
             if ($packingCharge > 9999) {
-                json_response(['success' => false, 'message' => 'Packing material charge cannot exceed Rs. 9999.'], 422);
+                json_response(['success' => false, 'message' => 'Packing material charge cannot exceed ₹9999.'], 422);
             }
         } else {
             $packingCharge = 0.0;
         }
         $tempoCharge = round(max(0.0, $tempoCharge), 2);
         if ($tempoCharge > 9999) {
-            json_response(['success' => false, 'message' => 'Tempo charge cannot exceed Rs. 9999.'], 422);
+            json_response(['success' => false, 'message' => 'Tempo charge cannot exceed ₹9999.'], 422);
         }
         $finalPrice = round($basePrice + $packingCharge + $tempoCharge, 2);
 
@@ -355,7 +355,7 @@ if ($method === 'POST') {
             json_response(['success' => false, 'message' => 'Total value of consignment is required.'], 422);
         }
         if ($declaredValue > 1000) {
-            json_response(['success' => false, 'message' => 'Total value of consignment cannot exceed Rs. 1000.'], 422);
+            json_response(['success' => false, 'message' => 'Total value of consignment cannot exceed ₹1000.'], 422);
         }
 
         // Service weight constraints (production-ready)

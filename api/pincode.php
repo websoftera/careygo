@@ -28,13 +28,19 @@ try {
         json_response(['success' => false, 'message' => 'This pincode is currently not serviceable.'], 422);
     }
 
+    $validZones = ['within_city', 'within_state', 'metro', 'rest_of_india'];
+    $zone = trim((string)($row['zone'] ?? ''));
+    if (!in_array($zone, $validZones, true)) {
+        $zone = 'rest_of_india';
+    }
+
     json_response([
         'success' => true,
         'data' => [
             'pincode'      => $row['pincode'],
             'city'         => $row['city'],
             'state'        => $row['state'],
-            'zone'         => $row['zone'],
+            'zone'         => $zone,
             'tat_standard' => (int) $row['tat_standard'],
             'tat_premium'  => (int) $row['tat_premium'],
             'tat_air'      => (int) $row['tat_air'],

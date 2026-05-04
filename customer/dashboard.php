@@ -146,7 +146,7 @@ $serviceLabels = ['standard'=>'Standard Express','premium'=>'Premium Express','a
                 <td style="font-size:12px;"><?= dashboard_weight_label($s['chargeable_weight'] ?: $s['weight']) ?></td>
                 <td style="font-size:13px;font-weight:700;">₹<?= number_format($s['final_price'], 0) ?></td>
                 <td style="font-size:12px;">
-                    <div style="font-weight:700;color:var(--success);">Rs.<?= number_format((float)($s['customer_earning_amount'] ?? 0), 0) ?></div>
+                    <div style="font-weight:700;color:var(--success);">₹<?= number_format((float)($s['customer_earning_amount'] ?? 0), 0) ?></div>
                 </td>
                 <td><span class="badge-status badge-<?= $s['status'] ?>"><?= ucwords(str_replace('_', ' ', $s['status'])) ?></span></td>
                 <td style="font-size:11px;color:var(--muted)"><?= date('d M Y', strtotime($s['created_at'])) ?></td>

@@ -1,4 +1,4 @@
-<?php /* Rate Calculator Modal — included in all customer portal pages */ ?>
+<?php /* Rate Calculator Modal - included in all customer portal pages */ ?>
 
 <!-- ===== RATE CALCULATOR MODAL ===== -->
 <div class="modal fade" id="rateCalcModal" tabindex="-1" aria-labelledby="rateCalcModalLabel" aria-hidden="true">
@@ -60,11 +60,11 @@
                     </div>
                 </label>
                 <div id="rc_packing_charge_row" style="display:block;margin-top:-4px;margin-bottom:14px;">
-                    <label class="rc-label">Packing Material Charge (Rs.)</label>
+                    <label class="rc-label">Packing Material Charge (₹)</label>
                     <input type="number" id="rc_packing_charge" class="wizard-input" min="0" max="9999" step="1" placeholder="0" oninput="rcResetResults()">
                 </div>
                 <div style="margin-top:-4px;margin-bottom:14px;">
-                    <label class="rc-label">Tempo Charge (Rs.)</label>
+                    <label class="rc-label">Tempo Charge (₹)</label>
                     <input type="number" id="rc_tempo_charge" class="wizard-input" min="0" max="9999" step="1" placeholder="0" oninput="rcResetResults()">
                 </div>
 
@@ -85,7 +85,7 @@
 </div>
 
 <style>
-/* ── Rate Calculator Modal ── */
+/* Rate Calculator Modal */
 .rc-dialog { max-width: 500px; }
 
 .rc-modal { border-radius: 20px; overflow: hidden; border: none; }
@@ -210,7 +210,7 @@
         rcPackingCharge = Math.min(9999, Math.max(0, parseFloat(e.target.value || 0) || 0));
         if ((parseFloat(e.target.value || 0) || 0) !== rcPackingCharge) e.target.value = rcPackingCharge ? String(rcPackingCharge) : '';
         const hint = document.getElementById('rc_packing_charge_hint');
-        if (hint) hint.textContent = rcPackingCharge > 0 ? `(Rs.${rcPackingCharge.toLocaleString('en-IN')})` : '(optional)';
+        if (hint) hint.textContent = rcPackingCharge > 0 ? `(₹${rcPackingCharge.toLocaleString('en-IN')})` : '(optional)';
         const chk = document.getElementById('rc_packing_material');
         if (chk) {
             chk.checked = rcPackingCharge > 0;
@@ -218,14 +218,14 @@
         }
     });
 
-    /* ── Unit toggle ── */
+    /* Unit toggle */
     window.rcSetUnit = function (u) {
         rcUnit = u;
         document.getElementById('rc_unit_kg').classList.toggle('active', u === 'kg');
         document.getElementById('rc_unit_gm').classList.toggle('active', u === 'gm');
     };
 
-    /* ── Pincode lookup ── */
+    /* Pincode lookup */
     window.rcLookup = function (type) {
         const inp = document.getElementById(`rc_${type}_pincode`);
         const btn = document.getElementById(`rc_${type}_btn`);
@@ -260,13 +260,13 @@
             .catch(() => { if (btn) btn.innerHTML = '<i class="bi bi-search"></i>'; });
     };
 
-    /* ── Reset results on input change ── */
+    /* Reset results on input change */
     window.rcResetResults = function () {
         const r = document.getElementById('rc_results');
         if (r) r.innerHTML = '';
     };
 
-    /* ── Calculate ── */
+    /* Calculate */
     window.rcCalculate = function () {
         const pickup   = (document.getElementById('rc_pickup_pincode')?.value   || '').trim();
         const delivery = (document.getElementById('rc_delivery_pincode')?.value || '').trim();
@@ -291,7 +291,7 @@
             if (errEl) { errEl.textContent = 'Maximum allowable weight is 60 kg'; errEl.style.display = 'block'; } return;
         }
 
-        if (btn) { btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Calculating…'; btn.disabled = true; }
+        if (btn) { btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Calculating...'; btn.disabled = true; }
         if (results) results.innerHTML = '';
 
         fetch(`${RC_URL}/api/pricing.php?weight=${weight}&pickup=${encodeURIComponent(pickup)}&delivery=${encodeURIComponent(delivery)}`)
@@ -310,7 +310,7 @@
             });
     };
 
-    /* ── Render Results ── */
+    /* Render Results */
     function rcRenderResults(services, zone, weight) {
         const results = document.getElementById('rc_results');
         if (!results) return;
@@ -347,7 +347,7 @@
                     <i class="${m.icon} rc-service-icon"></i>
                     <div>
                         <div class="rc-service-name">${esc(m.label)}</div>
-                        <div class="rc-service-tat"><i class="bi bi-clock me-1"></i>${esc(svc.tat_label)} · Est. ${esc(svc.eta)} � Chargeable ${rcFormatWeight(chargeableWeight)}</div>
+                        <div class="rc-service-tat"><i class="bi bi-clock me-1"></i>${esc(svc.tat_label)} · Est. ${esc(svc.eta)} · Chargeable ${rcFormatWeight(chargeableWeight)}</div>
                     </div>
                 </div>
                 <div class="rc-service-price">₹${svc.price.toLocaleString('en-IN')}</div>
@@ -360,12 +360,12 @@
                 ${zoneTxt ? `<span class="rc-zone-badge"><i class="bi bi-geo-alt me-1"></i>${esc(zoneTxt)}</span>` : ''}
             </div>
             ${rows}
-            ${includePacking ? `<p class="rc-disclaimer">Packing Material included: Rs.${packingCharge.toLocaleString('en-IN')} per shipment.</p>` : ''}
-            ${rcTempoCharge > 0 ? `<p class="rc-disclaimer">Tempo Charge included: Rs.${rcTempoCharge.toLocaleString('en-IN')} per shipment.</p>` : ''}
+            ${includePacking ? `<p class="rc-disclaimer">Packing Material included: ₹${packingCharge.toLocaleString('en-IN')} per shipment.</p>` : ''}
+            ${rcTempoCharge > 0 ? `<p class="rc-disclaimer">Tempo Charge included: ₹${rcTempoCharge.toLocaleString('en-IN')} per shipment.</p>` : ''}
             <p class="rc-disclaimer">* Estimates only. Final charges may vary based on actual weight &amp; dimensions.</p>`;
     }
 
-    /* ── Enter key shortcuts ── */
+    /* Enter key shortcuts */
     ['rc_pickup_pincode', 'rc_delivery_pincode'].forEach(id => {
         const el = document.getElementById(id);
         el?.addEventListener('input', () => {
@@ -387,7 +387,7 @@
         if (e.key === 'Enter') rcCalculate();
     });
 
-    /* ── Reset modal state on close ── */
+    /* Reset modal state on close */
     document.getElementById('rateCalcModal')?.addEventListener('hidden.bs.modal', () => {
         ['rc_pickup_pincode','rc_delivery_pincode','rc_weight','rc_tempo_charge'].forEach(id => {
             const el = document.getElementById(id); if (el) el.value = '';

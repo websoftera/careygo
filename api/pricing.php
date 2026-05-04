@@ -27,6 +27,15 @@ if ($weight <= 0) {
 
 $validZones = ['within_city', 'within_state', 'metro', 'rest_of_india'];
 
+function configuredPincodeZone(?array $row, array $validZones): ?string
+{
+    if (!$row) {
+        return null;
+    }
+    $zone = trim((string)($row['zone'] ?? ''));
+    return in_array($zone, $validZones, true) ? $zone : 'rest_of_india';
+}
+
 /**
  * Calculate price for a service type using pricing_slabs table.
  *
@@ -70,17 +79,17 @@ function slabChargeableWeight(float $weight, array $slabs): float
         $to   = $slab['weight_to'];
 
         if ($to !== null) {
-            $toF = (float) $to;
-            if ($weight > $from && $weight <= $toF) {
-                return round($toF, 3);
+            if ($weight >= $from && $weight <= (float) $to) {
+                return round((float) $to, 3);
             }
         } else {
-            if ($weight > $from) {
-                $incPer = max(0.001, (float) $slab['increment_per_kg']);
-                $extra  = max(0, $weight - $from);
-                $blocks = (int) ceil($extra / $incPer);
-                return round($from + ($blocks * $incPer), 3);
+            if ($weight < $from) {
+                continue;
             }
+            $incPer = max(0.001, (float) $slab['increment_per_kg']);
+            $extra  = max(0, $weight - $from);
+            $blocks = (int) ceil($extra / $incPer);
+            return round($from + ($blocks * $incPer), 3);
         }
     }
     return round($weight, 3);
@@ -93,17 +102,20 @@ function calculatePriceFromSlabs(float $weight, array $slabs): float
         $to   = $slab['weight_to'];
 
         if ($to !== null) {
-            if ($weight > $from && $weight <= (float) $to) {
+            // Fixed-price slab
+            if ($weight >= $from && $weight <= (float) $to) {
                 return (float) $slab['base_price'];
             }
         } else {
-            if ($weight > $from) {
-                $incPer = max(0.001, (float) $slab['increment_per_kg']);
-                $extra  = max(0, $weight - $from);
-                $blocks = (int) ceil($extra / $incPer);
-                $inc    = ($slab['increment_price'] !== null) ? (float) $slab['increment_price'] : 0;
-                return round((float) $slab['base_price'] + ($blocks * $inc), 2);
+            if ($weight < $from) {
+                continue;
             }
+            // Open-ended incremental slab
+            $incPer = max(0.001, (float) $slab['increment_per_kg']);
+            $extra  = max(0, $weight - $from);
+            $blocks = (int) ceil($extra / $incPer);
+            $inc    = ($slab['increment_price'] !== null) ? (float) $slab['increment_price'] : 0;
+            return round((float) $slab['base_price'] + ($blocks * $inc), 2);
         }
     }
 
@@ -146,6 +158,10 @@ $dState = $tatRow['state'] ?? $frontendDeliveryState;
 $zoneParam = trim($_GET['zone'] ?? '');
 if ($zoneParam && in_array($zoneParam, $validZones, true)) {
     $zone = $zoneParam;                                 
+} elseif (($configuredZone = configuredPincodeZone($tatRow, $validZones)) !== null) {
+    $zone = $configuredZone;
+} elseif (($configuredZone = configuredPincodeZone($pickupRow, $validZones)) !== null) {
+    $zone = $configuredZone;
 } elseif ($pickup !== '' && $pickup === $delivery) {
     $zone = 'within_city';                              
 } elseif ($pCity !== '' && $dCity !== '' && $pState !== '' && $dState !== '') {
@@ -189,7 +205,7 @@ if (false) try {
 try {
     // Max weight caps per service (enforced after slab lookup)
     $serviceConstraints = [
-        'standard'  => 60.000,
+        'standard'  => 2.000,
         'premium'   => 60.000,
         'air_cargo' => 60.000,
         'surface'   => 60.000,
@@ -207,11 +223,11 @@ try {
             $slabs = pricingSlabs($pdo, $type, null);
         }
         if (empty($slabs)) continue;
+        $price = calculatePriceFromSlabs($weight, $slabs);
+        if ($price <= 0) continue;
+
         $chargeableWeight = slabChargeableWeight($weight, $slabs);
         if ($chargeableWeight > $maxWeight) continue;
-        $price = calculatePriceFromSlabs($weight, $slabs);
-
-        if ($price <= 0) continue;
 
         $tat      = $tatData[$type] ?? $defaultTat[$type];
         $eta      = addBusinessDays($tat, 'l, d M Y');
