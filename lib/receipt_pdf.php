@@ -456,8 +456,8 @@ $pdf->SetFont('Arial', 'B', 9);
 $pdf->SetXY(172, 117);
 $pdf->currencyCell(26, 8, (float)$shipment['declared_value'], 0, 'C');
 
-    // Row 5: Total/Mode (Left) & Mode (Right) - y: 128 to 158
-    $pdf->Line(10, 158, 200, 158);
+    // Row 5: Total/Mode (Left) & Mode (Right) - y: 128 to 164
+    $pdf->Line(10, 164, 200, 164);
     $pdf->Line(10, 143, 105, 143); // Split Left Box 7
     
     // ----------- BOX 7 -----------
@@ -490,10 +490,10 @@ $pdf->currencyCell(50, 5, (float)$shipment['final_price']);
 
     // Credit account details
     if ($isCredit && !empty($shipment['credit_client_name'])) {
-        $pdf->SetFont('Arial', '', 5.5);
-        $pdf->SetXY(15, 154);
+        $pdf->SetFont('Arial', '', 5.2);
+        $pdf->SetXY(15, 158);
         $pdf->Cell(85, 2.5, 'Client: ' . $shipment['credit_client_name'], 0, 0, 'L');
-        $pdf->SetXY(15, 156.5);
+        $pdf->SetXY(15, 160.7);
         $pdf->Cell(85, 2.5, 'Requestor: ' . ($shipment['credit_requestor_name'] ?? ''), 0, 0, 'L');
     }
 
@@ -519,40 +519,40 @@ $pdf->currencyCell(50, 5, (float)$shipment['final_price']);
     $pdf->SetFont('Arial', 'B', 9);
     $pdf->Cell(75, 5, $shipment['tracking_no'] ?? '', 0, 0, 'L');
 
-    // Row 6: Risk (Left) & Sign (Right) - y: 158 to 220
+    // Row 6: Risk (Left) & Sign (Right) - y: 164 to 220
     
     // ----------- BOX 8 -----------
     
     // Column grid: keep a compact Accepted area and give Owner Risk more text width.
-    $pdf->Line(90, 158, 90, 209);
-    $pdf->Line(90, 189, 105, 189);
+    $pdf->Line(90, 164, 90, 209);
+    $pdf->Line(90, 195, 105, 195);
 
     // Left label
     $pdf->SetFont('Arial', 'B', 9);
-    $pdf->SetXY(10, 162);
+    $pdf->SetXY(10, 168);
     $pdf->Cell(50, 5, 'Owner Risk', 0, 0, 'C');
     $pdf->SetFont('Arial', '', 6.2);
-    $pdf->SetXY(13, 168);
+    $pdf->SetXY(13, 174);
     $ownerRiskNote = "All consignments are accepted for carriage at the owner's risk. The Company shall not be liable for any loss, damage, deterioration, leakage, or breakage, howsoever caused, whether in transit or otherwise. Carriage is subject to the terms, conditions, and limitations of the respective freight forwarder, carrier, or airline, as applicable. The Company's liability, if any, is limited to Rupees 100 per kg or the actual value of the consignment, whichever is lower, unless the shipment is declared and insured at the time of booking and expressly accepted by the Company in writing.";
     $pdf->MultiCell(72, 3.6, $ownerRiskNote, 0, 'L');
     $pdf->SetFont('Arial', '', 6.5);
-    $pdf->SetXY(91, 174);
+    $pdf->SetXY(91, 180);
     $pdf->Cell(13, 4, 'Accepted', 0, 0, 'C');
-    $pdf->checkbox(95, 181, true, '', 6);
+    $pdf->checkbox(95, 187, true, '', 6);
 
     // ----------- BOX 9 -----------
     $pdf->SetFont('Arial', 'B', 9);
-    $pdf->SetXY(145, 162);
+    $pdf->SetXY(145, 168);
     $pdf->Cell(50, 5, "Sender's Signature & Seal:", 0, 0, 'C');
     
     // Signature Border
     $pdf->SetDrawColor(0,0,0);
     $pdf->SetLineWidth(0.3);
-    $pdf->Rect(145, 168, 50, 22, 'D');
+    $pdf->Rect(145, 174, 50, 22, 'D');
 
     // OTP
     $pdf->SetFont('Arial', 'B', 9);
-    $pdf->SetXY(110, 180);
+    $pdf->SetXY(110, 186);
     $pdf->Cell(10, 5, 'OTP: ');
     $pdf->Cell(20, 5, '', 'B', 0, 'L'); // Pure clean line
     
