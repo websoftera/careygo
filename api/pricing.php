@@ -92,6 +92,13 @@ function slabChargeableWeight(float $weight, array $slabs): float
             return round($from + ($blocks * $incPer), 3);
         }
     }
+    if (!empty($slabs)) {
+        $first = $slabs[0];
+        $from = (float) $first['weight_from'];
+        if ($weight < $from) {
+            return round($first['weight_to'] !== null ? (float) $first['weight_to'] : $from, 3);
+        }
+    }
     return round($weight, 3);
 }
 
@@ -116,6 +123,12 @@ function calculatePriceFromSlabs(float $weight, array $slabs): float
             $blocks = (int) ceil($extra / $incPer);
             $inc    = ($slab['increment_price'] !== null) ? (float) $slab['increment_price'] : 0;
             return round((float) $slab['base_price'] + ($blocks * $inc), 2);
+        }
+    }
+    if (!empty($slabs)) {
+        $first = $slabs[0];
+        if ($weight < (float) $first['weight_from']) {
+            return (float) $first['base_price'];
         }
     }
 

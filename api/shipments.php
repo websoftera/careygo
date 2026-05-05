@@ -204,6 +204,13 @@ function shipmentSlabChargeableWeight(float $weight, array $slabs): float
             }
         }
     }
+    if (!empty($slabs)) {
+        $first = $slabs[0];
+        $from = (float)$first['weight_from'];
+        if ($weight < $from) {
+            return round($first['weight_to'] !== null ? (float)$first['weight_to'] : $from, 3);
+        }
+    }
     return round($weight, 3);
 }
 
