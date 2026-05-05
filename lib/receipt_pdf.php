@@ -47,7 +47,7 @@ class ReceiptPDF extends FPDF
             $this->SetLineWidth(0.2);
         }
         if ($label) {
-            $this->SetFont('Arial', '', 8);
+            $this->SetFont('Arial', '', 7.5);
             $this->SetXY($x + $size + 2, $y);
             $this->Cell(35, $size, $label, 0, 0, 'L');
         }
@@ -300,7 +300,7 @@ function generateReceiptPDF($shipment)
     $lineH = 6;
     $labelFont = 7.5;
     $valueFont = 7.5;
-    $smallFont = 6.5;
+    $smallFont = 7.5;
     
     // Sender Name
     $pdf->SetXY($x, $y);
@@ -326,7 +326,7 @@ function generateReceiptPDF($shipment)
     $pdf->SetFont('Arial', '', $labelFont);
     $pdf->Cell(12, 5, "Email:");
     $pdf->SetFont('Arial', '', $smallFont);
-    receipt_value_cell($pdf, 32, 5, htmlspecialchars(substr($shipment['pickup_email'] ?? $shipment['customer_email'] ?? '', 0, 28)));
+    receipt_value_cell($pdf, 32, 5, htmlspecialchars(substr($shipment['pickup_email'] ?? $shipment['customer_email'] ?? '', 0, 24)));
 
     // Address
     $pdf->SetXY($x, $y+=$lineH);
@@ -407,7 +407,7 @@ function generateReceiptPDF($shipment)
     $pdf->SetFont('Arial', '', $labelFont);
     $pdf->Cell(12, 5, "Email:");
     $pdf->SetFont('Arial', '', $smallFont);
-    receipt_value_cell($pdf, 32, 5, htmlspecialchars(substr($shipment['delivery_email'] ?? '', 0, 28)));
+    receipt_value_cell($pdf, 32, 5, htmlspecialchars(substr($shipment['delivery_email'] ?? '', 0, 24)));
 
     // Address
     $pdf->SetXY($x, $y+=$lineH);
@@ -469,34 +469,34 @@ function generateReceiptPDF($shipment)
     $box3Height = 10;
     $box3CellHeight = 5;
     $pdf->SetXY(12, $box3Top + (($box3Height - $box3CellHeight) / 2));
-    $pdf->SetFont('Arial', '', 6.5);
+    $pdf->SetFont('Arial', '', $labelFont);
     $pdf->Cell(6, 5, 'Pcs:');
-    $pdf->SetFont('Arial', 'B', 8);
+    $pdf->SetFont('Arial', 'B', $valueFont);
     receipt_value_cell($pdf, 8, 5, (string)$shipment['pieces']);
-    $pdf->SetFont('Arial', '', 6.5);
+    $pdf->SetFont('Arial', '', $labelFont);
     $pdf->Cell(5, 5, ' | ', 0, 0, 'C');
     $pdf->Cell(17, 5, 'Actual Weight:');
-    $pdf->SetFont('Arial', 'B', 8);
+    $pdf->SetFont('Arial', 'B', $valueFont);
     receipt_value_cell($pdf, 13, 5, receipt_weight_display($shipment['weight']));
-    $pdf->SetFont('Arial', '', 6.5);
+    $pdf->SetFont('Arial', '', $labelFont);
     $pdf->Cell(5, 5, ' | ', 0, 0, 'C');
 $pdf->Cell(21, 5, 'Chargeable Weight:');
-$pdf->SetFont('Arial', 'B', 8);
+$pdf->SetFont('Arial', 'B', $valueFont);
 $pdf->Cell(2, 5, '');
 receipt_value_cell($pdf, 16, 5, receipt_weight_display($receiptWeight));
 
     // ----------- BOX 4 Top -----------
-    $pdf->SetFont('Arial', '', 8);
+    $pdf->SetFont('Arial', '', $labelFont);
     $pdf->SetXY(107, 105);
     $pdf->Cell(32, 5, 'Description of Content:');
-    $pdf->SetFont('Arial', 'B', 8);
+    $pdf->SetFont('Arial', 'B', $valueFont);
     receipt_value_cell($pdf, 58, 5, htmlspecialchars(substr(receipt_upper($shipment['description']?:'NO DESCRIPTION'), 0, 35)));
 
     // Row 4: Enclosures (Left) & Total Value (Right) - y: 113 to 128
     $pdf->Line(10, 128, 200, 128);
     
     // ----------- BOX 5 -----------
-    $pdf->SetFont('Arial', 'B', 8);
+    $pdf->SetFont('Arial', 'B', $valueFont);
     $pdf->SetXY(15, 115);
     $pdf->Cell(40, 5, 'Paper Work Enclosures');
     
@@ -512,13 +512,13 @@ receipt_value_cell($pdf, 16, 5, receipt_weight_display($receiptWeight));
 
     // ----------- BOX 4 Bottom -----------
     // Value text
-    $pdf->SetFont('Arial', '', 7);
+    $pdf->SetFont('Arial', '', $labelFont);
     $pdf->SetXY(107, 118);
     $pdf->MultiCell(62, 4, 'Total Value of Consignment for carriage / E-Way bill:', 0, 'L');
     
     // Amount box separator
     $pdf->Line(172, 113, 172, 128); 
-$pdf->SetFont('Arial', 'B', 9);
+$pdf->SetFont('Arial', 'B', $valueFont);
 $pdf->SetXY(172, 117);
 $pdf->currencyCell(26, 8, (float)$shipment['declared_value'], 0, 'C');
 
@@ -528,22 +528,22 @@ $pdf->currencyCell(26, 8, (float)$shipment['declared_value'], 0, 'C');
     
     // ----------- BOX 7 -----------
     // Box y=128 to y=143 (15mm). Center content vertically.
-    $pdf->SetFont('Arial', '', 8);
+    $pdf->SetFont('Arial', '', $labelFont);
 $pdf->SetXY(15, 130);
 $pdf->Cell(22, 5, 'Total Amount:');
-$pdf->SetFont('Arial', 'B', 9);
+$pdf->SetFont('Arial', 'B', $valueFont);
 $pdf->currencyCell(50, 5, (float)$shipment['final_price']);
-    $pdf->SetFont('Arial', '', 7);
+    $pdf->SetFont('Arial', '', $labelFont);
     $pdf->SetXY(15, 136);
     $pdf->Cell(85, 4, receipt_amount_words((float)$shipment['final_price']), 0, 0, 'L');
     if (!empty($shipment['tempo_charge']) && (float)$shipment['tempo_charge'] > 0) {
-        $pdf->SetFont('Arial', '', 7);
+        $pdf->SetFont('Arial', '', $labelFont);
         $pdf->SetXY(15, 140);
-        $pdf->Cell(22, 3, 'Tempo Charges:', 0, 0, 'L');
-        $pdf->currencyCell(30, 3, (float)$shipment['tempo_charge']);
+        $pdf->Cell(25, 4, 'Tempo Charges:', 0, 0, 'L');
+        $pdf->currencyCell(30, 4, (float)$shipment['tempo_charge']);
     }
     // Box 7 (Payment Mode)
-    $pdf->SetFont('Arial', 'B', 8);
+    $pdf->SetFont('Arial', 'B', $valueFont);
     $pdf->SetXY(15, 145);
     $pdf->Cell(40, 5, 'Mode of Payment');
 
@@ -556,15 +556,15 @@ $pdf->currencyCell(50, 5, (float)$shipment['final_price']);
 
     // Credit account details
     if ($isCredit && !empty($shipment['credit_client_name'])) {
-        $pdf->SetFont('Arial', '', 5.2);
+        $pdf->SetFont('Arial', '', $labelFont);
         $pdf->SetXY(15, 158);
-        $pdf->Cell(85, 2.5, 'Client: ' . $shipment['credit_client_name'], 0, 0, 'L');
+        $pdf->Cell(85, 2.5, 'Client: ' . substr($shipment['credit_client_name'], 0, 32), 0, 0, 'L');
         $pdf->SetXY(15, 160.7);
-        $pdf->Cell(85, 2.5, 'Requestor: ' . ($shipment['credit_requestor_name'] ?? ''), 0, 0, 'L');
+        $pdf->Cell(85, 2.5, 'Requestor: ' . substr($shipment['credit_requestor_name'] ?? '', 0, 28), 0, 0, 'L');
     }
 
     // ----------- BOX 6 -----------
-    $pdf->SetFont('Arial', '', 8);
+    $pdf->SetFont('Arial', '', $labelFont);
     $pdf->SetXY(110, 131);
     $pdf->Cell(18, 5, 'Mode:');
     
