@@ -219,6 +219,82 @@ function receipt_value_cell(ReceiptPDF $pdf, float $w, float $h, string $text, s
     $pdf->valueCell($w, $h, $text, $border, $align);
 }
 
+function receipt_slab_chargeable_weight(float $weight, array $slabs): float
+{
+    $best = null;
+    foreach ($slabs as $slab) {
+        $from = (float)($slab['weight_from'] ?? 0);
+        $to = $slab['weight_to'] ?? null;
+        if ($to !== null) {
+            $candidate = (float)$to;
+            if ($weight <= $candidate && ($weight >= $from || $best === null)) {
+                $best = $best === null ? $candidate : min($best, $candidate);
+            }
+            continue;
+        }
+
+        $incPer = (float)($slab['increment_per_kg'] ?? 0);
+        if ($weight <= $from) {
+            $candidate = $from;
+        } elseif ($incPer > 0) {
+            $extra = max(0, $weight - $from);
+            $candidate = $from + ((int)ceil($extra / $incPer) * $incPer);
+        } else {
+            $candidate = max($weight, $from);
+        }
+        if ($candidate >= $weight) {
+            $best = $best === null ? $candidate : min($best, $candidate);
+        }
+    }
+    return round($best ?? $weight, 3);
+}
+
+function receipt_configured_chargeable_weight(array $shipment): float
+{
+    global $pdo;
+    if (!($pdo instanceof PDO) || empty($shipment['service_type'])) {
+        return 0.0;
+    }
+
+    $actual = (float)($shipment['weight'] ?? 0);
+    $volumetric = (float)($shipment['volumetric_weight'] ?? 0);
+    $billingWeight = max($actual, $volumetric);
+    if ($billingWeight <= 0) {
+        return 0.0;
+    }
+
+    try {
+        $zone = 'rest_of_india';
+        $deliveryPincode = trim((string)($shipment['delivery_pincode'] ?? ''));
+        if ($deliveryPincode !== '') {
+            $zoneStmt = $pdo->prepare("SELECT zone FROM pincode_tat WHERE pincode = ? LIMIT 1");
+            $zoneStmt->execute([$deliveryPincode]);
+            $configuredZone = trim((string)$zoneStmt->fetchColumn());
+            if ($configuredZone !== '') {
+                $zone = $configuredZone;
+            }
+        }
+
+        $order = "ORDER BY CASE WHEN weight_to IS NULL THEN 1 ELSE 0 END ASC, weight_to ASC, weight_from ASC";
+        $stmt = $pdo->prepare("SELECT weight_from, weight_to, increment_per_kg FROM pricing_slabs WHERE service_type = ? AND zone = ? $order");
+        $stmt->execute([$shipment['service_type'], $zone]);
+        $slabs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        if (empty($slabs) && $zone !== 'rest_of_india') {
+            $stmt = $pdo->prepare("SELECT weight_from, weight_to, increment_per_kg FROM pricing_slabs WHERE service_type = ? AND zone = 'rest_of_india' $order");
+            $stmt->execute([$shipment['service_type']]);
+            $slabs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+        if (empty($slabs)) {
+            $stmt = $pdo->prepare("SELECT weight_from, weight_to, increment_per_kg FROM pricing_slabs WHERE service_type = ? AND zone IS NULL $order");
+            $stmt->execute([$shipment['service_type']]);
+            $slabs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+        return $slabs ? receipt_slab_chargeable_weight($billingWeight, $slabs) : 0.0;
+    } catch (Exception $e) {
+        return 0.0;
+    }
+}
+
 function receipt_barcode_payload(array $shipment): string
 {
     $tracking = strtoupper(trim((string)($shipment['tracking_no'] ?? '')));
@@ -468,7 +544,10 @@ function generateReceiptPDF($shipment)
     $pdf->Line(10, 113, 200, 113);
     
     // ----------- BOX 3 -----------
-    $receiptWeight = (float)($shipment['chargeable_weight'] ?? 0) > 0 ? (float)$shipment['chargeable_weight'] : (float)$shipment['weight'];
+    $configuredReceiptWeight = receipt_configured_chargeable_weight($shipment);
+    $receiptWeight = $configuredReceiptWeight > 0
+        ? $configuredReceiptWeight
+        : ((float)($shipment['chargeable_weight'] ?? 0) > 0 ? (float)$shipment['chargeable_weight'] : (float)$shipment['weight']);
     $box3Top = 103;
     $box3Height = 10;
     $box3CellHeight = 5;

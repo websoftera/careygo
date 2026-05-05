@@ -187,31 +187,32 @@ function shipmentPricingSlabs(PDO $pdo, string $serviceType, string $zone): arra
 
 function shipmentSlabChargeableWeight(float $weight, array $slabs): float
 {
+    $best = null;
     foreach ($slabs as $slab) {
         $from = (float)$slab['weight_from'];
         $to   = $slab['weight_to'];
         if ($to !== null) {
-            $toF = (float)$to;
-            if ($weight > $from && $weight <= $toF) {
-                return round($toF, 3);
+            $candidate = (float)$to;
+            if ($weight <= $candidate && ($weight >= $from || $best === null)) {
+                $best = $best === null ? $candidate : min($best, $candidate);
             }
         } else {
-            if ($weight > $from) {
-                $incPer = max(0.001, (float)$slab['increment_per_kg']);
+            $incPer = (float)$slab['increment_per_kg'];
+            if ($weight <= $from) {
+                $candidate = $from;
+            } elseif ($incPer > 0) {
                 $extra  = max(0, $weight - $from);
                 $blocks = (int)ceil($extra / $incPer);
-                return round($from + ($blocks * $incPer), 3);
+                $candidate = $from + ($blocks * $incPer);
+            } else {
+                $candidate = max($weight, $from);
+            }
+            if ($candidate >= $weight) {
+                $best = $best === null ? $candidate : min($best, $candidate);
             }
         }
     }
-    if (!empty($slabs)) {
-        $first = $slabs[0];
-        $from = (float)$first['weight_from'];
-        if ($weight < $from) {
-            return round($first['weight_to'] !== null ? (float)$first['weight_to'] : $from, 3);
-        }
-    }
-    return round($weight, 3);
+    return round($best ?? $weight, 3);
 }
 
 ensureEarningColumns($pdo);
