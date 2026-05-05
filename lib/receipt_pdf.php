@@ -91,7 +91,10 @@ class ReceiptPDF extends FPDF
 
         $this->Image($symbolPath, $startX, $y + max(0, ($h - $symbolHeight) / 2), $symbolWidth, $symbolHeight);
         $this->SetXY($startX + $symbolWidth + $gap, $y);
+        $oldMargin = $this->cMargin;
+        $this->cMargin = 0;
         $this->Cell(max(0, $w - ($startX - $x) - $symbolWidth - $gap), $h, $text, 0, 0, 'L');
+        $this->cMargin = $oldMargin;
         $this->SetXY($x + $w, $y);
     }
 
