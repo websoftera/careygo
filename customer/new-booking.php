@@ -632,7 +632,7 @@ window.SITE_URL = '<?= rtrim(SITE_URL, '/') ?>';
 window.CURRENT_CUSTOMER_EMAIL = <?= json_encode($user['email'] ?? '') ?>;
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../js/delivery.js"></script>
+<script src="../js/delivery.js?v=<?= filemtime(__DIR__ . '/../js/delivery.js') ?>"></script>
 <script>
 // Sidebar toggle
 const custSidebar = document.getElementById('custSidebar');

@@ -681,9 +681,35 @@
     function updateChargeableWeight() {
         const actual = state.weight || 0;
         const vol    = state.volumetricWeight || 0;
-        state.chargeableWeight = Math.max(actual, vol);
-        if (!state.serviceType) state.serviceChargeableWeight = 0;
+        const baseChargeable = Math.max(actual, vol);
+        if (state.serviceType && state.serviceChargeableWeight) {
+            state.chargeableWeight = Math.max(state.serviceChargeableWeight, baseChargeable);
+        } else {
+            state.chargeableWeight = baseChargeable;
+            state.serviceChargeableWeight = 0;
+        }
         updateChargeableWeightDisplay();
+    }
+
+    function syncSelectedServiceFromDOM() {
+        const selectedService = document.querySelector('.service-card.selected');
+        if (!selectedService) {
+            state.serviceChargeableWeight = 0;
+            return null;
+        }
+
+        const selectedChargeableWeight = parseFloat(selectedService.dataset.chargeableWeight || 0) || 0;
+        state.serviceType = selectedService.dataset.service || state.serviceType;
+        state.servicePrice = parseFloat(selectedService.dataset.price) || state.servicePrice;
+        state.serviceLabel = selectedService.dataset.label || state.serviceLabel;
+        state.serviceTat = selectedService.dataset.tat || state.serviceTat;
+
+        if (selectedChargeableWeight > 0) {
+            state.serviceChargeableWeight = selectedChargeableWeight;
+            state.chargeableWeight = selectedChargeableWeight;
+        }
+
+        return selectedService;
     }
 
     function updateChargeableWeightDisplay() {
@@ -717,6 +743,11 @@
         if (!container) return;
         const wt = getWeightInKg();
         state.weight = wt;
+        state.serviceType = '';
+        state.servicePrice = 0;
+        state.serviceLabel = '';
+        state.serviceTat = '';
+        state.serviceChargeableWeight = 0;
         updateChargeableWeight();
 
         // Price on chargeable weight (max of actual and volumetric)
@@ -1075,6 +1106,8 @@
 
     /* ── Step 5: Build summary ── */
     function buildSummary() {
+        syncSelectedServiceFromDOM();
+
         // Pickup address
         const pEl = document.getElementById('summary_pickup');
         if (pEl) pEl.innerHTML = `
@@ -1106,7 +1139,12 @@
         if (wEl) wEl.textContent = `${state.weight.toFixed(3)} kg`;
 
         // Chargeable weight
-        const chargeableWeight = state.serviceChargeableWeight || state.chargeableWeight || state.weight;
+        const selectedChargeableWeight = parseFloat(document.querySelector('.service-card.selected')?.dataset.chargeableWeight || 0) || 0;
+        const chargeableWeight = selectedChargeableWeight || state.serviceChargeableWeight || state.chargeableWeight || state.weight;
+        if (chargeableWeight > 0) {
+            state.serviceChargeableWeight = chargeableWeight;
+            state.chargeableWeight = chargeableWeight;
+        }
         const cwEl = document.getElementById('summary_chargeable_weight');
         if (cwEl) {
             cwEl.textContent = formatWeightSmart(chargeableWeight);
@@ -1433,14 +1471,9 @@
         syncEwaybillStateFromDOM();
         if (packingChargeInput) updateCustomerPackingCharge(packingChargeInput.value);
         if (tempoChargeInput) state.tempoCharge = Math.min(9999, Math.max(0, parseFloat(tempoChargeInput.value || 0) || 0));
-        const selectedService = document.querySelector('.service-card.selected');
+        const selectedService = syncSelectedServiceFromDOM();
         if (selectedService) {
-            state.serviceType = selectedService.dataset.service;
-            state.servicePrice = parseFloat(selectedService.dataset.price) || state.servicePrice;
-            state.serviceChargeableWeight = parseFloat(selectedService.dataset.chargeableWeight || 0) || state.serviceChargeableWeight || state.chargeableWeight || state.weight;
             state.chargeableWeight = state.serviceChargeableWeight || state.chargeableWeight;
-            state.serviceLabel = selectedService.dataset.label || state.serviceLabel;
-            state.serviceTat = selectedService.dataset.tat || state.serviceTat;
         } else {
             state.serviceChargeableWeight = 0;
         }
