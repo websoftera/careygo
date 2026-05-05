@@ -63,13 +63,35 @@ class ReceiptPDF extends FPDF
 
     function currencyCell($w, $h, $amount, $border = 0, $align = 'L', $decimals = 0)
     {
-        // Use embedded Arial with rupee glyph at chr(128) (U+20B9 = ₹)
-        $savedStyle = $this->FontStyle;
-        $savedSize  = $this->FontSizePt;
-        $this->SetFont('ArialRupee', $savedStyle === 'B' ? 'B' : '', $savedSize);
-        $text = chr(128) . ' ' . number_format((float)$amount, (int)$decimals);
-        $this->Cell($w, $h, $text, $border, 0, $align);
-        $this->SetFont('Arial', $savedStyle, $savedSize);
+        $x = $this->GetX();
+        $y = $this->GetY();
+        if ($border) {
+            $this->Cell($w, $h, '', $border, 0, 'L');
+            $this->SetXY($x, $y);
+        }
+
+        $symbolPath = __DIR__ . '/../assets/images/rupee-symbol.png';
+        $text = number_format((float)$amount, (int)$decimals);
+        if (!is_file($symbolPath)) {
+            $this->Cell($w, $h, 'INR ' . $text, 0, 0, $align);
+            return;
+        }
+
+        $symbolSize = min(4.2, max(2.6, $h * 0.8));
+        $gap = 1.4;
+        $contentWidth = $symbolSize + $gap + $this->GetStringWidth($text);
+        if ($align === 'C') {
+            $startX = $x + max(0, ($w - $contentWidth) / 2);
+        } elseif ($align === 'R') {
+            $startX = $x + max(0, $w - $contentWidth);
+        } else {
+            $startX = $x;
+        }
+
+        $this->Image($symbolPath, $startX, $y + max(0, ($h - $symbolSize) / 2), $symbolSize, $symbolSize);
+        $this->SetXY($startX + $symbolSize + $gap, $y);
+        $this->Cell(max(0, $w - ($startX - $x) - $symbolSize - $gap), $h, $text, 0, 0, 'L');
+        $this->SetXY($x + $w, $y);
     }
 
     function code39($x, $y, $code, $barWidth = 0.22, $barHeight = 6, $maxWidth = null)
