@@ -77,8 +77,8 @@ class ReceiptPDF extends FPDF
             return;
         }
 
-        $symbolSize = min(4.2, max(2.6, $h * 0.8));
-        $gap = 0.2;
+        $symbolSize = min(3.8, max(2.4, $h * 0.72));
+        $gap = -0.4;
         $contentWidth = $symbolSize + $gap + $this->GetStringWidth($text);
         if ($align === 'C') {
             $startX = $x + max(0, ($w - $contentWidth) / 2);
@@ -471,19 +471,21 @@ function generateReceiptPDF($shipment)
     $pdf->SetXY(12, $box3Top + (($box3Height - $box3CellHeight) / 2));
     $pdf->SetFont('Arial', '', $labelFont);
     $pdf->Cell(6, 5, 'Pcs:');
+    $pdf->Cell(1.5, 5, '');
     $pdf->SetFont('Arial', 'B', $valueFont);
     receipt_value_cell($pdf, 8, 5, (string)$shipment['pieces']);
     $pdf->SetFont('Arial', '', $labelFont);
-    $pdf->Cell(5, 5, ' | ', 0, 0, 'C');
-    $pdf->Cell(17, 5, 'Actual Weight:');
+    $pdf->Cell(4, 5, '|', 0, 0, 'C');
+    $pdf->Cell(18.5, 5, 'Actual Weight:');
+    $pdf->Cell(1.5, 5, '');
     $pdf->SetFont('Arial', 'B', $valueFont);
-    receipt_value_cell($pdf, 13, 5, receipt_weight_display($shipment['weight']));
+    receipt_value_cell($pdf, 15, 5, receipt_weight_display($shipment['weight']));
     $pdf->SetFont('Arial', '', $labelFont);
-    $pdf->Cell(5, 5, ' | ', 0, 0, 'C');
-$pdf->Cell(21, 5, 'Chargeable Weight:');
+    $pdf->Cell(4, 5, '|', 0, 0, 'C');
+$pdf->Cell(23.5, 5, 'Chargeable Weight:');
 $pdf->SetFont('Arial', 'B', $valueFont);
-$pdf->Cell(2, 5, '');
-receipt_value_cell($pdf, 16, 5, receipt_weight_display($receiptWeight));
+$pdf->Cell(1.5, 5, '');
+receipt_value_cell($pdf, 9.5, 5, receipt_weight_display($receiptWeight));
 
     // ----------- BOX 4 Top -----------
     $pdf->SetFont('Arial', '', $labelFont);
@@ -538,7 +540,7 @@ $pdf->currencyCell(50, 5, (float)$shipment['final_price']);
     $pdf->Cell(85, 4, receipt_amount_words((float)$shipment['final_price']), 0, 0, 'L');
     if (!empty($shipment['tempo_charge']) && (float)$shipment['tempo_charge'] > 0) {
         $pdf->SetFont('Arial', '', $labelFont);
-        $pdf->SetXY(15, 140);
+        $pdf->SetXY(15, 139.2);
         $pdf->Cell(25, 4, 'Tempo Charges:', 0, 0, 'L');
         $pdf->currencyCell(30, 4, (float)$shipment['tempo_charge']);
     }
