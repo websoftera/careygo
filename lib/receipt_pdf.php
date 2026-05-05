@@ -77,9 +77,10 @@ class ReceiptPDF extends FPDF
             return;
         }
 
-        $symbolSize = min(3.8, max(2.4, $h * 0.72));
-        $gap = 0.3;
-        $contentWidth = $symbolSize + $gap + $this->GetStringWidth($text);
+        $symbolHeight = min(3.8, max(2.4, $h * 0.72));
+        $symbolWidth = $symbolHeight * 0.52;
+        $gap = 0.25;
+        $contentWidth = $symbolWidth + $gap + $this->GetStringWidth($text);
         if ($align === 'C') {
             $startX = $x + max(0, ($w - $contentWidth) / 2);
         } elseif ($align === 'R') {
@@ -88,9 +89,9 @@ class ReceiptPDF extends FPDF
             $startX = $x;
         }
 
-        $this->Image($symbolPath, $startX, $y + max(0, ($h - $symbolSize) / 2), $symbolSize, $symbolSize);
-        $this->SetXY($startX + $symbolSize + $gap, $y);
-        $this->Cell(max(0, $w - ($startX - $x) - $symbolSize - $gap), $h, $text, 0, 0, 'L');
+        $this->Image($symbolPath, $startX, $y + max(0, ($h - $symbolHeight) / 2), $symbolWidth, $symbolHeight);
+        $this->SetXY($startX + $symbolWidth + $gap, $y);
+        $this->Cell(max(0, $w - ($startX - $x) - $symbolWidth - $gap), $h, $text, 0, 0, 'L');
         $this->SetXY($x + $w, $y);
     }
 
