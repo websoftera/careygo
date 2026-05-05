@@ -78,7 +78,7 @@ class ReceiptPDF extends FPDF
         }
 
         $symbolSize = min(4.2, max(2.6, $h * 0.8));
-        $gap = 1.4;
+        $gap = 0.2;
         $contentWidth = $symbolSize + $gap + $this->GetStringWidth($text);
         if ($align === 'C') {
             $startX = $x + max(0, ($w - $contentWidth) / 2);
