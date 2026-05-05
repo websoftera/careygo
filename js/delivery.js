@@ -821,10 +821,12 @@
             const etaDay = etaParts.length > 1 ? etaParts[0] : '';
             const etaDate = etaParts.length > 1 ? etaParts.slice(1).join(', ') : svc.eta;
 
+            const svcChargeableWeight = parseFloat(svc.chargeable_weight || chargeableWeight) || chargeableWeight;
+
             return `
-            <div class="service-card" data-service="${svc.type}" data-price="${svc.price}" data-chargeable-weight="${svc.chargeable_weight || chargeableWeight}" data-label="${escHtml(meta.label)}" data-tat="${escHtml(svc.tat_label)}"
+            <div class="service-card" data-service="${svc.type}" data-price="${svc.price}" data-chargeable-weight="${svcChargeableWeight}" data-label="${escHtml(meta.label)}" data-tat="${escHtml(svc.tat_label)}"
                  style="border-left:4px solid ${tatBorder};"
-                 onclick="selectService('${svc.type}', ${svc.price}, '${escHtml(meta.label)}', '${escHtml(svc.tat_label)}')">
+                 onclick="selectService('${svc.type}', ${svc.price}, '${escHtml(meta.label)}', '${escHtml(svc.tat_label)}', ${svcChargeableWeight})">
                 <div class="service-card-check"><i class="bi bi-check-lg"></i></div>
                 <div class="service-card-top">
                     <div>
@@ -851,7 +853,7 @@
                 </div>
                 <div class="service-card-meta" style="margin-top:4px;">
                     <div class="service-card-meta-item" style="font-size:12px;color:#6b7280;">
-                        <i class="bi bi-weight"></i> Chargeable: <strong>${formatWeightSmart(parseFloat(svc.chargeable_weight || chargeableWeight) || chargeableWeight)}</strong>
+                        <i class="bi bi-weight"></i> Chargeable: <strong>${formatWeightSmart(svcChargeableWeight)}</strong>
                     </div>
                 </div>
             </div>`;
@@ -862,14 +864,14 @@
         }
     }
 
-    window.selectService = function (type, price, label, tat) {
+    window.selectService = function (type, price, label, tat, chargeableWeight) {
         document.querySelectorAll('.service-card').forEach(c => c.classList.toggle('selected', c.dataset.service === type));
         const selectedCard = document.querySelector(`.service-card[data-service="${type}"]`);
         state.serviceType  = type;
         state.servicePrice = price;
         state.serviceLabel = label;
         state.serviceTat   = tat;
-        state.serviceChargeableWeight = parseFloat(selectedCard?.dataset.chargeableWeight || 0) || state.chargeableWeight || state.weight;
+        state.serviceChargeableWeight = parseFloat(chargeableWeight || selectedCard?.dataset.chargeableWeight || 0) || state.chargeableWeight || state.weight;
         state.chargeableWeight = state.serviceChargeableWeight;
         updateChargeableWeightDisplay();
     };
