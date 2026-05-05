@@ -682,7 +682,7 @@
         const actual = state.weight || 0;
         const vol    = state.volumetricWeight || 0;
         state.chargeableWeight = Math.max(actual, vol);
-        state.serviceChargeableWeight = 0;
+        if (!state.serviceType) state.serviceChargeableWeight = 0;
         updateChargeableWeightDisplay();
     }
 
@@ -1437,10 +1437,12 @@
         if (selectedService) {
             state.serviceType = selectedService.dataset.service;
             state.servicePrice = parseFloat(selectedService.dataset.price) || state.servicePrice;
-            state.serviceChargeableWeight = parseFloat(selectedService.dataset.chargeableWeight || 0) || state.serviceChargeableWeight;
+            state.serviceChargeableWeight = parseFloat(selectedService.dataset.chargeableWeight || 0) || state.serviceChargeableWeight || state.chargeableWeight || state.weight;
             state.chargeableWeight = state.serviceChargeableWeight || state.chargeableWeight;
             state.serviceLabel = selectedService.dataset.label || state.serviceLabel;
             state.serviceTat = selectedService.dataset.tat || state.serviceTat;
+        } else {
+            state.serviceChargeableWeight = 0;
         }
         const selectedPayment = document.querySelector('.payment-option.selected');
         if (selectedPayment) state.paymentMethod = selectedPayment.dataset.payment || state.paymentMethod;
