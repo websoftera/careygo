@@ -19,9 +19,9 @@ if (!function_exists('_cfg')) {
 // define('DB_NAME', _cfg('CGO_DB_NAME', 'careygo'));
 
 define('DB_HOST', _cfg('CGO_DB_HOST', '127.0.0.1'));
-define('DB_USER', _cfg('CGO_DB_USER', 'u141519101_careygo'));
-define('DB_PASS', _cfg('CGO_DB_PASS', '+DgrP256'));
-define('DB_NAME', _cfg('CGO_DB_NAME', 'u141519101_careygo'));
+define('DB_USER', _cfg('CGO_DB_USER', 'u728317772_caryego'));
+define('DB_PASS', _cfg('CGO_DB_PASS', '*IdjJpb9'));
+define('DB_NAME', _cfg('CGO_DB_NAME', 'u728317772_caryego'));
 
 // ── Production credentials (set via env vars instead) ────────
 // CGO_DB_HOST=localhost
