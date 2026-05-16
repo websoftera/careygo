@@ -31,12 +31,12 @@ $_navUser = auth_user();   // null = guest, array = logged-in payload
 <body>
 
     <!-- ===== TOP BAR ===== -->
-    <div class="top-bar py-2 d-none d-lg-block">
+    <div class="top-bar py-2">
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-md-8 d-flex gap-4 top-info">
                     <a href="mailto:info@careygo.in"><i class="bi bi-envelope-fill"></i> info@careygo.in</a>
-                    <span><i class="bi bi-geo-alt-fill"></i> 250 Main Street, 2nd Floor, USA</span>
+                    <span class="d-none d-lg-flex"><i class="bi bi-geo-alt-fill"></i> 250 Main Street, 2nd Floor, USA</span>
                     <a href="tel:+919850296178"><i class="bi bi-telephone-fill"></i> +91 98502 96178</a>
                 </div>
                 <div class="col-md-4 d-flex justify-content-end gap-2 social-icons">
@@ -50,11 +50,12 @@ $_navUser = auth_user();   // null = guest, array = logged-in payload
     </div>
 
     <!-- ===== MAIN NAVIGATION ===== -->
-    <nav class="navbar navbar-expand-xl main-navbar py-3 sticky-top">
+    <nav class="navbar navbar-expand-xl main-navbar py-3">
         <div class="container align-items-center">
             <!-- Logo -->
             <a class="navbar-brand d-flex align-items-center" href="index.php">
-                <img src="assets/images/Main-Careygo-logo-blue.png" alt="CAREYGO Logo" class="brand-logo">
+                <img src="assets/images/Main-Careygo-logo-blue.png" alt="CAREYGO Logo" class="brand-logo"
+                    width="520" height="193">
             </a>
 
             <!-- Mobile Toggle -->
@@ -79,22 +80,22 @@ $_navUser = auth_user();   // null = guest, array = logged-in payload
             <div class="collapse navbar-collapse" id="mainNav">
                 <ul class="navbar-nav mx-auto mb-3 mb-xl-0 nav-links-wrapper px-4 py-2 mt-3 mt-xl-0">
                     <li class="nav-item px-1 px-xl-2">
-                        <a class="nav-link active" href="#">HOME</a>
+                        <a class="nav-link active" href="#home">HOME</a>
                     </li>
                     <li class="nav-item px-1 px-xl-2">
-                        <a class="nav-link" href="#">ABOUT US</a>
+                        <a class="nav-link" href="#about-us">ABOUT US</a>
                     </li>
                     <li class="nav-item px-1 px-xl-2">
-                        <a class="nav-link" href="#">SERVICES</a>
+                        <a class="nav-link" href="#services">SERVICES</a>
                     </li>
                     <li class="nav-item px-1 px-xl-2">
-                        <a class="nav-link" href="#">OUR NETWORK</a>
+                        <a class="nav-link" href="#our-network">OUR NETWORK</a>
                     </li>
                     <li class="nav-item px-1 px-xl-2">
                         <a class="nav-link" href="#">BLOG</a>
                     </li>
                     <li class="nav-item px-1 px-xl-2">
-                        <a class="nav-link" href="#">CONTACT US</a>
+                        <a class="nav-link" href="#contact-us">CONTACT US</a>
                     </li>
                 </ul>
 

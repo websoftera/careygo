@@ -1,7 +1,7 @@
 <?php require_once 'includes/header.php'; ?>
 
     <!-- ===== HERO SECTION ===== -->
-    <section class="hero-section position-relative d-flex align-items-center">
+    <section class="hero-section position-relative d-flex align-items-center" id="home">
         <!-- Background Image overlay is handled in CSS so we can apply perfect tinting -->
         <div class="container position-relative z-1 text-white">
             <div class="row">
@@ -23,7 +23,7 @@
     </section>
 
     <!-- ===== SERVICES SECTION ===== -->
-    <section class="services-section">
+    <section class="services-section" id="services">
         <div class="container">
             <!-- Top Section: Intro Text (Left) + First 3 Cards (Right) -->
             <div class="row gx-5 mb-4">
@@ -34,7 +34,7 @@
                         OUR SERVICES</h6>
                     <h2 class="fw-bold mb-4"
                         style="font-family: 'Montserrat', sans-serif; font-size: 42px; color: #1a1a1a; line-height: 1.15; letter-spacing: -1px;">
-                        Business<br>Verticals
+                        Business <br>Verticals
                     </h2>
                     <p class="mb-5"
                         style="font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 400; line-height: 1.7; color: #6C757D;">
@@ -233,7 +233,7 @@
     </section>
 
     <!-- ===== WHY CHOOSE US SECTION ===== -->
-    <section class="why-choose-section position-relative">
+    <section class="why-choose-section position-relative" id="our-network">
         <div class="container position-relative z-1">
             <!-- Section Header (Left Aligned) -->
             <div class="row mb-3">
@@ -330,7 +330,7 @@
     </section>
 
     <!-- ===== ABOUT / DELIVERY SECTION ===== -->
-    <section class="about-section position-relative" style="margin-top: -45px;">
+    <section class="about-section position-relative" id="about-us" style="margin-top: -45px;">
         <div class="container position-relative z-1 mb-lg-5 pt-0">
             <div class="row align-items-stretch g-4">
                 <!-- Left Side: Image -->
@@ -347,7 +347,7 @@
                             <h6 class="text-primary-custom fw-bold text-uppercase mb-3"
                                 style="font-size: 13px; letter-spacing: 1px;">ABOUT CAREYGO</h6>
                             <h2 class="fw-bold mb-4 text-dark about-heading">
-                                Maximizing efficiency<br>in delivery services
+                                Maximizing efficiency <br>in delivery services
                             </h2>
                             <p class="text-muted mb-5 about-desc" style="max-width: 95%;">
                                 logistics company specializes in managing the transportation, storage, and distribution
@@ -414,6 +414,94 @@
                                         <img src="assets/images/button-arrow.png" alt="arrow" style="width: 12px;">
                                     </span>
                                 </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== CONTACT US SECTION ===== -->
+    <section class="contact-section position-relative" id="contact-us">
+        <div class="container position-relative z-1">
+            <div class="row align-items-stretch g-4">
+                <div class="col-lg-7">
+                    <div class="contact-form-panel h-100">
+                        <h6 class="text-primary-custom fw-bold text-uppercase mb-3 contact-eyebrow">CONTACT US</h6>
+                        <h2 class="fw-bold mb-3 text-dark contact-heading">
+                            Let us handle your next shipment
+                        </h2>
+                        <p class="contact-desc mb-4">
+                            Share your shipment details and our team will help you choose the right logistics solution.
+                        </p>
+
+                        <form class="contact-form" id="contactForm" novalidate>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="contactName" class="form-label">Full Name</label>
+                                    <input type="text" class="form-control" id="contactName" name="name"
+                                        placeholder="Your name" minlength="2" maxlength="60"
+                                        pattern="^[A-Za-z][A-Za-z\s.'-]{1,59}$" required>
+                                    <div class="invalid-feedback">Please enter a valid name without numbers.</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="contactPhone" class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" id="contactPhone" name="phone"
+                                        placeholder="+91" inputmode="numeric" maxlength="14"
+                                        pattern="^(?:\+91[\s-]?)?[6-9][0-9]{9}$" required>
+                                    <div class="invalid-feedback">Please enter a valid 10 digit phone number.</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="contactEmail" class="form-label">Email Address</label>
+                                    <input type="email" class="form-control" id="contactEmail" name="email"
+                                        placeholder="you@example.com" required>
+                                    <div class="invalid-feedback">Please enter a valid email address.</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="contactService" class="form-label">Service Type</label>
+                                    <select class="form-select" id="contactService" name="service" required>
+                                        <option selected>Courier Services</option>
+                                        <option>E-Commerce</option>
+                                        <option>Premium Express Services</option>
+                                        <option>International Courier</option>
+                                        <option>Packaging Solutions</option>
+                                    </select>
+                                    <div class="invalid-feedback">Please select a service type.</div>
+                                </div>
+                                <div class="col-12">
+                                    <label for="contactMessage" class="form-label">Message</label>
+                                    <textarea class="form-control" id="contactMessage" name="message" rows="4"
+                                        placeholder="Pickup city, delivery city, weight, and any special instructions"
+                                        minlength="10" required></textarea>
+                                    <div class="invalid-feedback">Please add at least 10 characters.</div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="contact-form-status" id="contactFormStatus" role="status" aria-live="polite"></div>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit"
+                                        class="btn btn-primary-custom rounded-pill text-white fw-bold d-inline-flex align-items-center contact-submit">
+                                        Send Message
+                                        <span class="ms-2 d-inline-flex align-items-center justify-content-center bg-white rounded-circle">
+                                            <i class="bi bi-arrow-up-right"></i>
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <div class="contact-visual h-100">
+                        <img src="assets/images/Packaging Solutions.jpg" alt="Careygo customer support"
+                            class="img-fluid w-100 h-100">
+                        <div class="contact-quick-card">
+                            <span class="contact-quick-icon"><i class="bi bi-headset"></i></span>
+                            <div>
+                                <span class="contact-quick-label">Need help?</span>
+                                <a href="tel:+919850296178">+91 98502 96178</a>
                             </div>
                         </div>
                     </div>

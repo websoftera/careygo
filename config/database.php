@@ -16,7 +16,7 @@ if (!function_exists('_cfg')) {
 // define('DB_HOST', _cfg('CGO_DB_HOST', 'localhost'));
 // define('DB_USER', _cfg('CGO_DB_USER', 'root'));
 // define('DB_PASS', _cfg('CGO_DB_PASS', ''));
-// define('DB_NAME', _cfg('CGO_DB_NAME', 'careygo'));
+// define('DB_NAME', _cfg('CGO_DB_NAME', 'caryego'));
 
 define('DB_HOST', _cfg('CGO_DB_HOST', '127.0.0.1'));
 define('DB_USER', _cfg('CGO_DB_USER', 'u728317772_caryego'));

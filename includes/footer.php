@@ -75,49 +75,120 @@
                     class="sep">|</span> <a href="#">Privacy Policy</a> <span class="sep">|</span> <a href="#">FAQ</a>
             </div>
             <div class="footer-row">
-                <a href="tel:+919850296178"><i class="bi bi-telephone-fill"></i> +91 98502 96178</a>
-                <span class="sep">|</span>
-                <a href="mailto:info@careygo.in"><i class="bi bi-envelope-fill"></i> info@careygo.in</a>
-            </div>
-            <div class="footer-row">
                 <span>© 2026 CAREYGO - All Rights Reserved.&nbsp;<a href="https://websoftera.com" target="_blank" class="websoftera-text">Websoftera</a></span>
             </div>
         </div>
 
         <!-- Bottom Copyright Bar -->
         <div class="footer-bottom-bar text-center py-3 mt-4 d-none d-md-block">
-            <p class="mb-0 text-light-gray" style="font-size: 13px; letter-spacing: 0.5px;">Copyright @ <?php echo date('Y'); ?>. CAREYGO
+            <p class="mb-0 text-light-gray" style="font-size: 13px; letter-spacing: 0.5px;">© 2026 CAREYGO - All Rights Reserved.&nbsp;<a href="https://websoftera.com" target="_blank" class="websoftera-text">Websoftera</a>
             </p>
         </div>
     </footer>
 
     <!-- Back to Top Button -->
-    <button onclick="scrollToTop()" id="backToTop" class="back-to-top" title="Go to top">
+    <button id="backToTop" class="back-to-top" title="Go to top" type="button" aria-label="Scroll to top">
         <i class="bi bi-chevron-up"></i>
     </button>
 
     <!-- Back to Top Script -->
     <script>
-        window.onscroll = function () {
-            var btn = document.getElementById("backToTop");
-            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
-                btn.style.display = "flex";
-            } else {
-                btn.style.display = "none";
-            }
-        };
+        const backToTopBtn = document.getElementById("backToTop");
 
-        function scrollToTop() {
-            const c = document.documentElement.scrollTop || document.body.scrollTop;
-            if (c > 0) {
-                window.requestAnimationFrame(scrollToTop);
-                window.scrollTo(0, c - c / 12 - 5);
+        window.addEventListener("scroll", function () {
+            backToTopBtn.style.display = window.scrollY > 300 ? "flex" : "none";
+        }, { passive: true });
+
+        backToTopBtn.addEventListener("click", function () {
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+        });
+
+        const contactForm = document.getElementById("contactForm");
+        if (contactForm) {
+            const nameInput = document.getElementById("contactName");
+            const phoneInput = document.getElementById("contactPhone");
+
+            function validateContactName() {
+                const value = nameInput.value.trim();
+                const isValid = /^[A-Za-z][A-Za-z\s.'-]{1,59}$/.test(value);
+                nameInput.setCustomValidity(isValid ? "" : "Please enter a valid name without numbers.");
             }
+
+            function validateContactPhone() {
+                const value = phoneInput.value.trim();
+                const isValid = /^(?:\+91[\s-]?)?[6-9][0-9]{9}$/.test(value);
+                phoneInput.setCustomValidity(isValid ? "" : "Please enter a valid 10 digit phone number.");
+            }
+
+            nameInput.addEventListener("input", function () {
+                nameInput.value = nameInput.value.replace(/[0-9]/g, "");
+                validateContactName();
+            });
+
+            phoneInput.addEventListener("input", function () {
+                phoneInput.value = phoneInput.value.replace(/[^\d+\s-]/g, "");
+                validateContactPhone();
+            });
+
+            contactForm.addEventListener("submit", function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                const status = document.getElementById("contactFormStatus");
+                validateContactName();
+                validateContactPhone();
+
+                if (!contactForm.checkValidity()) {
+                    contactForm.classList.add("was-validated");
+                    if (status) {
+                        status.className = "contact-form-status";
+                        status.textContent = "";
+                    }
+                    return;
+                }
+
+                contactForm.classList.remove("was-validated");
+                contactForm.reset();
+
+                if (status) {
+                    status.className = "contact-form-status is-success";
+                    status.textContent = "Thank you. Our team will contact you shortly.";
+                }
+            });
         }
     </script>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const mainNav = document.getElementById("mainNav");
+            if (!mainNav || typeof bootstrap === "undefined") return;
+
+            mainNav.querySelectorAll(".nav-link").forEach(function (link) {
+                link.addEventListener("click", function (event) {
+                    if (link.getAttribute("href") === "#home") {
+                        event.preventDefault();
+                        window.scrollTo({
+                            top: 0,
+                            behavior: "smooth"
+                        });
+                    }
+
+                    if (window.innerWidth >= 1200) return;
+
+                    const navCollapse = bootstrap.Collapse.getOrCreateInstance(mainNav, {
+                        toggle: false
+                    });
+                    navCollapse.hide();
+                });
+            });
+        });
+    </script>
 
 </body>
 
