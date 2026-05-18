@@ -24,12 +24,12 @@
                         <i class="bi bi-arrow-right-circle fs-5" style="font-weight: 200;"></i> Useful Link
                     </h5>
                     <ul class="list-unstyled footer-links mb-0 d-flex flex-column gap-3">
-                        <li><a href="#">Home</a></li>
-                        <li><a href="#">About Us</a></li>
-                        <li><a href="#">Services</a></li>
-                        <li><a href="#">Our Network</a></li>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#about-us">About Us</a></li>
+                        <li><a href="#services">Services</a></li>
+                        <li><a href="#our-network">Our Network</a></li>
                         <li><a href="#">Blogs</a></li>
-                        <li><a href="#">Contact Us</a></li>
+                        <li><a href="#contact-us">Contact Us</a></li>
                     </ul>
                 </div>
 
@@ -85,6 +85,52 @@
             </p>
         </div>
     </footer>
+
+    <!-- Enquiry Popup -->
+    <div class="modal fade enquiry-modal" id="enquiryModal" tabindex="-1" aria-labelledby="enquiryModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <button type="button" class="btn-close enquiry-close" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+                <div class="modal-body">
+                    <div class="enquiry-logo-wrap">
+                        <img src="assets/images/Main-Careygo-logo-blue.png" alt="CAREYGO Logo"
+                            class="enquiry-logo">
+                    </div>
+                    <p class="enquiry-label text-uppercase mb-0" id="enquiryModalLabel">Connect With Us</p>
+
+                    <form class="enquiry-form" id="enquiryForm" novalidate>
+                        <div class="mb-2">
+                            <input type="text" class="form-control" id="enquiryName" name="name"
+                                placeholder="Full name" aria-label="Full name"
+                                pattern="^[A-Za-z][A-Za-z\s.'-]{1,59}$" required>
+                            <div class="invalid-feedback">Please enter a valid name without numbers.</div>
+                        </div>
+                        <div class="mb-2">
+                            <input type="email" class="form-control" id="enquiryEmail" name="email"
+                                placeholder="Email address" aria-label="Email address" required>
+                            <div class="invalid-feedback">Please enter a valid email address.</div>
+                        </div>
+                        <div class="mb-2">
+                            <input type="tel" class="form-control" id="enquiryPhone" name="phone"
+                                placeholder="10 digit mobile number" aria-label="Phone number" inputmode="numeric" maxlength="10"
+                                pattern="^[6-9][0-9]{9}$" required>
+                            <div class="invalid-feedback">Please enter a valid 10 digit phone number.</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary-custom enquiry-submit">
+                            Send Enquiry
+                            <span
+                                class="icon-circle bg-white rounded-circle d-inline-flex align-items-center justify-content-center">
+                                <i class="bi bi-arrow-up-right btn-arrow"></i>
+                            </span>
+                        </button>
+                        <div class="enquiry-form-status" id="enquiryFormStatus" role="status" aria-live="polite"></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Back to Top Button -->
     <button id="backToTop" class="back-to-top" title="Go to top" type="button" aria-label="Scroll to top">
@@ -159,6 +205,73 @@
                 }
             });
         }
+
+        const enquiryForm = document.getElementById("enquiryForm");
+        if (enquiryForm) {
+            const enquiryName = document.getElementById("enquiryName");
+            const enquiryPhone = document.getElementById("enquiryPhone");
+
+            function validateEnquiryName() {
+                const value = enquiryName.value.trim();
+                const isValid = /^[A-Za-z][A-Za-z\s.'-]{1,59}$/.test(value);
+                enquiryName.setCustomValidity(isValid ? "" : "Please enter a valid name without numbers.");
+            }
+
+            function validateEnquiryPhone() {
+                const value = enquiryPhone.value.trim();
+                const isValid = /^[6-9][0-9]{9}$/.test(value);
+                enquiryPhone.setCustomValidity(isValid ? "" : "Please enter a valid 10 digit phone number.");
+            }
+
+            enquiryName.addEventListener("input", function () {
+                enquiryName.value = enquiryName.value.replace(/[0-9]/g, "");
+                validateEnquiryName();
+            });
+
+            enquiryPhone.addEventListener("input", function () {
+                enquiryPhone.value = enquiryPhone.value.replace(/\D/g, "").slice(0, 10);
+                validateEnquiryPhone();
+            });
+
+            enquiryForm.addEventListener("submit", function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                const status = document.getElementById("enquiryFormStatus");
+                validateEnquiryName();
+                validateEnquiryPhone();
+
+                if (!enquiryForm.checkValidity()) {
+                    enquiryForm.classList.add("was-validated");
+                    if (status) {
+                        status.className = "enquiry-form-status";
+                        status.textContent = "";
+                    }
+                    return;
+                }
+
+                enquiryForm.classList.remove("was-validated");
+                enquiryForm.reset();
+
+                if (status) {
+                    status.className = "enquiry-form-status is-success";
+                    status.textContent = "Thank you. Our team will contact you shortly.";
+                }
+            });
+
+            const enquiryModal = document.getElementById("enquiryModal");
+            if (enquiryModal) {
+                enquiryModal.addEventListener("hidden.bs.modal", function () {
+                    const status = document.getElementById("enquiryFormStatus");
+                    enquiryForm.classList.remove("was-validated");
+                    enquiryForm.reset();
+                    if (status) {
+                        status.className = "enquiry-form-status";
+                        status.textContent = "";
+                    }
+                });
+            }
+        }
     </script>
 
     <!-- Bootstrap JS -->
@@ -169,7 +282,7 @@
             const mainNav = document.getElementById("mainNav");
             if (!mainNav || typeof bootstrap === "undefined") return;
 
-            mainNav.querySelectorAll(".nav-link").forEach(function (link) {
+            document.querySelectorAll(".nav-link, .footer-links a").forEach(function (link) {
                 link.addEventListener("click", function (event) {
                     if (link.getAttribute("href") === "#home") {
                         event.preventDefault();
@@ -179,7 +292,7 @@
                         });
                     }
 
-                    if (window.innerWidth >= 1200) return;
+                    if (!mainNav.contains(link) || window.innerWidth >= 1200) return;
 
                     const navCollapse = bootstrap.Collapse.getOrCreateInstance(mainNav, {
                         toggle: false

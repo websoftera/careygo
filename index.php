@@ -13,7 +13,8 @@
                         Logistics Solutions to Help Business
                     </h1>
                     <div class="hero-btn-container">
-                        <a href="#" class="btn btn-primary-custom">
+                        <a href="#" class="btn btn-primary-custom" data-bs-toggle="modal"
+                            data-bs-target="#enquiryModal">
                             Connect With Us
                         </a>
                     </div>
@@ -41,7 +42,7 @@
                         Drive your freight forward with cutting-edge logistics. We deliver smarter supply chain
                         solutions.
                     </p>
-                    <a href="#"
+                    <a href="#contact-us"
                         class="btn btn-primary-custom rounded-pill text-white px-4 py-2 d-inline-flex align-items-center gap-2 fw-semibold">
                         Connect With Us
                         <span
@@ -404,7 +405,7 @@
 
                             <!-- CTA Button -->
                             <div class="mt-2 text-start pb-2">
-                                <a href="#"
+                                <a href="#contact-us"
                                     class="btn btn-primary-custom rounded-pill text-white px-4 py-2 fw-bold d-inline-flex align-items-center position-relative z-2"
                                     style="font-size: 14px; letter-spacing: 0.5px; transition: all 0.3s ease;">
                                     Connect With Us
@@ -462,9 +463,15 @@
                                     <label for="contactService" class="form-label">Service Type</label>
                                     <select class="form-select" id="contactService" name="service" required>
                                         <option selected>Courier Services</option>
-                                        <option>E-Commerce</option>
+                                        <option>E-Commerce Services</option>
+                                        <option>Business to Business - B2B</option>
+                                        <option>Online Sellers - D2C</option>
                                         <option>Premium Express Services</option>
+                                        <option>Express Services</option>
+                                        <option>Reverse Pickup</option>
+                                        <option>Cash on Delivery - COD</option>
                                         <option>International Courier</option>
+                                        <option>International - Airport to Airport</option>
                                         <option>Packaging Solutions</option>
                                     </select>
                                     <div class="invalid-feedback">Please select a service type.</div>
