@@ -24,12 +24,12 @@
                         <i class="bi bi-arrow-right-circle fs-5" style="font-weight: 200;"></i> Useful Link
                     </h5>
                     <ul class="list-unstyled footer-links mb-0 d-flex flex-column gap-3">
-                        <li><a href="#home">Home</a></li>
-                        <li><a href="#about-us">About Us</a></li>
-                        <li><a href="#services">Services</a></li>
-                        <li><a href="#our-network">Our Network</a></li>
-                        <li><a href="#">Blogs</a></li>
-                        <li><a href="#contact-us">Contact Us</a></li>
+                        <li><a href="index.php">Home</a></li>
+                        <li><a href="index.php#about-us">About Us</a></li>
+                        <li><a href="index.php#services">Services</a></li>
+                        <li><a href="index.php#our-network">Our Network</a></li>
+                        <li><a href="blog">Blogs</a></li>
+                        <li><a href="index.php#contact-us">Contact Us</a></li>
                     </ul>
                 </div>
 
@@ -71,7 +71,7 @@
         <!-- Mobile Footer Content -->
         <div class="container position-relative z-2 d-md-none footer-mobile-v2">
             <div class="footer-row">
-                <a href="#">About Us</a> <span class="sep">|</span> <a href="#">Returns & Refunds</a> <span
+                <a href="index.php#about-us">About Us</a> <span class="sep">|</span> <a href="blog">Blogs</a> <span
                     class="sep">|</span> <a href="#">Privacy Policy</a> <span class="sep">|</span> <a href="#">FAQ</a>
             </div>
             <div class="footer-row">

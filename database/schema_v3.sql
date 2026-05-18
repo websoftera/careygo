@@ -25,3 +25,26 @@ CREATE TABLE IF NOT EXISTS `shipment_tracking_events` (
     INDEX `idx_event_time`  (`event_time`),
     FOREIGN KEY (`shipment_id`) REFERENCES `shipments`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- Blog posts
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `blogs` (
+    `id`               INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `title`            VARCHAR(180) NOT NULL,
+    `slug`             VARCHAR(220) NOT NULL,
+    `excerpt`          TEXT DEFAULT NULL,
+    `content`          MEDIUMTEXT NOT NULL,
+    `featured_image`   VARCHAR(255) DEFAULT NULL,
+    `author_name`      VARCHAR(120) DEFAULT NULL,
+    `meta_title`       VARCHAR(180) DEFAULT NULL,
+    `meta_description` VARCHAR(255) DEFAULT NULL,
+    `meta_keywords`    VARCHAR(255) DEFAULT NULL,
+    `status`           ENUM('draft','published') NOT NULL DEFAULT 'draft',
+    `published_at`     DATETIME DEFAULT NULL,
+    `created_at`       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uq_blogs_slug` (`slug`),
+    KEY `idx_blogs_status_published` (`status`, `published_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

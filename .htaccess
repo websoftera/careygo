@@ -33,6 +33,10 @@ RewriteEngine On
 # Deny direct access to sensitive directories
 RewriteRule ^(config|lib|database|database\/.*\.sql)(/|$) - [F,L]
 
+# Clean blog URLs
+RewriteRule ^blog/?$ blog.php [L,QSA]
+RewriteRule ^blog/([A-Za-z0-9-]+)/?$ blog-detail.php?slug=$1 [L,QSA]
+
 # ── Security headers ─────────────────────────────────────────
 <IfModule mod_headers.c>
     Header always set X-Frame-Options "SAMEORIGIN"
