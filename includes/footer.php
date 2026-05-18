@@ -292,6 +292,13 @@
                         });
                     }
 
+                    if (mainNav.contains(link) && link.classList.contains("nav-link")) {
+                        mainNav.querySelectorAll(".nav-link").forEach(function (navLink) {
+                            navLink.classList.remove("active");
+                        });
+                        link.classList.add("active");
+                    }
+
                     if (!mainNav.contains(link) || window.innerWidth >= 1200) return;
 
                     const navCollapse = bootstrap.Collapse.getOrCreateInstance(mainNav, {
