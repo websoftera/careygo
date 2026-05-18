@@ -75,6 +75,12 @@
                     <span>Pincodes / TAT</span>
                 </a>
             </li>
+            <li>
+                <a href="blogs.php" class="sidebar-link <?= ($activePage ?? '') === 'blogs' ? 'active' : '' ?>">
+                    <i class="bi bi-journal-text"></i>
+                    <span>Blogs</span>
+                </a>
+            </li>
 
             <li class="nav-section-label mt-2">Account</li>
             <li>

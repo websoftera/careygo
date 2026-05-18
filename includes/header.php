@@ -6,6 +6,7 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../lib/auth.php';
 
 $_navUser = auth_user();   // null = guest, array = logged-in payload
+$_currentPage = basename($_SERVER['SCRIPT_NAME'] ?? 'index.php');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -13,7 +14,24 @@ $_navUser = auth_user();   // null = guest, array = logged-in payload
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Careygo Logistics</title>
+    <base href="<?= htmlspecialchars(SITE_URL . '/') ?>">
+    <title><?= htmlspecialchars($pageTitle ?? 'Careygo Logistics') ?></title>
+    <?php if (!empty($metaDescription)): ?>
+    <meta name="description" content="<?= htmlspecialchars($metaDescription) ?>">
+    <?php endif; ?>
+    <?php if (!empty($metaKeywords)): ?>
+    <meta name="keywords" content="<?= htmlspecialchars($metaKeywords) ?>">
+    <?php endif; ?>
+    <?php if (!empty($canonicalUrl)): ?>
+    <link rel="canonical" href="<?= htmlspecialchars($canonicalUrl) ?>">
+    <?php endif; ?>
+    <meta property="og:title" content="<?= htmlspecialchars($pageTitle ?? 'Careygo Logistics') ?>">
+    <?php if (!empty($metaDescription)): ?>
+    <meta property="og:description" content="<?= htmlspecialchars($metaDescription) ?>">
+    <?php endif; ?>
+    <?php if (!empty($metaImage)): ?>
+    <meta property="og:image" content="<?= htmlspecialchars($metaImage) ?>">
+    <?php endif; ?>
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -80,22 +98,22 @@ $_navUser = auth_user();   // null = guest, array = logged-in payload
             <div class="collapse navbar-collapse" id="mainNav">
                 <ul class="navbar-nav mx-auto mb-3 mb-xl-0 nav-links-wrapper px-4 py-2 mt-3 mt-xl-0">
                     <li class="nav-item px-1 px-xl-2">
-                        <a class="nav-link active" href="#home">HOME</a>
+                        <a class="nav-link <?= $_currentPage === 'index.php' ? 'active' : '' ?>" href="index.php">HOME</a>
                     </li>
                     <li class="nav-item px-1 px-xl-2">
-                        <a class="nav-link" href="#about-us">ABOUT US</a>
+                        <a class="nav-link" href="index.php#about-us">ABOUT US</a>
                     </li>
                     <li class="nav-item px-1 px-xl-2">
-                        <a class="nav-link" href="#services">SERVICES</a>
+                        <a class="nav-link" href="index.php#services">SERVICES</a>
                     </li>
                     <li class="nav-item px-1 px-xl-2">
-                        <a class="nav-link" href="#our-network">OUR NETWORK</a>
+                        <a class="nav-link" href="index.php#our-network">OUR NETWORK</a>
                     </li>
                     <li class="nav-item px-1 px-xl-2">
-                        <a class="nav-link" href="#">BLOG</a>
+                        <a class="nav-link <?= in_array($_currentPage, ['blog.php', 'blog-detail.php'], true) ? 'active' : '' ?>" href="blog">BLOG</a>
                     </li>
                     <li class="nav-item px-1 px-xl-2">
-                        <a class="nav-link" href="#contact-us">CONTACT US</a>
+                        <a class="nav-link" href="index.php#contact-us">CONTACT US</a>
                     </li>
                 </ul>
 
