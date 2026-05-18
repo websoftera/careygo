@@ -2152,6 +2152,142 @@ ul {
     }
 }
 
+/* Desktop header alignment: keep logo, menu, search, and CTA inside viewport */
+@media (min-width: 1351px) {
+    .main-navbar .container {
+        display: flex;
+        flex-wrap: nowrap !important;
+        align-items: center;
+        gap: 22px;
+    }
+
+    .navbar-brand {
+        flex: 0 0 170px;
+        width: 170px;
+        margin-right: 0 !important;
+    }
+
+    .brand-logo {
+        display: block;
+        width: 170px;
+        height: auto;
+        max-height: 64px;
+    }
+
+    .main-navbar .navbar-collapse {
+        flex: 1 1 auto;
+        min-width: 0;
+        align-items: center;
+        gap: 22px;
+    }
+
+    .nav-links-wrapper {
+        flex: 1 1 auto;
+        max-width: min(50vw, 860px);
+        justify-content: center;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        padding: 6px 28px !important;
+    }
+
+    .navbar-nav .nav-item {
+        padding-left: 4px !important;
+        padding-right: 4px !important;
+    }
+
+    .navbar-nav .nav-link {
+        padding: 8px 14px !important;
+    }
+
+    .nav-actions {
+        flex: 0 0 auto;
+        gap: 12px !important;
+        margin-left: 0;
+        white-space: nowrap;
+    }
+
+    .search-btn {
+        flex: 0 0 44px;
+        margin-right: 12px;
+    }
+
+    .nav-actions .btn-primary-custom {
+        white-space: nowrap;
+        padding: 0 6px 0 18px !important;
+    }
+}
+
+/* Final desktop header sizing: stable at browser zoom and wide desktop sizes */
+@media (min-width: 1200px) {
+    .main-navbar .container {
+        display: flex;
+        flex-wrap: nowrap !important;
+        align-items: center;
+        gap: clamp(10px, 1vw, 18px);
+    }
+
+    .navbar-brand {
+        flex: 0 0 170px;
+        width: 170px;
+        margin-right: 0 !important;
+    }
+
+    .brand-logo {
+        display: block;
+        width: 100%;
+        height: auto;
+        max-height: 64px;
+    }
+
+    .main-navbar .navbar-collapse {
+        display: flex !important;
+        flex: 1 1 auto;
+        min-width: 0;
+        align-items: center;
+        justify-content: flex-end;
+        gap: clamp(10px, 1vw, 18px);
+    }
+
+    .nav-links-wrapper {
+        flex: 0 1 auto;
+        max-width: min(48vw, 820px);
+        justify-content: center;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        padding: 6px clamp(12px, 1.2vw, 24px) !important;
+    }
+
+    .navbar-nav .nav-item {
+        padding-left: 2px !important;
+        padding-right: 2px !important;
+    }
+
+    .navbar-nav .nav-link {
+        padding: 8px clamp(8px, 0.75vw, 14px) !important;
+        font-size: 13px;
+    }
+
+    .nav-actions {
+        flex: 0 0 auto;
+        min-width: max-content;
+        gap: 10px !important;
+        margin-left: 0 !important;
+        white-space: nowrap;
+    }
+
+    .search-btn {
+        flex: 0 0 44px;
+        margin-right: 12px !important;
+    }
+
+    .nav-actions .btn-primary-custom {
+        flex: 0 0 auto;
+        white-space: nowrap;
+        padding: 0 6px 0 16px !important;
+        font-size: 13px;
+    }
+}
+
 /* Mobile page gutters: keep every homepage section aligned at 16px */
 @media (max-width: 767.98px) {
     .top-bar .container,
