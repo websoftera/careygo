@@ -1085,7 +1085,7 @@ ul {
 
 /* Mobile Toggle Cross Icon when opened */
 .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon {
-    background-image: none;
+    background-image: none !important;
     position: relative;
     display: flex;
     align-items: center;
@@ -2665,8 +2665,8 @@ ul {
     }
 
     .main-navbar:has(.navbar-toggler[aria-expanded="true"]) .navbar-toggler {
-        background-color: #eef2f7 !important;
-        box-shadow: 0 6px 16px rgba(16, 32, 74, 0.12);
+        background-color: var(--primary-blue) !important;
+        box-shadow: 0 6px 16px rgba(16, 32, 74, 0.16);
     }
 
     .main-navbar:has(.navbar-toggler[aria-expanded="true"]) .navbar-collapse {
