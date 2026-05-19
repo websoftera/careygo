@@ -307,6 +307,16 @@
             const mainNav = document.getElementById("mainNav");
             if (!mainNav || typeof bootstrap === "undefined") return;
 
+            mainNav.addEventListener("hidden.bs.collapse", function () {
+                mainNav.classList.remove("show", "collapsing");
+                mainNav.style.height = "";
+                mainNav.style.display = "";
+                document.querySelectorAll('[data-bs-target="#mainNav"]').forEach(function (toggle) {
+                    toggle.setAttribute("aria-expanded", "false");
+                    toggle.classList.add("collapsed");
+                });
+            });
+
             document.querySelectorAll(".nav-link, .footer-links a").forEach(function (link) {
                 link.addEventListener("click", function (event) {
                     if (link.getAttribute("href") === "#home") {
@@ -325,6 +335,14 @@
                     }
 
                     if (!mainNav.contains(link) || window.innerWidth >= 1200) return;
+
+                    mainNav.classList.remove("show", "collapsing");
+                    mainNav.style.height = "";
+                    mainNav.style.display = "";
+                    document.querySelectorAll('[data-bs-target="#mainNav"]').forEach(function (toggle) {
+                        toggle.setAttribute("aria-expanded", "false");
+                        toggle.classList.add("collapsed");
+                    });
 
                     const navCollapse = bootstrap.Collapse.getOrCreateInstance(mainNav, {
                         toggle: false
