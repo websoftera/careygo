@@ -25,7 +25,7 @@ $companyName    = 'Careygo Logistics Pvt. Ltd.';
 $companyGstin   = '27XXXXX0000X1ZX';   // replace with actual GSTIN
 $companyAddr    = '123, Logistics Park, Mumbai, Maharashtra - 400001';
 $companyEmail   = 'billing@careygo.in';
-$companyPhone   = '+91-XXXXX-XXXXX';
+$companyPhone   = 'XXXXX-XXXXX';
 
 // Invoice number: INV-<shipment_id>-<year>
 $invoiceNo   = 'INV-' . str_pad($s['id'], 6, '0', STR_PAD_LEFT) . '-' . date('Y', strtotime($s['created_at']));

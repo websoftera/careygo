@@ -108,8 +108,8 @@ require_once 'includes/header.php';
                     <td style="font-size:13px;font-weight:700;color:var(--primary);" id="earning_pct_<?= $c['id'] ?>"><?= number_format((float)($c['customer_earning_pct'] ?? 0), 2) ?>%</td>
                     <td><span class="badge-status badge-<?= $c['status'] ?>" id="badge_<?= $c['id'] ?>"><?= ucfirst($c['status']) ?></span></td>
                     <td style="font-size:12px;color:var(--muted);"><?= date('d M Y', strtotime($c['created_at'])) ?></td>
-                    <td>
-                        <div class="d-flex gap-1 align-items-center">
+                    <td class="customer-actions-cell">
+                        <div class="customer-actions">
                             <?php if ($c['status'] !== 'approved'): ?>
                             <button class="btn-success-admin" onclick="updateStatus(<?= $c['id'] ?>, 'approved')" title="Approve">
                                 <i class="bi bi-check-lg"></i> Approve
@@ -138,6 +138,31 @@ require_once 'includes/header.php';
         </table>
     </div>
 </div>
+
+<style>
+#customersTable th:last-child,
+#customersTable td.customer-actions-cell {
+    min-width: 250px;
+    white-space: nowrap;
+}
+.customer-actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+}
+.customer-actions .btn-success-admin,
+.customer-actions .btn-danger-admin {
+    flex: 0 0 auto;
+    justify-content: center;
+    min-width: 84px;
+    padding: 7px 12px;
+    white-space: nowrap;
+}
+.customer-actions .btn-action {
+    flex: 0 0 auto;
+}
+</style>
 
 <!-- Customer Earning Modal -->
 <div class="modal fade admin-modal" id="earningModal" tabindex="-1" aria-hidden="true">

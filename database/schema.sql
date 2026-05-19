@@ -40,6 +40,24 @@ CREATE TABLE IF NOT EXISTS `token_blacklist` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
+-- Home banners
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `home_banners` (
+    `id`          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `eyebrow`     VARCHAR(120) DEFAULT NULL,
+    `title`       VARCHAR(180) NOT NULL,
+    `button_text` VARCHAR(80) DEFAULT NULL,
+    `button_url`  VARCHAR(255) DEFAULT NULL,
+    `image_path`  VARCHAR(255) DEFAULT NULL,
+    `status`      ENUM('draft','published') NOT NULL DEFAULT 'published',
+    `sort_order`  INT NOT NULL DEFAULT 0,
+    `created_at`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    INDEX `idx_home_banners_status_sort` (`status`, `sort_order`, `id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
 -- Default admin seed  (password: Admin@123)
 -- ============================================================
 INSERT IGNORE INTO `users`

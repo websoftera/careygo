@@ -125,7 +125,7 @@ if (!$shipment) {
 
     <div class="footer">
         <p>Careygo Logistics - Fast & Reliable Courier Service</p>
-        <p>For support: <a href="mailto:support@careygo.in">support@careygo.in</a> | <a href="tel:+919850296178">+91-98502-96178</a></p>
+        <p>For support: <a href="mailto:support@careygo.in">support@careygo.in</a> | <a href="tel:9850296178">98502-96178</a></p>
     </div>
 
     <script>

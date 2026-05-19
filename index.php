@@ -1,27 +1,228 @@
-<?php require_once 'includes/header.php'; ?>
+<?php
+require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/lib/helpers.php';
+require_once __DIR__ . '/lib/banner.php';
+
+$homeBanners = banner_published($pdo);
+$homeBannerCount = count($homeBanners);
+
+require_once 'includes/header.php';
+?>
 
     <!-- ===== HERO SECTION ===== -->
-    <section class="hero-section position-relative d-flex align-items-center" id="home">
-        <!-- Background Image overlay is handled in CSS so we can apply perfect tinting -->
-        <div class="container position-relative z-1 text-white">
-            <div class="row">
-                <div class="col-lg-8 col-xl-7 hero-content">
-                    <div class="hero-label rounded-pill">
-                        Plan, Transport and Focus
-                    </div>
-                    <h1 class="hero-title fw-bold text-white">
-                        Logistics Solutions to Help Business
-                    </h1>
-                    <div class="hero-btn-container">
-                        <a href="#" class="btn btn-primary-custom" data-bs-toggle="modal"
-                            data-bs-target="#enquiryModal">
-                            Connect With Us
-                        </a>
+    <section class="hero-section hero-carousel position-relative d-flex align-items-center" id="home" data-hero-carousel data-slide-count="<?= (int) $homeBannerCount ?>">
+        <?php foreach ($homeBanners as $index => $homeBanner): ?>
+        <?php
+            $buttonUrl = (string) ($homeBanner['button_url'] ?: '#enquiryModal');
+            $isModalButton = banner_is_modal_url($buttonUrl);
+        ?>
+        <div class="hero-slide <?= $index === 0 ? 'is-active' : '' ?>" data-hero-slide="<?= (int) $index ?>" style="background-image: url('<?= h(banner_image_url($homeBanner['image_path'] ?? null)) ?>');">
+            <div class="container position-relative z-1 text-white">
+                <div class="row">
+                    <div class="col-lg-8 col-xl-7 hero-content">
+                        <?php if (!empty($homeBanner['eyebrow'])): ?>
+                        <div class="hero-label rounded-pill">
+                            <?= h($homeBanner['eyebrow']) ?>
+                        </div>
+                        <?php endif; ?>
+                        <h1 class="hero-title fw-bold text-white">
+                            <?= h($homeBanner['title']) ?>
+                        </h1>
+                        <?php if (!empty($homeBanner['button_text'])): ?>
+                        <div class="hero-btn-container">
+                            <a href="<?= h($buttonUrl) ?>" class="btn btn-primary-custom" <?= $isModalButton ? 'data-bs-toggle="modal" data-bs-target="' . h($buttonUrl) . '"' : '' ?>>
+                                <?= h($homeBanner['button_text']) ?>
+                            </a>
+                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
         </div>
+        <?php endforeach; ?>
+
+        <?php if ($homeBannerCount > 1): ?>
+        <div class="hero-carousel-controls">
+            <button type="button" class="hero-carousel-arrow" data-hero-prev aria-label="Previous banner">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+            <button type="button" class="hero-carousel-arrow" data-hero-next aria-label="Next banner">
+                <i class="bi bi-chevron-right"></i>
+            </button>
+        </div>
+        <?php endif; ?>
     </section>
+
+    <style>
+    .hero-carousel {
+        background-image: none !important;
+        overflow: hidden;
+    }
+    .hero-carousel::before {
+        display: none;
+    }
+    .hero-slide {
+        align-items: center;
+        background-position: right center;
+        background-repeat: no-repeat;
+        background-size: cover;
+        display: flex;
+        inset: 0;
+        opacity: 0;
+        pointer-events: none;
+        position: absolute;
+        transform: scale(1);
+        transition: opacity 1200ms ease-in-out, transform 6500ms linear;
+        will-change: opacity, transform;
+        z-index: 1;
+    }
+    .hero-slide::before {
+        background: linear-gradient(90deg, rgba(31, 23, 18, 0.85) 0%, rgba(20, 35, 60, 0.4) 55%, rgba(0, 0, 0, 0) 100%);
+        content: '';
+        height: 100%;
+        left: 0;
+        pointer-events: none;
+        position: absolute;
+        top: 0;
+        width: 100%;
+        z-index: 1;
+    }
+    .hero-slide.is-active {
+        opacity: 1;
+        pointer-events: auto;
+        transform: scale(1.035);
+        z-index: 3;
+    }
+    .hero-slide .container {
+        position: relative;
+        width: 100%;
+        z-index: 2;
+    }
+    .hero-carousel .hero-content {
+        padding-left: 50px !important;
+    }
+    .hero-slide .hero-label,
+    .hero-slide .hero-title,
+    .hero-slide .hero-btn-container {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+    .hero-slide.is-active .hero-label {
+        opacity: 1;
+        transform: none;
+    }
+    .hero-slide.is-active .hero-title {
+        opacity: 1;
+        transform: none;
+    }
+    .hero-slide.is-active .hero-btn-container {
+        opacity: 1;
+        transform: none;
+    }
+    .hero-carousel-controls {
+        align-items: center;
+        bottom: 34px;
+        display: flex;
+        gap: 8px;
+        opacity: 1;
+        position: absolute;
+        right: 42px;
+        transform: translateY(0);
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        z-index: 6;
+    }
+    .hero-carousel-arrow {
+        align-items: center;
+        background: #fff;
+        border: 1px solid #dbe2ee;
+        border-radius: 50%;
+        color: #001A93;
+        display: inline-flex;
+        height: 38px;
+        justify-content: center;
+        transition: all 0.2s ease;
+        width: 38px;
+    }
+    .hero-carousel-arrow:hover {
+        background: #001A93;
+        color: #fff;
+    }
+    @media (max-width: 767.98px) {
+        .hero-carousel::before {
+            display: none;
+        }
+        .hero-slide {
+            background-position: center center;
+        }
+        .hero-carousel .hero-content {
+            padding: 12px 20px !important;
+        }
+        .hero-slide::before {
+            background: linear-gradient(180deg, rgba(82, 60, 48, 0.8) 0%, rgba(26, 47, 76, 0.6) 50%, rgba(0, 0, 0, 0.4) 100%);
+        }
+        .hero-carousel-controls {
+            display: none;
+        }
+        .hero-carousel-arrow {
+            height: 34px;
+            width: 34px;
+        }
+    }
+    </style>
+
+    <script>
+    (function () {
+        const carousel = document.querySelector('[data-hero-carousel]');
+        if (!carousel) return;
+
+        const slides = Array.from(carousel.querySelectorAll('[data-hero-slide]'));
+        const prev = carousel.querySelector('[data-hero-prev]');
+        const next = carousel.querySelector('[data-hero-next]');
+        if (slides.length <= 1) return;
+
+        let current = 0;
+        let timer = null;
+        const intervalMs = 5000;
+
+        function showSlide(index) {
+            current = (index + slides.length) % slides.length;
+            slides.forEach((slide, slideIndex) => {
+                slide.classList.toggle('is-active', slideIndex === current);
+            });
+        }
+
+        function stopAuto() {
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+            }
+        }
+
+        function startAuto() {
+            stopAuto();
+            timer = setInterval(() => showSlide(current + 1), intervalMs);
+        }
+
+        prev?.addEventListener('click', () => {
+            showSlide(current - 1);
+            startAuto();
+        });
+
+        next?.addEventListener('click', () => {
+            showSlide(current + 1);
+            startAuto();
+        });
+
+        carousel.addEventListener('mouseenter', stopAuto);
+        carousel.addEventListener('mouseleave', startAuto);
+        carousel.addEventListener('focusin', stopAuto);
+        carousel.addEventListener('focusout', startAuto);
+
+        showSlide(0);
+        startAuto();
+    })();
+    </script>
 
     <!-- ===== SERVICES SECTION ===== -->
     <section class="services-section" id="services">
@@ -43,7 +244,7 @@
                         solutions.
                     </p>
                     <a href="#contact-us"
-                        class="btn btn-primary-custom rounded-pill text-white px-4 py-2 d-inline-flex align-items-center gap-2 fw-semibold">
+                        class="btn btn-primary-custom cta-arrow-pill rounded-pill text-white px-4 py-2 d-inline-flex align-items-center gap-2 fw-semibold">
                         Connect With Us
                         <span
                             class="icon-circle bg-white rounded-circle d-flex align-items-center justify-content-center"
@@ -406,13 +607,13 @@
                             <!-- CTA Button -->
                             <div class="mt-2 text-start pb-2">
                                 <a href="#contact-us"
-                                    class="btn btn-primary-custom rounded-pill text-white px-4 py-2 fw-bold d-inline-flex align-items-center position-relative z-2"
+                                    class="btn btn-primary-custom cta-arrow-pill rounded-pill text-white px-4 py-2 fw-bold d-inline-flex align-items-center position-relative z-2"
                                     style="font-size: 14px; letter-spacing: 0.5px; transition: all 0.3s ease;">
                                     Connect With Us
                                     <span
                                         class="ms-2 d-inline-flex align-items-center justify-content-center bg-white rounded-circle"
                                         style="width: 24px; height: 24px;">
-                                        <img src="assets/images/button-arrow.png" alt="arrow" style="width: 12px;">
+                                        <i class="bi bi-arrow-up-right btn-arrow"></i>
                                     </span>
                                 </a>
                             </div>
@@ -449,7 +650,7 @@
                                 <div class="col-md-6">
                                     <label for="contactPhone" class="form-label">Phone Number</label>
                                     <input type="tel" class="form-control" id="contactPhone" name="phone"
-                                        placeholder="+91" inputmode="numeric" maxlength="14"
+                                        placeholder="98502 96178" inputmode="numeric" maxlength="14"
                                         pattern="^(?:\+91[\s-]?)?[6-9][0-9]{9}$" required>
                                     <div class="invalid-feedback">Please enter a valid 10 digit phone number.</div>
                                 </div>
@@ -488,7 +689,7 @@
                                 </div>
                                 <div class="col-12">
                                     <button type="submit"
-                                        class="btn btn-primary-custom rounded-pill text-white fw-bold d-inline-flex align-items-center contact-submit">
+                                        class="btn btn-primary-custom cta-arrow-pill rounded-pill text-white fw-bold d-inline-flex align-items-center contact-submit">
                                         Send Message
                                         <span class="ms-2 d-inline-flex align-items-center justify-content-center bg-white rounded-circle">
                                             <i class="bi bi-arrow-up-right"></i>
@@ -508,7 +709,7 @@
                             <span class="contact-quick-icon"><i class="bi bi-headset"></i></span>
                             <div>
                                 <span class="contact-quick-label">Need help?</span>
-                                <a href="tel:+919850296178">+91 98502 96178</a>
+                                <a href="tel:9850296178">98502 96178</a>
                             </div>
                         </div>
                     </div>
