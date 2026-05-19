@@ -575,7 +575,7 @@ HTML;
         </div>
 
         <div class="footer">
-            <p><strong>Careygo Logistics</strong> | Email: support@careygo.in | Phone: +91-98502-96178</p>
+            <p><strong>Careygo Logistics</strong> | Email: support@careygo.in | Phone: 98502-96178</p>
             <p>© 2026 Careygo Logistics. All rights reserved.</p>
             <p style="margin-top: 15px;">This document was generated on {$bookingDate}</p>
         </div>

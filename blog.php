@@ -10,12 +10,29 @@ $metaDescription = 'Read Careygo logistics insights, courier tips, ecommerce del
 $metaKeywords = 'Careygo blog, courier tips, logistics, ecommerce shipping, delivery services';
 $canonicalUrl = SITE_URL . '/blog';
 
-$stmt = $pdo->query("
+$perPage = 20;
+$page = max(1, (int) ($_GET['page'] ?? 1));
+$totalBlogs = (int) $pdo->query("
+    SELECT COUNT(*)
+    FROM blogs
+    WHERE status = 'published' AND (published_at IS NULL OR published_at <= NOW())
+")->fetchColumn();
+$totalPages = max(1, (int) ceil($totalBlogs / $perPage));
+if ($page > $totalPages) {
+    $page = $totalPages;
+}
+$offset = ($page - 1) * $perPage;
+
+$stmt = $pdo->prepare("
     SELECT id, title, slug, excerpt, content, featured_image, published_at
     FROM blogs
     WHERE status = 'published' AND (published_at IS NULL OR published_at <= NOW())
     ORDER BY COALESCE(published_at, created_at) DESC, id DESC
+    LIMIT :limit OFFSET :offset
 ");
+$stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+$stmt->execute();
 $blogs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 require_once __DIR__ . '/includes/header.php';
@@ -66,6 +83,15 @@ require_once __DIR__ . '/includes/header.php';
             </div>
             <?php endforeach; ?>
         </div>
+        <?php if ($totalPages > 1): ?>
+        <nav class="blog-pagination" aria-label="Blog pagination">
+            <a class="blog-page-link <?= $page <= 1 ? 'disabled' : '' ?>" href="blog<?= $page > 2 ? '?page=' . ($page - 1) : '' ?>">Previous</a>
+            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+            <a class="blog-page-link <?= $i === $page ? 'active' : '' ?>" href="blog<?= $i > 1 ? '?page=' . $i : '' ?>"><?= $i ?></a>
+            <?php endfor; ?>
+            <a class="blog-page-link <?= $page >= $totalPages ? 'disabled' : '' ?>" href="blog?page=<?= $page + 1 ?>">Next</a>
+        </nav>
+        <?php endif; ?>
         <?php endif; ?>
     </div>
 </section>

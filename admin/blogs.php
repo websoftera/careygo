@@ -11,14 +11,20 @@ $pageTitle  = 'Blog Management';
 $activePage = 'blogs';
 $message = '';
 $error = '';
+$formData = [];
+$csrfToken = csrf_token();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+    if ($action !== 'delete') {
+        $formData = $_POST;
+    }
+
     try {
         if (!csrf_verify($_POST['csrf_token'] ?? '')) {
             throw new RuntimeException('Invalid request. Please refresh and try again.');
         }
 
-        $action = $_POST['action'] ?? '';
         if ($action === 'delete') {
             $id = (int) ($_POST['id'] ?? 0);
             $stmt = $pdo->prepare('SELECT featured_image FROM blogs WHERE id = ? LIMIT 1');
@@ -56,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $pdo->prepare('SELECT featured_image FROM blogs WHERE id = ? LIMIT 1');
                 $stmt->execute([$id]);
                 $currentImage = $stmt->fetchColumn();
-                $slug = blog_unique_slug($pdo, $title, $id, $_POST['slug'] ?? '');
+                $slug = blog_unique_slug($pdo, $title, $id);
 
                 $sql = "
                     UPDATE blogs
@@ -91,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $message = 'Blog updated successfully.';
             } else {
-                $slug = blog_unique_slug($pdo, $title, null, $_POST['slug'] ?? '');
+                $slug = blog_unique_slug($pdo, $title);
                 $stmt = $pdo->prepare("
                     INSERT INTO blogs
                     (title, slug, excerpt, content, featured_image, author_name, meta_title, meta_description, meta_keywords, status, published_at)
@@ -125,11 +131,45 @@ if (isset($_GET['edit'])) {
     $editBlog = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
 }
 
-$blogs = $pdo->query("
+if ($error && !empty($formData)) {
+    $editBlog = array_merge($editBlog ?: [], [
+        'id' => $formData['id'] ?? '',
+        'title' => $formData['title'] ?? '',
+        'slug' => '',
+        'excerpt' => $formData['excerpt'] ?? '',
+        'content' => blog_clean_content($formData['content'] ?? ''),
+        'status' => $formData['status'] ?? 'draft',
+        'published_at' => !empty($formData['published_at'])
+            ? date('Y-m-d H:i:s', strtotime($formData['published_at']))
+            : null,
+        'meta_title' => $formData['meta_title'] ?? '',
+        'meta_description' => $formData['meta_description'] ?? '',
+        'meta_keywords' => $formData['meta_keywords'] ?? '',
+        'author_name' => $formData['author_name'] ?? ($adminData['full_name'] ?? 'Careygo Team'),
+    ]);
+}
+
+$isEditing = !empty($editBlog['id']);
+
+$blogsPerPage = 25;
+$blogPage = max(1, (int) ($_GET['blog_page'] ?? 1));
+$totalBlogs = (int) $pdo->query("SELECT COUNT(*) FROM blogs")->fetchColumn();
+$totalBlogPages = max(1, (int) ceil($totalBlogs / $blogsPerPage));
+if ($blogPage > $totalBlogPages) {
+    $blogPage = $totalBlogPages;
+}
+$blogOffset = ($blogPage - 1) * $blogsPerPage;
+
+$blogsStmt = $pdo->prepare("
     SELECT id, title, slug, featured_image, status, published_at, created_at
     FROM blogs
     ORDER BY created_at DESC
-")->fetchAll(PDO::FETCH_ASSOC);
+    LIMIT :limit OFFSET :offset
+");
+$blogsStmt->bindValue(':limit', $blogsPerPage, PDO::PARAM_INT);
+$blogsStmt->bindValue(':offset', $blogOffset, PDO::PARAM_INT);
+$blogsStmt->execute();
+$blogs = $blogsStmt->fetchAll(PDO::FETCH_ASSOC);
 
 require_once 'includes/header.php';
 ?>
@@ -139,7 +179,7 @@ require_once 'includes/header.php';
         <h4>Blog Management</h4>
         <p>Add, edit, publish, and optimize blog articles for the website.</p>
     </div>
-    <?php if ($editBlog): ?>
+    <?php if ($isEditing): ?>
     <a href="blogs.php" class="btn-outline-admin"><i class="bi bi-plus-lg"></i> Add New Blog</a>
     <?php endif; ?>
 </div>
@@ -151,21 +191,17 @@ require_once 'includes/header.php';
     <div class="col-lg-5">
         <div class="admin-card">
             <div class="admin-card-header">
-                <h6 class="admin-card-title"><i class="bi bi-pencil-square me-2 text-primary"></i><?= $editBlog ? 'Edit Blog' : 'Add Blog' ?></h6>
+                <h6 class="admin-card-title"><i class="bi bi-pencil-square me-2 text-primary"></i><?= $isEditing ? 'Edit Blog' : 'Add Blog' ?></h6>
             </div>
             <div class="admin-card-body">
                 <form method="POST" enctype="multipart/form-data" class="blog-admin-form">
-                    <input type="hidden" name="csrf_token" value="<?= h(csrf_token()) ?>">
+                    <input type="hidden" name="csrf_token" value="<?= h($csrfToken) ?>">
                     <input type="hidden" name="id" value="<?= h((string) ($editBlog['id'] ?? '')) ?>">
                     <input type="hidden" name="action" value="save">
 
                     <div class="mb-3">
                         <label class="admin-form-label">Title <span class="text-danger">*</span></label>
                         <input type="text" class="admin-form-control" name="title" maxlength="180" value="<?= h($editBlog['title'] ?? '') ?>" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="admin-form-label">Slug</label>
-                        <input type="text" class="admin-form-control" name="slug" maxlength="220" value="<?= h($editBlog['slug'] ?? '') ?>" placeholder="Auto generated if empty">
                     </div>
                     <div class="mb-3">
                         <label class="admin-form-label">Short Description</label>
@@ -224,7 +260,7 @@ require_once 'includes/header.php';
                         <input type="text" class="admin-form-control" name="author_name" maxlength="120" value="<?= h($editBlog['author_name'] ?? ($adminData['full_name'] ?? 'Careygo Team')) ?>">
                     </div>
 
-                    <button class="btn-primary-admin" type="submit"><i class="bi bi-check-lg"></i> <?= $editBlog ? 'Update Blog' : 'Save Blog' ?></button>
+                    <button class="btn-primary-admin" type="submit"><i class="bi bi-check-lg"></i> <?= $isEditing ? 'Update Blog' : 'Save Blog' ?></button>
                 </form>
             </div>
         </div>
@@ -234,6 +270,7 @@ require_once 'includes/header.php';
         <div class="admin-card">
             <div class="admin-card-header">
                 <h6 class="admin-card-title"><i class="bi bi-journal-text me-2 text-primary"></i>All Blogs</h6>
+                <span class="blog-admin-count">Showing <?= count($blogs) ?> of <?= number_format($totalBlogs) ?></span>
             </div>
             <div class="admin-table-wrap">
                 <table class="admin-table">
@@ -266,7 +303,7 @@ require_once 'includes/header.php';
                                     <a class="btn-action" href="../<?= h(blog_url($blog['slug'])) ?>" target="_blank" title="View"><i class="bi bi-eye"></i></a>
                                     <a class="btn-action" href="blogs.php?edit=<?= (int) $blog['id'] ?>" title="Edit"><i class="bi bi-pencil"></i></a>
                                     <form method="POST" onsubmit="return confirm('Delete this blog?');">
-                                        <input type="hidden" name="csrf_token" value="<?= h(csrf_token()) ?>">
+                                        <input type="hidden" name="csrf_token" value="<?= h($csrfToken) ?>">
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="id" value="<?= (int) $blog['id'] ?>">
                                         <button class="btn-action danger" type="submit" title="Delete"><i class="bi bi-trash"></i></button>
@@ -278,6 +315,15 @@ require_once 'includes/header.php';
                     </tbody>
                 </table>
             </div>
+            <?php if ($totalBlogPages > 1): ?>
+            <nav class="admin-blog-pagination" aria-label="Blog admin pagination">
+                <a class="admin-blog-page-link <?= $blogPage <= 1 ? 'disabled' : '' ?>" href="blogs.php<?= $blogPage > 2 ? '?blog_page=' . ($blogPage - 1) : '' ?>">Previous</a>
+                <?php for ($i = 1; $i <= $totalBlogPages; $i++): ?>
+                <a class="admin-blog-page-link <?= $i === $blogPage ? 'active' : '' ?>" href="blogs.php<?= $i > 1 ? '?blog_page=' . $i : '' ?>"><?= $i ?></a>
+                <?php endfor; ?>
+                <a class="admin-blog-page-link <?= $blogPage >= $totalBlogPages ? 'disabled' : '' ?>" href="blogs.php?blog_page=<?= $blogPage + 1 ?>">Next</a>
+            </nav>
+            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -305,6 +351,45 @@ require_once 'includes/header.php';
     border-radius: 8px;
     background: #eef2f7;
     flex-shrink: 0;
+}
+.blog-admin-count {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 600;
+}
+.admin-blog-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 14px;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+}
+.admin-blog-page-link {
+    min-width: 34px;
+    height: 34px;
+    padding: 0 11px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+}
+.admin-blog-page-link:hover,
+.admin-blog-page-link.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+.admin-blog-page-link.disabled {
+    opacity: 0.45;
+    pointer-events: none;
 }
 .blog-admin-form textarea {
     resize: vertical;

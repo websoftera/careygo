@@ -741,7 +741,7 @@ $pdf->currencyCell(50, 5, (float)$shipment['final_price']);
     $pdf->Rect(10, 220, 190, 10, 'F');
     $pdf->SetXY(15, 222);
     $pdf->Cell(55, 6, 'www.careygo.in', 0, 0, 'L');
-    $pdf->Cell(120, 6, '+91 87804 06230 | customersupport@careygo.in', 0, 0, 'R');
+    $pdf->Cell(120, 6, '87804 06230 | customersupport@careygo.in', 0, 0, 'R');
 
     // Images Section (Outside the Border, Before T&C)
     $imgY = 232;

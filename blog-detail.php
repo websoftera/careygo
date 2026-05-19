@@ -49,6 +49,16 @@ $metaKeywords = $blog['meta_keywords'] ?: 'Careygo, logistics, courier, shipping
 $canonicalUrl = SITE_URL . '/' . blog_url($blog['slug']);
 $metaImage = SITE_URL . '/' . blog_image_url($blog['featured_image']);
 
+$relatedStmt = $pdo->prepare("
+    SELECT title, slug, excerpt, content, featured_image, published_at
+    FROM blogs
+    WHERE id != ? AND status = 'published' AND (published_at IS NULL OR published_at <= NOW())
+    ORDER BY COALESCE(published_at, created_at) DESC, id DESC
+    LIMIT 6
+");
+$relatedStmt->execute([(int) $blog['id']]);
+$relatedBlogs = $relatedStmt->fetchAll(PDO::FETCH_ASSOC);
+
 require_once __DIR__ . '/includes/header.php';
 ?>
 
@@ -90,5 +100,75 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     </div>
 </article>
+
+<?php if (!empty($relatedBlogs)): ?>
+<section class="related-blog-section">
+    <div class="container">
+        <div class="related-blog-header">
+            <h2>Our Blogs</h2>
+            <div class="related-blog-controls">
+                <button type="button" data-related-slide="prev" onclick="return relatedBlogMove(-1)" aria-label="Previous blogs">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <button type="button" data-related-slide="next" onclick="return relatedBlogMove(1)" aria-label="Next blogs">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+        <div class="related-blog-viewport" id="relatedBlogSlider">
+            <div class="related-blog-track">
+                <?php foreach ($relatedBlogs as $related): ?>
+                <div class="related-blog-slide">
+                    <article class="related-blog-card">
+                        <a class="related-blog-image" href="<?= htmlspecialchars(blog_url($related['slug'])) ?>">
+                            <img src="<?= htmlspecialchars(blog_image_url($related['featured_image'])) ?>" alt="<?= htmlspecialchars($related['title']) ?>">
+                        </a>
+                        <div class="related-blog-body">
+                            <?php if (!empty($related['published_at'])): ?>
+                            <div class="blog-card-date"><i class="bi bi-calendar3"></i><?= date('d M Y', strtotime($related['published_at'])) ?></div>
+                            <?php endif; ?>
+                            <h3><a href="<?= htmlspecialchars(blog_url($related['slug'])) ?>"><?= htmlspecialchars($related['title']) ?></a></h3>
+                            <p><?= htmlspecialchars(blog_excerpt($related['excerpt'], $related['content'], 95)) ?></p>
+                        </div>
+                    </article>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </div>
+</section>
+<script>
+function relatedBlogMove(direction) {
+    const slider = document.getElementById('relatedBlogSlider');
+    if (!slider) return false;
+    const track = slider.querySelector('.related-blog-track');
+    const slide = track ? track.querySelector('.related-blog-slide') : null;
+    if (!slide) return false;
+    const styles = window.getComputedStyle(track);
+    let gap = parseFloat(styles.columnGap);
+    if (Number.isNaN(gap)) gap = parseFloat(styles.gap);
+    if (Number.isNaN(gap)) gap = 0;
+    const step = slide.getBoundingClientRect().width + gap;
+    slider.scrollTo({
+        left: slider.scrollLeft + (step * direction),
+        behavior: 'smooth'
+    });
+    return false;
+}
+
+function initRelatedBlogSlider() {
+    const slider = document.getElementById('relatedBlogSlider');
+    if (!slider) return;
+    if (slider.dataset.sliderReady === '1') return;
+    slider.dataset.sliderReady = '1';
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initRelatedBlogSlider);
+} else {
+    initRelatedBlogSlider();
+}
+</script>
+<?php endif; ?>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

@@ -76,6 +76,12 @@
                 </a>
             </li>
             <li>
+                <a href="banners.php" class="sidebar-link <?= ($activePage ?? '') === 'banners' ? 'active' : '' ?>">
+                    <i class="bi bi-images"></i>
+                    <span>Banners</span>
+                </a>
+            </li>
+            <li>
                 <a href="blogs.php" class="sidebar-link <?= ($activePage ?? '') === 'blogs' ? 'active' : '' ?>">
                     <i class="bi bi-journal-text"></i>
                     <span>Blogs</span>

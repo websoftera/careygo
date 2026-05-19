@@ -72,7 +72,7 @@ if ($user) {
                             <div class="input-group auth-input-group">
                                 <span class="input-group-text"><i class="bi bi-telephone"></i></span>
                                 <input type="tel" class="form-control auth-input" id="phone" name="phone"
-                                    placeholder="+91 98000 00000" required autocomplete="tel">
+                                    placeholder="98000 00000" required autocomplete="tel">
                             </div>
                             <div class="invalid-feedback" id="phone-error"></div>
                         </div>

@@ -61,7 +61,7 @@
                         </li>
                         <li class="d-flex align-items-start gap-2">
                             <i class="bi bi-telephone mt-1 text-white"></i>
-                            <a href="tel:+919850296178">+91 98502 96178</a>
+                            <a href="tel:9850296178">98502 96178</a>
                         </li>
                     </ul>
                 </div>
@@ -71,17 +71,20 @@
         <!-- Mobile Footer Content -->
         <div class="container position-relative z-2 d-md-none footer-mobile-v2">
             <div class="footer-row">
-                <a href="index.php#about-us">About Us</a> <span class="sep">|</span> <a href="blog">Blogs</a> <span
-                    class="sep">|</span> <a href="#">Privacy Policy</a> <span class="sep">|</span> <a href="#">FAQ</a>
+                <a href="index.php#about-us">About Us</a> <span class="sep">|</span>
+                <a href="index.php#services">Services</a> <span class="sep">|</span>
+                <a href="index.php#our-network">Our Network</a> <span class="sep">|</span>
+                <a href="blog">Blog</a> <span class="sep">|</span>
+                <a href="index.php#contact-us">Contact</a>
             </div>
             <div class="footer-row">
-                <span>© 2026 CAREYGO - All Rights Reserved.&nbsp;<a href="https://websoftera.com" target="_blank" class="websoftera-text">Websoftera</a></span>
+                <span>© 2026 CAREYGO - All Rights Reserved.&nbsp;<a href="index.php#home" class="websoftera-text">Careygo</a></span>
             </div>
         </div>
 
         <!-- Bottom Copyright Bar -->
         <div class="footer-bottom-bar text-center py-3 mt-4 d-none d-md-block">
-            <p class="mb-0 text-light-gray" style="font-size: 13px; letter-spacing: 0.5px;">© 2026 CAREYGO - All Rights Reserved.&nbsp;<a href="https://websoftera.com" target="_blank" class="websoftera-text">Websoftera</a>
+            <p class="mb-0 text-light-gray" style="font-size: 13px; letter-spacing: 0.5px;">© 2026 CAREYGO - All Rights Reserved.&nbsp;<a href="index.php#home" class="websoftera-text">Careygo</a>
             </p>
         </div>
     </footer>
@@ -118,7 +121,29 @@
                                 pattern="^[6-9][0-9]{9}$" required>
                             <div class="invalid-feedback">Please enter a valid 10 digit phone number.</div>
                         </div>
-                        <button type="submit" class="btn btn-primary-custom enquiry-submit">
+                        <div class="mb-2">
+                            <select class="form-select" id="enquiryService" name="service" aria-label="Service type" required>
+                                <option selected>Courier Services</option>
+                                <option>E-Commerce Services</option>
+                                <option>Business to Business - B2B</option>
+                                <option>Online Sellers - D2C</option>
+                                <option>Premium Express Services</option>
+                                <option>Express Services</option>
+                                <option>Reverse Pickup</option>
+                                <option>Cash on Delivery - COD</option>
+                                <option>International Courier</option>
+                                <option>International - Airport to Airport</option>
+                                <option>Packaging Solutions</option>
+                            </select>
+                            <div class="invalid-feedback">Please select a service type.</div>
+                        </div>
+                        <div class="mb-2">
+                            <textarea class="form-control" id="enquiryMessage" name="message" rows="3"
+                                placeholder="Pickup city, delivery city, weight, and any special instructions"
+                                aria-label="Message" minlength="10" required></textarea>
+                            <div class="invalid-feedback">Please add at least 10 characters.</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary-custom cta-arrow-pill enquiry-submit">
                             Send Enquiry
                             <span
                                 class="icon-circle bg-white rounded-circle d-inline-flex align-items-center justify-content-center">
@@ -307,6 +332,24 @@
                     navCollapse.hide();
                 });
             });
+
+            const enquiryModal = document.getElementById("enquiryModal");
+            if (enquiryModal) {
+                const enquiryModalInstance = bootstrap.Modal.getOrCreateInstance(enquiryModal);
+                document.querySelectorAll(".service-img-wrapper, .service-title").forEach(function (trigger) {
+                    trigger.setAttribute("role", "button");
+                    trigger.setAttribute("tabindex", "0");
+                    trigger.addEventListener("click", function () {
+                        enquiryModalInstance.show();
+                    });
+                    trigger.addEventListener("keydown", function (event) {
+                        if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            enquiryModalInstance.show();
+                        }
+                    });
+                });
+            }
         });
     </script>
 
