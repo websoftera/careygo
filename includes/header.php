@@ -146,10 +146,16 @@ try {
                         <a class="nav-link" href="index.php#services">SERVICES</a>
                     </li>
                     <li class="nav-item px-1 px-xl-2">
-                        <a class="nav-link" href="index.php#our-network">OUR NETWORK</a>
+                        <a class="nav-link <?= in_array($_currentPage, ['blog.php', 'blog-detail.php'], true) ? 'active' : '' ?>" href="blog">BLOG</a>
                     </li>
                     <li class="nav-item px-1 px-xl-2">
-                        <a class="nav-link <?= in_array($_currentPage, ['blog.php', 'blog-detail.php'], true) ? 'active' : '' ?>" href="blog">BLOG</a>
+                        <a class="nav-link" href="public-tracking.php">TRACKING</a>
+                    </li>
+                    <li class="nav-item px-1 px-xl-2">
+                        <a class="nav-link" href="<?= $_navUser ? 'customer/new-booking.php' : 'login.php' ?>">PICKUP</a>
+                    </li>
+                    <li class="nav-item px-1 px-xl-2">
+                        <a class="nav-link" href="<?= $_navUser ? 'customer/new-booking.php' : 'login.php' ?>">RATE CALCULATOR</a>
                     </li>
                     <li class="nav-item px-1 px-xl-2">
                         <a class="nav-link" href="index.php#contact-us">CONTACT US</a>

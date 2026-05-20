@@ -1441,10 +1441,14 @@ ul {
     background-color: #ffffff;
     border-radius: 50%;
     box-shadow: 0 8px 20px rgba(7, 19, 59, 0.18);
+    background-size: 10px;
+    height: 22px;
     opacity: 1;
+    padding: 4px;
     position: absolute;
     right: 10px;
     top: 10px;
+    width: 22px;
     z-index: 3;
 }
 
@@ -2800,9 +2804,9 @@ ul {
     }
 
     .mobile-action-img-pickup {
-        flex-basis: 24px;
-        height: 24px;
-        width: 24px;
+        flex-basis: 34px;
+        height: 34px;
+        width: 34px;
     }
 
     .mobile-action-img-rate {
@@ -2812,9 +2816,9 @@ ul {
     }
 
     .mobile-action-img-tracking {
-        flex-basis: 24px;
-        height: 24px;
-        width: 24px;
+        flex-basis: 32px;
+        height: 32px;
+        width: 32px;
     }
 
     @media (max-width: 360px) {
@@ -2835,6 +2839,18 @@ ul {
             flex-basis: 20px;
             height: 20px;
             width: 20px;
+        }
+
+        .mobile-action-img-pickup {
+            flex-basis: 30px;
+            height: 30px;
+            width: 30px;
+        }
+
+        .mobile-action-img-tracking {
+            flex-basis: 28px;
+            height: 28px;
+            width: 28px;
         }
     }
 
