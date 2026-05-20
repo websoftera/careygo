@@ -66,7 +66,7 @@ require_once __DIR__ . '/includes/header.php';
             <div class="col-md-6 col-lg-4">
                 <article class="blog-card">
                     <a class="blog-card-image" href="<?= htmlspecialchars(blog_url($blog['slug'])) ?>">
-                        <img src="<?= htmlspecialchars(blog_image_url($blog['featured_image'])) ?>" alt="<?= htmlspecialchars($blog['title']) ?>">
+                        <img src="<?= htmlspecialchars(blog_image_url($blog['featured_image'])) ?>" alt="<?= htmlspecialchars($blog['title']) ?>" loading="lazy" decoding="async">
                     </a>
                     <div class="blog-card-body">
                         <?php if (!empty($blog['published_at'])): ?>

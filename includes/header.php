@@ -253,15 +253,15 @@ try {
     <div class="mobile-header-actions" aria-label="Quick actions">
         <div class="mobile-header-actions-inner">
             <a href="public-tracking.php" class="mobile-header-action">
-                <img src="assets/images/mobile-actions/tracking-icon.png" alt="" class="mobile-action-img mobile-action-img-tracking">
+                <img src="assets/images/mobile-actions/tracking-icon.png" alt="" class="mobile-action-img mobile-action-img-tracking" decoding="async">
                 <span>Tracking</span>
             </a>
             <a href="<?= $_navUser ? 'customer/new-booking.php' : 'login.php' ?>" class="mobile-header-action<?= $_navUser ? '' : ' mobile-auth-modal-link' ?>"<?= $_navUser ? '' : ' data-auth-url="login.php?modal=1"' ?>>
-                <img src="assets/images/mobile-actions/pickup-icon.png" alt="" class="mobile-action-img mobile-action-img-pickup">
+                <img src="assets/images/mobile-actions/pickup-icon.png" alt="" class="mobile-action-img mobile-action-img-pickup" decoding="async">
                 <span>Pickup</span>
             </a>
             <a href="<?= $_navUser ? 'customer/new-booking.php' : 'login.php' ?>" class="mobile-header-action<?= $_navUser ? '' : ' mobile-auth-modal-link' ?>"<?= $_navUser ? '' : ' data-auth-url="login.php?modal=1"' ?>>
-                <img src="assets/images/mobile-actions/rate-calculator-icon.png" alt="" class="mobile-action-img mobile-action-img-rate">
+                <img src="assets/images/mobile-actions/rate-calculator-icon.png" alt="" class="mobile-action-img mobile-action-img-rate" decoding="async">
                 <span>Rate Calculator</span>
             </a>
         </div>

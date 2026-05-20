@@ -80,7 +80,7 @@ require_once __DIR__ . '/includes/header.php';
 <article class="blog-detail-section">
     <div class="container">
         <div class="blog-detail-wrap">
-            <img class="blog-detail-image" src="<?= htmlspecialchars(blog_image_url($blog['featured_image'])) ?>" alt="<?= htmlspecialchars($blog['title']) ?>">
+            <img class="blog-detail-image" src="<?= htmlspecialchars(blog_image_url($blog['featured_image'])) ?>" alt="<?= htmlspecialchars($blog['title']) ?>" decoding="async" fetchpriority="high">
             <div class="blog-detail-meta">
                 <?php if (!empty($blog['published_at'])): ?>
                 <span><i class="bi bi-calendar3"></i> Published on <?= date('d M Y', strtotime($blog['published_at'])) ?></span>
@@ -121,7 +121,7 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="related-blog-slide">
                     <article class="related-blog-card">
                         <a class="related-blog-image" href="<?= htmlspecialchars(blog_url($related['slug'])) ?>">
-                            <img src="<?= htmlspecialchars(blog_image_url($related['featured_image'])) ?>" alt="<?= htmlspecialchars($related['title']) ?>">
+                            <img src="<?= htmlspecialchars(blog_image_url($related['featured_image'])) ?>" alt="<?= htmlspecialchars($related['title']) ?>" loading="lazy" decoding="async">
                         </a>
                         <div class="related-blog-body">
                             <?php if (!empty($related['published_at'])): ?>
