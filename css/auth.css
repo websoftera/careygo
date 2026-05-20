@@ -344,6 +344,7 @@
     height: auto;
     min-height: 0;
     overflow-x: hidden;
+    padding: 0 !important;
 }
 
 .auth-modal-page .auth-wrapper {
