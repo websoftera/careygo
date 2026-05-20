@@ -224,6 +224,66 @@ require_once 'includes/header.php';
     })();
     </script>
 
+    <?php
+    $homeServices = [
+        [
+            'title' => 'Domestic Courier',
+            'description' => 'Fast and reliable courier delivery across India with secure handling and tracking support.',
+            'image' => 'assets/images/Courier Services.jpg',
+        ],
+        [
+            'title' => 'International Courier',
+            'description' => 'Worldwide shipping solutions with customs support, safe transit, and timely delivery.',
+            'image' => 'assets/images/International Courier.jpg',
+        ],
+        [
+            'title' => 'Reverse Pickup',
+            'description' => 'Easy reverse pickup service for returns, exchanges, and product collection from customers.',
+            'image' => 'assets/images/Reverse Pickup.jpg',
+        ],
+        [
+            'title' => 'Business to Business (B2B)',
+            'description' => 'Efficient logistics solutions for corporate, industrial, and commercial shipment requirements.',
+            'image' => 'assets/images/Business to Business - B2B.jpeg',
+        ],
+        [
+            'title' => 'eCommerce Courier',
+            'description' => 'Reliable eCommerce shipping with fast delivery and smooth last-mile logistics support.',
+            'image' => 'assets/images/E-Commerce.jpg',
+        ],
+        [
+            'title' => 'Online Sellers',
+            'description' => 'Dedicated courier solutions for online sellers with COD and nationwide delivery services.',
+            'image' => 'assets/images/Online Sellers - D2C.jpg',
+        ],
+        [
+            'title' => 'Premium Express Service',
+            'description' => 'Priority express delivery service for urgent, valuable, and time-sensitive shipments.',
+            'image' => 'assets/images/Premium Express Services.jpg',
+        ],
+        [
+            'title' => 'Express Service',
+            'description' => 'Quick and affordable express courier service for regular time-bound deliveries.',
+            'image' => 'assets/images/Express Services.jpeg',
+        ],
+        [
+            'title' => 'Cash on Delivery (COD)',
+            'description' => 'Secure COD services with timely remittance and hassle-free payment collection support.',
+            'image' => 'assets/images/Cash on Delivery - COD.jpeg',
+        ],
+        [
+            'title' => 'International Airport to Airport',
+            'description' => 'Fast airport-to-airport cargo solutions for urgent international commercial shipments.',
+            'image' => 'assets/images/International - Airport to Airport.jpg',
+        ],
+        [
+            'title' => 'Packing Solutions',
+            'description' => 'Professional packing solutions ensuring safe, secure, and damage-free transportation.',
+            'image' => 'assets/images/Packaging Solutions.jpg',
+        ],
+    ];
+    ?>
+
     <!-- ===== SERVICES SECTION ===== -->
     <section class="services-section" id="services">
         <div class="container">
@@ -257,179 +317,40 @@ require_once 'includes/header.php';
                 <!-- Right Column: First 3 Services Grid -->
                 <div class="col-lg-9">
                     <div class="row g-4 h-100">
-                        <!-- Service Card 1 -->
+                        <?php foreach (array_slice($homeServices, 0, 3) as $service): ?>
                         <div class="col-lg-4 col-md-6 col-12">
                             <div class="service-card h-100 text-center">
                                 <div class="service-img-wrapper mb-3">
-                                    <img src="assets/images/Courier Services.jpg" alt="Courier Services"
+                                    <img src="<?= h($service['image']) ?>" alt="<?= h($service['title']) ?>"
                                         class="img-fluid rounded-3">
                                 </div>
-                                <h4 class="service-title h6 fw-bold mb-3 text-primary-custom">Courier Services</h4>
+                                <h4 class="service-title h6 fw-bold mb-3 text-primary-custom"><?= h($service['title']) ?></h4>
                                 <p class="service-desc text-muted mb-0">
-                                    logistics company specializes in managing the transportation, storage, and
-                                    distribution of goods. It offers services such as freight forwarding, warehousing...
+                                    <?= h($service['description']) ?>
                                 </p>
                             </div>
                         </div>
-
-                        <!-- Service Card 2 -->
-                        <div class="col-lg-4 col-md-6 col-12">
-                            <div class="service-card h-100 text-center">
-                                <div class="service-img-wrapper mb-3">
-                                    <img src="assets/images/E-Commerce.jpg" alt="E-Commerce Services"
-                                        class="img-fluid rounded-3">
-                                </div>
-                                <h4 class="service-title h6 fw-bold mb-3 text-primary-custom">E-Commerce Services</h4>
-                                <p class="service-desc text-muted mb-0">
-                                    logistics company specializes in managing the transportation, storage, and
-                                    distribution of goods. It offers services such as freight forwarding, warehousing...
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- Service Card 3 -->
-                        <div class="col-lg-4 col-md-6 col-12">
-                            <div class="service-card h-100 text-center">
-                                <div class="service-img-wrapper mb-3">
-                                    <img src="assets/images/Business to Business - B2B.jpeg"
-                                        alt="Business to Business - B2B" class="img-fluid rounded-3">
-                                </div>
-                                <h4 class="service-title h6 fw-bold mb-3 text-primary-custom">Business to Business - B2B
-                                </h4>
-                                <p class="service-desc text-muted mb-0">
-                                    logistics company specializes in managing the transportation, storage, and
-                                    distribution of goods. It offers services such as freight forwarding, warehousing...
-                                </p>
-                            </div>
-                        </div>
+                        <?php endforeach; ?>
                     </div>
                 </div>
             </div>
 
             <!-- Bottom Section: Remaining Cards (4 per row) -->
             <div class="row g-4">
-                <!-- Service Card 4 -->
+                <?php foreach (array_slice($homeServices, 3) as $service): ?>
                 <div class="col-lg-3 col-md-6 col-12">
                     <div class="service-card h-100 text-center">
                         <div class="service-img-wrapper mb-3">
-                            <img src="assets/images/Online Sellers - D2C.jpg" alt="Online Sellers - D2C"
+                            <img src="<?= h($service['image']) ?>" alt="<?= h($service['title']) ?>"
                                 class="img-fluid rounded-3">
                         </div>
-                        <h4 class="service-title h6 fw-bold mb-3 text-primary-custom">Online Sellers - D2C</h4>
+                        <h4 class="service-title h6 fw-bold mb-3 text-primary-custom"><?= h($service['title']) ?></h4>
                         <p class="service-desc text-muted mb-0">
-                            logistics company specializes in managing the transportation, storage, and
-                            distribution of goods. It offers services such as freight forwarding, warehousing...
+                            <?= h($service['description']) ?>
                         </p>
                     </div>
                 </div>
-
-                <!-- Service Card 5 -->
-                <div class="col-lg-3 col-md-6 col-12">
-                    <div class="service-card h-100 text-center">
-                        <div class="service-img-wrapper mb-3">
-                            <img src="assets/images/Premium Express Services.jpg" alt="Premium Express Services"
-                                class="img-fluid rounded-3">
-                        </div>
-                        <h4 class="service-title h6 fw-bold mb-3 text-primary-custom">Premium Express Services
-                        </h4>
-                        <p class="service-desc text-muted mb-0">
-                            logistics company specializes in managing the transportation, storage, and
-                            distribution of goods. It offers services such as freight forwarding, warehousing...
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Service Card 6 -->
-                <div class="col-lg-3 col-md-6 col-12">
-                    <div class="service-card h-100 text-center">
-                        <div class="service-img-wrapper mb-3">
-                            <img src="assets/images/Express Services.jpeg" alt="Express Services"
-                                class="img-fluid rounded-3">
-                        </div>
-                        <h4 class="service-title h6 fw-bold mb-3 text-primary-custom">Express Services</h4>
-                        <p class="service-desc text-muted mb-0">
-                            logistics company specializes in managing the transportation, storage, and
-                            distribution of goods. It offers services such as freight forwarding, warehousing...
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Service Card 7 -->
-                <div class="col-lg-3 col-md-6 col-12">
-                    <div class="service-card h-100 text-center">
-                        <div class="service-img-wrapper mb-3">
-                            <img src="assets/images/Reverse Pickup.jpg" alt="Reverse Pickup"
-                                class="img-fluid rounded-3">
-                        </div>
-                        <h4 class="service-title h6 fw-bold mb-3 text-primary-custom">Reverse Pickup</h4>
-                        <p class="service-desc text-muted mb-0">
-                            logistics company specializes in managing the transportation, storage, and
-                            distribution of goods. It offers services such as freight forwarding, warehousing...
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Service Card 8 -->
-                <div class="col-lg-3 col-md-6 col-12">
-                    <div class="service-card h-100 text-center">
-                        <div class="service-img-wrapper mb-3">
-                            <img src="assets/images/Cash on Delivery - COD.jpeg" alt="Cash on Delivery - COD"
-                                class="img-fluid rounded-3">
-                        </div>
-                        <h4 class="service-title h6 fw-bold mb-3 text-primary-custom">Cash on Delivery - COD
-                        </h4>
-                        <p class="service-desc text-muted mb-0">
-                            logistics company specializes in managing the transportation, storage, and
-                            distribution of goods. It offers services such as freight forwarding, warehousing...
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Service Card 9 -->
-                <div class="col-lg-3 col-md-6 col-12">
-                    <div class="service-card h-100 text-center">
-                        <div class="service-img-wrapper mb-3">
-                            <img src="assets/images/International Courier.jpg" alt="International Courier"
-                                class="img-fluid rounded-3">
-                        </div>
-                        <h4 class="service-title h6 fw-bold mb-3 text-primary-custom">International Courier</h4>
-                        <p class="service-desc text-muted mb-0">
-                            logistics company specializes in managing the transportation, storage, and
-                            distribution of goods. It offers services such as freight forwarding, warehousing...
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Service Card 10 -->
-                <div class="col-lg-3 col-md-6 col-12">
-                    <div class="service-card h-100 text-center">
-                        <div class="service-img-wrapper mb-3">
-                            <img src="assets/images/International - Airport to Airport.jpg"
-                                alt="International - Airport to Airport" class="img-fluid rounded-3">
-                        </div>
-                        <h4 class="service-title h6 fw-bold mb-3 text-primary-custom">International - Airport to
-                            Airport</h4>
-                        <p class="service-desc text-muted mb-0">
-                            logistics company specializes in managing the transportation, storage, and
-                            distribution of goods. It offers services such as freight forwarding, warehousing...
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Service Card 11 -->
-                <div class="col-lg-3 col-md-6 col-12">
-                    <div class="service-card h-100 text-center">
-                        <div class="service-img-wrapper mb-3">
-                            <img src="assets/images/Packaging Solutions.jpg" alt="Packaging Solutions"
-                                class="img-fluid rounded-3">
-                        </div>
-                        <h4 class="service-title h6 fw-bold mb-3 text-primary-custom">Packaging Solutions</h4>
-                        <p class="service-desc text-muted mb-0">
-                            logistics company specializes in managing the transportation, storage, and
-                            distribution of goods. It offers services such as freight forwarding, warehousing...
-                        </p>
-                    </div>
-                </div>
+                <?php endforeach; ?>
             </div>
         </div>
     </section>
@@ -663,17 +584,9 @@ require_once 'includes/header.php';
                                 <div class="col-md-6">
                                     <label for="contactService" class="form-label">Service Type</label>
                                     <select class="form-select" id="contactService" name="service" required>
-                                        <option selected>Courier Services</option>
-                                        <option>E-Commerce Services</option>
-                                        <option>Business to Business - B2B</option>
-                                        <option>Online Sellers - D2C</option>
-                                        <option>Premium Express Services</option>
-                                        <option>Express Services</option>
-                                        <option>Reverse Pickup</option>
-                                        <option>Cash on Delivery - COD</option>
-                                        <option>International Courier</option>
-                                        <option>International - Airport to Airport</option>
-                                        <option>Packaging Solutions</option>
+                                        <?php foreach ($homeServices as $serviceIndex => $service): ?>
+                                        <option <?= $serviceIndex === 0 ? 'selected' : '' ?>><?= h($service['title']) ?></option>
+                                        <?php endforeach; ?>
                                     </select>
                                     <div class="invalid-feedback">Please select a service type.</div>
                                 </div>

@@ -7,24 +7,25 @@ require_once __DIR__ . '/../lib/auth.php';
 
 $_navUser = auth_user();   // null = guest, array = logged-in payload
 $_currentPage = basename($_SERVER['SCRIPT_NAME'] ?? 'index.php');
+$_styleVersion = @filemtime(__DIR__ . '/../css/style.css') ?: time();
 
 $_siteSearchItems = [
     ['title' => 'Home', 'category' => 'Page', 'url' => 'index.php', 'text' => 'home careygo logistics cargo delivery transport'],
     ['title' => 'About Us', 'category' => 'Page', 'url' => 'index.php#about-us', 'text' => 'about careygo delivery services efficiency logistics partner'],
-    ['title' => 'Services', 'category' => 'Page', 'url' => 'index.php#services', 'text' => 'services business verticals courier ecommerce b2b d2c express cod international packaging'],
+    ['title' => 'Services', 'category' => 'Page', 'url' => 'index.php#services', 'text' => 'services business verticals domestic courier ecommerce b2b online sellers express cod international packing'],
     ['title' => 'Our Network', 'category' => 'Page', 'url' => 'index.php#our-network', 'text' => 'network value proposition moneyback on time secure handling call pickup'],
     ['title' => 'Contact Us', 'category' => 'Page', 'url' => 'index.php#contact-us', 'text' => 'contact phone email shipment details support connect with us'],
-    ['title' => 'Courier Services', 'category' => 'Service', 'url' => 'index.php#services', 'text' => 'courier services freight forwarding warehousing goods delivery'],
-    ['title' => 'E-Commerce Services', 'category' => 'Service', 'url' => 'index.php#services', 'text' => 'ecommerce e-commerce online seller shipping delivery logistics'],
-    ['title' => 'Business to Business - B2B', 'category' => 'Service', 'url' => 'index.php#services', 'text' => 'business to business b2b logistics cargo transport'],
-    ['title' => 'Online Sellers - D2C', 'category' => 'Service', 'url' => 'index.php#services', 'text' => 'online sellers d2c direct to consumer ecommerce shipping'],
-    ['title' => 'Premium Express Services', 'category' => 'Service', 'url' => 'index.php#services', 'text' => 'premium express fast delivery moneyback guarantee'],
-    ['title' => 'Express Services', 'category' => 'Service', 'url' => 'index.php#services', 'text' => 'express services quick courier delivery cargo'],
+    ['title' => 'Domestic Courier', 'category' => 'Service', 'url' => 'index.php#services', 'text' => 'domestic courier india secure handling tracking delivery'],
+    ['title' => 'International Courier', 'category' => 'Service', 'url' => 'index.php#services', 'text' => 'international courier worldwide shipping customs safe transit timely delivery'],
     ['title' => 'Reverse Pickup', 'category' => 'Service', 'url' => 'index.php#services', 'text' => 'reverse pickup return shipment logistics'],
-    ['title' => 'Cash on Delivery - COD', 'category' => 'Service', 'url' => 'index.php#services', 'text' => 'cash on delivery cod payment collection courier'],
-    ['title' => 'International Courier', 'category' => 'Service', 'url' => 'index.php#services', 'text' => 'international courier overseas shipment logistics'],
-    ['title' => 'International - Airport to Airport', 'category' => 'Service', 'url' => 'index.php#services', 'text' => 'airport to airport international cargo air freight'],
-    ['title' => 'Packaging Solutions', 'category' => 'Service', 'url' => 'index.php#services', 'text' => 'packaging solutions safe packing fragile handling'],
+    ['title' => 'Business to Business (B2B)', 'category' => 'Service', 'url' => 'index.php#services', 'text' => 'business to business b2b corporate industrial commercial shipment logistics'],
+    ['title' => 'eCommerce Courier', 'category' => 'Service', 'url' => 'index.php#services', 'text' => 'ecommerce e-commerce courier online seller shipping last mile delivery logistics'],
+    ['title' => 'Online Sellers', 'category' => 'Service', 'url' => 'index.php#services', 'text' => 'online sellers cod nationwide delivery courier solutions'],
+    ['title' => 'Premium Express Service', 'category' => 'Service', 'url' => 'index.php#services', 'text' => 'premium express priority urgent valuable time sensitive delivery'],
+    ['title' => 'Express Service', 'category' => 'Service', 'url' => 'index.php#services', 'text' => 'express service quick affordable courier regular time bound delivery'],
+    ['title' => 'Cash on Delivery (COD)', 'category' => 'Service', 'url' => 'index.php#services', 'text' => 'cash on delivery cod payment collection remittance courier'],
+    ['title' => 'International Airport to Airport', 'category' => 'Service', 'url' => 'index.php#services', 'text' => 'airport to airport international cargo urgent commercial shipments air freight'],
+    ['title' => 'Packing Solutions', 'category' => 'Service', 'url' => 'index.php#services', 'text' => 'packing solutions safe secure damage free transportation'],
     ['title' => 'Blog', 'category' => 'Page', 'url' => 'blog', 'text' => 'blog logistics courier tips ecommerce shipping delivery articles'],
 ];
 
@@ -81,7 +82,7 @@ try {
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=<?= (int) $_styleVersion ?>">
 </head>
 
 <body>
