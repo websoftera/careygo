@@ -43,7 +43,7 @@ body {
 
 @media (max-width: 767.98px) {
     body {
-        padding-top: 5px !important;
+        padding-top: 121px !important;
     }
 }
 
@@ -2714,30 +2714,50 @@ ul {
     }
 
     .mobile-header-actions {
-        background: #ffffff;
+        background: #ffffff !important;
+        background-color: #ffffff !important;
         border-top: 1px solid #d3d3d3;
         border-bottom: 1px solid #d3d3d3;
-        box-shadow: none;
+        box-shadow: 0 1px 0 #ffffff;
+        contain: paint;
         display: block;
+        height: 38px;
+        isolation: isolate;
         left: 0;
+        opacity: 1;
+        overflow: hidden;
         position: fixed;
         right: 0;
         top: 82px;
-        z-index: 1028;
+        transform: translateZ(0);
+        z-index: 1032;
+    }
+
+    .mobile-header-actions::before {
+        background: #ffffff;
+        content: "";
+        inset: 0;
+        pointer-events: none;
+        position: absolute;
+        z-index: 0;
     }
 
     .mobile-header-actions-inner {
+        background: #ffffff !important;
         display: grid;
         gap: 0;
         grid-template-columns: repeat(3, minmax(0, 1fr));
+        height: 100%;
         padding: 0;
+        position: relative;
+        z-index: 1;
     }
 
     .mobile-header-action {
         align-items: center;
-        background: #ffffff;
+        background: #ffffff !important;
         border-right: 1px solid #d3d3d3;
-        color: #999999;
+        color: #111111;
         display: inline-flex;
         font-family: 'Poppins', sans-serif;
         font-size: 10.2px;
@@ -2745,7 +2765,8 @@ ul {
         gap: 3px;
         justify-content: center;
         line-height: 1.08;
-        min-height: 35px;
+        height: 100%;
+        min-height: 0;
         min-width: 0;
         padding: 4px 3px;
         text-align: center;
@@ -2766,46 +2787,54 @@ ul {
     .mobile-header-action:hover,
     .mobile-header-action:focus {
         background: #f7f7f7;
-        color: #999999;
+        color: #111111;
     }
 
     .mobile-action-img {
         display: block;
         flex: 0 0 24px;
-        filter: opacity(0.55);
+        filter: brightness(0);
         height: 24px;
         object-fit: contain;
         width: 24px;
     }
 
     .mobile-action-img-pickup {
-        flex-basis: 30px;
-        height: 25px;
-        width: 30px;
+        flex-basis: 24px;
+        height: 24px;
+        width: 24px;
     }
 
     .mobile-action-img-rate {
-        flex-basis: 20px;
-        height: 20px;
-        width: 20px;
+        flex-basis: 24px;
+        height: 24px;
+        width: 24px;
     }
 
     .mobile-action-img-tracking {
-        flex-basis: 28px;
-        height: 28px;
-        width: 28px;
+        flex-basis: 24px;
+        height: 24px;
+        width: 24px;
     }
 
     @media (max-width: 360px) {
+        body {
+            padding-top: 121px !important;
+        }
+
+        .mobile-header-actions {
+            top: 82px;
+        }
+
         .mobile-header-action {
             font-size: 8px;
             gap: 2px;
         }
 
         .mobile-action-img {
-            flex-basis: 18px;
-            height: 18px;
-            width: 18px;
+            flex-basis: 20px;
+            height: 20px;
+            width: 20px;
         }
     }
 
@@ -2847,6 +2876,45 @@ ul {
         height: 18px;
         background-size: 18px 18px;
         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2.5' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+    }
+
+    @media (max-width: 360px) {
+        .main-navbar {
+            min-height: 52px !important;
+        }
+
+        .main-navbar .container {
+            flex-wrap: nowrap !important;
+            gap: 4px !important;
+            min-height: 46px !important;
+        }
+
+        .navbar-brand {
+            flex: 0 0 108px !important;
+            width: 108px !important;
+            height: 38px !important;
+            margin-left: -10px !important;
+        }
+
+        .brand-logo {
+            width: 108px !important;
+            max-height: 36px !important;
+        }
+
+        .main-navbar .d-xl-none {
+            gap: 5px !important;
+        }
+
+        .nav-login-btn-sm {
+            font-size: 10px !important;
+            min-width: 58px;
+            padding: 5px 9px !important;
+        }
+
+        .navbar-toggler {
+            height: 30px !important;
+            width: 30px !important;
+        }
     }
 
     .main-navbar:has(.navbar-toggler[aria-expanded="true"]) .navbar-brand {
