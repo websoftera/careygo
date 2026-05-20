@@ -16,7 +16,8 @@ require_once 'includes/header.php';
             $buttonUrl = (string) ($homeBanner['button_url'] ?: '#enquiryModal');
             $isModalButton = banner_is_modal_url($buttonUrl);
         ?>
-        <div class="hero-slide <?= $index === 0 ? 'is-active' : '' ?>" data-hero-slide="<?= (int) $index ?>" style="background-image: url('<?= h(banner_image_url($homeBanner['image_path'] ?? null)) ?>');">
+        <?php $bannerImageUrl = banner_image_url($homeBanner['image_path'] ?? null); ?>
+        <div class="hero-slide <?= $index === 0 ? 'is-active' : '' ?>" data-hero-slide="<?= (int) $index ?>" data-bg="<?= h($bannerImageUrl) ?>"<?= $index === 0 ? ' style="background-image: url(\'' . h($bannerImageUrl) . '\');"' : '' ?>>
             <div class="container position-relative z-1 text-white">
                 <div class="row">
                     <div class="col-lg-8 col-xl-7 hero-content">
@@ -185,8 +186,16 @@ require_once 'includes/header.php';
         let timer = null;
         const intervalMs = 5000;
 
+        function loadSlide(slide) {
+            if (!slide || slide.dataset.loaded === '1') return;
+            slide.style.backgroundImage = 'url("' + slide.dataset.bg.replace(/"/g, '\\"') + '")';
+            slide.dataset.loaded = '1';
+        }
+
         function showSlide(index) {
             current = (index + slides.length) % slides.length;
+            loadSlide(slides[current]);
+            loadSlide(slides[(current + 1) % slides.length]);
             slides.forEach((slide, slideIndex) => {
                 slide.classList.toggle('is-active', slideIndex === current);
             });
@@ -322,7 +331,7 @@ require_once 'includes/header.php';
                             <div class="service-card h-100 text-center">
                                 <div class="service-img-wrapper mb-3">
                                     <img src="<?= h($service['image']) ?>" alt="<?= h($service['title']) ?>"
-                                        class="img-fluid rounded-3">
+                                        class="img-fluid rounded-3" loading="lazy" decoding="async">
                                 </div>
                                 <h4 class="service-title h6 fw-bold mb-3 text-primary-custom"><?= h($service['title']) ?></h4>
                                 <p class="service-desc text-muted mb-0">
@@ -342,7 +351,7 @@ require_once 'includes/header.php';
                     <div class="service-card h-100 text-center">
                         <div class="service-img-wrapper mb-3">
                             <img src="<?= h($service['image']) ?>" alt="<?= h($service['title']) ?>"
-                                class="img-fluid rounded-3">
+                                class="img-fluid rounded-3" loading="lazy" decoding="async">
                         </div>
                         <h4 class="service-title h6 fw-bold mb-3 text-primary-custom"><?= h($service['title']) ?></h4>
                         <p class="service-desc text-muted mb-0">
@@ -389,7 +398,7 @@ require_once 'includes/header.php';
                         <div
                             class="feature-icon-wrapper rounded-4 bg-white d-flex align-items-center justify-content-center">
                             <img src="assets/images/why-choose-icon-1.png" alt="Moneyback Guarantee"
-                                class="feature-icon">
+                                class="feature-icon" loading="lazy" decoding="async">
                         </div>
                     </div>
                 </div>
@@ -407,7 +416,7 @@ require_once 'includes/header.php';
                         </p>
                         <div
                             class="feature-icon-wrapper rounded-4 bg-white d-flex align-items-center justify-content-center">
-                            <img src="assets/images/why-choose-icon-2.png" alt="100% On Time" class="feature-icon">
+                            <img src="assets/images/why-choose-icon-2.png" alt="100% On Time" class="feature-icon" loading="lazy" decoding="async">
                         </div>
                     </div>
                 </div>
@@ -425,7 +434,7 @@ require_once 'includes/header.php';
                         </p>
                         <div
                             class="feature-icon-wrapper rounded-4 bg-white d-flex align-items-center justify-content-center">
-                            <img src="assets/images/why-choose-icon-3.png" alt="Secure Handling" class="feature-icon">
+                            <img src="assets/images/why-choose-icon-3.png" alt="Secure Handling" class="feature-icon" loading="lazy" decoding="async">
                         </div>
                     </div>
                 </div>
@@ -444,7 +453,7 @@ require_once 'includes/header.php';
                         <div
                             class="feature-icon-wrapper rounded-4 bg-white d-flex align-items-center justify-content-center">
                             <img src="assets/images/why-choose-icon-4.png" alt="Dedicated Call Pickup"
-                                class="feature-icon">
+                                class="feature-icon" loading="lazy" decoding="async">
                         </div>
                     </div>
                 </div>
@@ -459,7 +468,7 @@ require_once 'includes/header.php';
                 <!-- Left Side: Image -->
                 <div class="col-lg-6 mb-4 mb-lg-0">
                     <img src="assets/images/about-image.jpg" alt="About Careygo Delivery"
-                        class="img-fluid w-100 shadow-sm h-100" style="object-fit: cover; border-radius: 30px;">
+                        class="img-fluid w-100 shadow-sm h-100" style="object-fit: cover; border-radius: 30px;" loading="lazy" decoding="async">
                 </div>
 
                 <!-- Right Side: Content -->
@@ -481,7 +490,7 @@ require_once 'includes/header.php';
                             </p>
 
                             <!-- Subtle bottom right image overlay for about content -->
-                            <img src="assets/images/ABOUT-BG.png" alt="" class="about-bg-image z-0 pe-none">
+                            <img src="assets/images/ABOUT-BG.png" alt="" class="about-bg-image z-0 pe-none" loading="lazy" decoding="async">
 
                             <!-- Bullet Points -->
                             <div class="row mb-5 gy-3 position-relative z-2">
@@ -617,7 +626,7 @@ require_once 'includes/header.php';
                 <div class="col-lg-5">
                     <div class="contact-visual h-100">
                         <img src="assets/images/Packaging Solutions.jpg" alt="Careygo customer support"
-                            class="img-fluid w-100 h-100">
+                            class="img-fluid w-100 h-100" loading="lazy" decoding="async">
                         <div class="contact-quick-card">
                             <span class="contact-quick-icon"><i class="bi bi-headset"></i></span>
                             <div>
