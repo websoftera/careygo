@@ -8,6 +8,7 @@ if ($user) {
     if ($user['status'] === 'approved') { header('Location: customer/dashboard.php'); exit; }
     header('Location: customer/pending.php'); exit;
 }
+$isAuthModal = isset($_GET['modal']) && $_GET['modal'] === '1';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -18,9 +19,9 @@ if ($user) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/auth.css?v=<?= @filemtime(__DIR__ . '/css/auth.css') ?: time() ?>">
 </head>
-<body class="auth-body">
+<body class="auth-body<?= $isAuthModal ? ' auth-modal-page' : '' ?>">
 
     <div class="auth-wrapper">
         <!-- Left Panel -->
@@ -130,7 +131,7 @@ if ($user) {
                 </form>
 
                 <div class="auth-divider"><span>Already have an account?</span></div>
-                <a href="login.php" class="btn auth-alt-btn w-100">Sign In</a>
+                <a href="login.php<?= $isAuthModal ? '?modal=1' : '' ?>" class="btn auth-alt-btn w-100">Sign In</a>
 
                 <p class="auth-back-link text-center mt-4">
                     <a href="index.php"><i class="bi bi-arrow-left me-1"></i>Back to Homepage</a>
@@ -141,5 +142,24 @@ if ($user) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/register.js"></script>
+    <?php if ($isAuthModal): ?>
+    <script>
+        (function () {
+            function sendHeight() {
+                window.parent.postMessage({
+                    careygoAuthHeight: document.querySelector('.auth-form-wrap').getBoundingClientRect().height + 14
+                }, window.location.origin);
+            }
+            window.addEventListener('load', sendHeight);
+            window.addEventListener('resize', sendHeight);
+            new MutationObserver(sendHeight).observe(document.body, {
+                attributes: true,
+                childList: true,
+                subtree: true
+            });
+            setTimeout(sendHeight, 150);
+        })();
+    </script>
+    <?php endif; ?>
 </body>
 </html>

@@ -337,3 +337,83 @@
         border-radius: 16px;
     }
 }
+
+/* Compact auth pages when loaded inside the mobile popup */
+.auth-body.auth-modal-page {
+    background: #ffffff;
+    height: auto;
+    min-height: 0;
+    overflow-x: hidden;
+}
+
+.auth-modal-page .auth-wrapper {
+    height: auto;
+    display: block;
+    min-height: 0;
+}
+
+.auth-modal-page .auth-panel-left {
+    display: none !important;
+}
+
+.auth-modal-page .auth-panel-right {
+    align-items: flex-start;
+    background: #ffffff;
+    justify-content: flex-start;
+    height: auto;
+    min-height: 0;
+    padding: 4px 14px 10px;
+}
+
+.auth-modal-page .auth-form-wrap {
+    border-radius: 14px;
+    box-shadow: none;
+    max-width: 100%;
+    padding: 0 12px 10px;
+}
+
+.auth-modal-page .text-center.d-lg-none.mb-4 {
+    margin-bottom: 8px !important;
+}
+
+.auth-modal-page .auth-logo-mobile {
+    height: 28px;
+}
+
+.auth-modal-page .auth-form-title {
+    font-size: 1.35rem;
+    margin-bottom: 4px;
+}
+
+.auth-modal-page .auth-form-subtitle {
+    font-size: 12px;
+    line-height: 1.45;
+    margin-bottom: 14px;
+}
+
+.auth-modal-page .mb-4 {
+    margin-bottom: 16px !important;
+}
+
+.auth-modal-page .auth-input-group .form-control {
+    padding: 11px 12px;
+}
+
+.auth-modal-page .auth-submit-btn,
+.auth-modal-page .auth-alt-btn {
+    padding: 11px;
+}
+
+.auth-modal-page .auth-divider {
+    margin: 18px 0 12px;
+}
+
+.auth-modal-page .auth-back-link {
+    display: none;
+}
+
+@media (max-width: 520px) {
+    .auth-modal-page .auth-row {
+        gap: 12px;
+    }
+}
