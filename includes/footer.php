@@ -157,6 +157,18 @@
         </div>
     </div>
 
+    <?php if (function_exists('auth_user') && !auth_user()): ?>
+    <!-- Mobile Auth Popup -->
+    <div class="modal fade mobile-auth-modal" id="mobileAuthModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <button type="button" class="btn-close mobile-auth-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <iframe id="mobileAuthFrame" title="Careygo account access" loading="lazy"></iframe>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <!-- Back to Top Button -->
     <button id="backToTop" class="back-to-top" title="Go to top" type="button" aria-label="Scroll to top">
         <i class="bi bi-chevron-up"></i>
@@ -366,6 +378,128 @@
                             enquiryModalInstance.show();
                         }
                     });
+                });
+            }
+
+            const mobileAuthModal = document.getElementById("mobileAuthModal");
+            const mobileAuthFrame = document.getElementById("mobileAuthFrame");
+            if (mobileAuthModal && mobileAuthFrame) {
+                const authModalInstance = bootstrap.Modal.getOrCreateInstance(mobileAuthModal);
+                const resizeAuthFrame = function () {
+                    try {
+                        const doc = mobileAuthFrame.contentDocument;
+                        if (!doc) return;
+                        const height = Math.ceil(doc.documentElement.scrollHeight);
+                        const maxHeight = Math.max(320, window.innerHeight - 24);
+                        mobileAuthFrame.style.height = Math.min(height, maxHeight) + "px";
+                    } catch (error) {}
+                };
+
+                document.querySelectorAll(".mobile-auth-modal-link").forEach(function (link) {
+                    link.addEventListener("click", function (event) {
+                        if (window.innerWidth > 767) return;
+                        event.preventDefault();
+                        mobileAuthFrame.src = link.dataset.authUrl || link.getAttribute("href") || "login.php?modal=1";
+                        authModalInstance.show();
+                    });
+                });
+
+                mobileAuthFrame.addEventListener("load", function () {
+                    resizeAuthFrame();
+                    setTimeout(resizeAuthFrame, 150);
+                });
+
+                window.addEventListener("resize", resizeAuthFrame);
+                window.addEventListener("message", function (event) {
+                    if (event.origin !== window.location.origin) return;
+                    const height = Number(event.data && event.data.careygoAuthHeight);
+                    if (!height) return;
+                    const maxHeight = Math.max(320, window.innerHeight - 24);
+                    mobileAuthFrame.style.height = Math.min(Math.ceil(height), maxHeight) + "px";
+                });
+
+                mobileAuthModal.addEventListener("hidden.bs.modal", function () {
+                    mobileAuthFrame.removeAttribute("src");
+                    mobileAuthFrame.style.height = "";
+                });
+            }
+        });
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            if (window.careygoMobileAuthBound) return;
+            window.careygoMobileAuthBound = true;
+
+            document.addEventListener("click", function (event) {
+                const link = event.target.closest(".mobile-auth-modal-link");
+                if (!link || window.innerWidth > 767) return;
+
+                const modalEl = document.getElementById("mobileAuthModal");
+                const frame = document.getElementById("mobileAuthFrame");
+                if (!modalEl || !frame) return;
+
+                event.preventDefault();
+                frame.src = link.dataset.authUrl || link.getAttribute("href") || "login.php?modal=1";
+                if (typeof bootstrap !== "undefined") {
+                    bootstrap.Modal.getOrCreateInstance(modalEl).show();
+                } else {
+                    modalEl.style.display = "block";
+                    modalEl.removeAttribute("aria-hidden");
+                    modalEl.setAttribute("aria-modal", "true");
+                    modalEl.classList.add("show");
+                    document.body.classList.add("modal-open");
+                    if (!document.querySelector(".mobile-auth-backdrop")) {
+                        const backdrop = document.createElement("div");
+                        backdrop.className = "modal-backdrop fade show mobile-auth-backdrop";
+                        document.body.appendChild(backdrop);
+                    }
+                }
+            });
+
+            document.addEventListener("click", function (event) {
+                const close = event.target.closest('[data-bs-dismiss="modal"], .mobile-auth-backdrop');
+                if (!close) return;
+
+                const modalEl = document.getElementById("mobileAuthModal");
+                const frame = document.getElementById("mobileAuthFrame");
+                if (!modalEl || !modalEl.classList.contains("show")) return;
+
+                if (typeof bootstrap !== "undefined") return;
+
+                event.preventDefault();
+                modalEl.classList.remove("show");
+                modalEl.style.display = "none";
+                modalEl.setAttribute("aria-hidden", "true");
+                modalEl.removeAttribute("aria-modal");
+                document.body.classList.remove("modal-open");
+                document.querySelectorAll(".mobile-auth-backdrop").forEach(function (backdrop) {
+                    backdrop.remove();
+                });
+                if (frame) {
+                    frame.removeAttribute("src");
+                    frame.style.height = "";
+                }
+            });
+
+            window.addEventListener("message", function (event) {
+                if (event.origin !== window.location.origin) return;
+                const frame = document.getElementById("mobileAuthFrame");
+                if (!frame) return;
+
+                const height = Number(event.data && event.data.careygoAuthHeight);
+                if (!height) return;
+
+                const maxHeight = Math.max(320, window.innerHeight - 24);
+                frame.style.height = Math.min(Math.ceil(height), maxHeight) + "px";
+            });
+
+            const modalEl = document.getElementById("mobileAuthModal");
+            const frame = document.getElementById("mobileAuthFrame");
+            if (modalEl && frame) {
+                modalEl.addEventListener("hidden.bs.modal", function () {
+                    frame.removeAttribute("src");
+                    frame.style.height = "";
                 });
             }
         });

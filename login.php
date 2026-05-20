@@ -14,6 +14,7 @@ if ($user) {
     }
     header('Location: customer/pending.php'); exit;
 }
+$isAuthModal = isset($_GET['modal']) && $_GET['modal'] === '1';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -24,9 +25,9 @@ if ($user) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/auth.css?v=<?= @filemtime(__DIR__ . '/css/auth.css') ?: time() ?>">
 </head>
-<body class="auth-body">
+<body class="auth-body<?= $isAuthModal ? ' auth-modal-page' : '' ?>">
 
     <div class="auth-wrapper">
         <!-- Left Panel -->
@@ -93,7 +94,7 @@ if ($user) {
 
                 <div class="auth-divider"><span>New to Careygo?</span></div>
 
-                <a href="register.php" class="btn auth-alt-btn w-100">Create an Account</a>
+                <a href="register.php<?= $isAuthModal ? '?modal=1' : '' ?>" class="btn auth-alt-btn w-100">Create an Account</a>
 
                 <p class="auth-back-link text-center mt-4">
                     <a href="index.php"><i class="bi bi-arrow-left me-1"></i>Back to Homepage</a>
@@ -104,5 +105,24 @@ if ($user) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/login.js"></script>
+    <?php if ($isAuthModal): ?>
+    <script>
+        (function () {
+            function sendHeight() {
+                window.parent.postMessage({
+                    careygoAuthHeight: document.querySelector('.auth-form-wrap').getBoundingClientRect().height + 14
+                }, window.location.origin);
+            }
+            window.addEventListener('load', sendHeight);
+            window.addEventListener('resize', sendHeight);
+            new MutationObserver(sendHeight).observe(document.body, {
+                attributes: true,
+                childList: true,
+                subtree: true
+            });
+            setTimeout(sendHeight, 150);
+        })();
+    </script>
+    <?php endif; ?>
 </body>
 </html>

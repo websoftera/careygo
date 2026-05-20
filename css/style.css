@@ -43,7 +43,7 @@ body {
 
 @media (max-width: 767.98px) {
     body {
-        padding-top: 82px !important;
+        padding-top: 5px !important;
     }
 }
 
@@ -569,6 +569,10 @@ ul {
 .nav-user-menu-logout:hover { background: #fef2f2; color: #ef4444; }
 
 /* ===================================================== */
+
+.mobile-header-actions {
+    display: none;
+}
 
 /* Connect With Us Button */
 .btn-primary-custom {
@@ -1402,6 +1406,72 @@ ul {
     position: relative;
     padding: 24px 28px 26px;
     background: linear-gradient(180deg, #ffffff 0%, #f4f7fb 100%);
+}
+
+/* Mobile auth popup */
+.mobile-auth-modal.show {
+    display: block;
+}
+
+.mobile-auth-modal .modal-dialog {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: min(360px, calc(100vw - 24px));
+}
+
+.mobile-auth-modal .modal-content {
+    background: #ffffff;
+    border: 0;
+    border-radius: 10px;
+    box-shadow: 0 20px 55px rgba(0, 26, 147, 0.22);
+    max-height: calc(100dvh - 24px);
+    overflow: hidden;
+    position: relative;
+}
+
+.mobile-auth-modal iframe {
+    border: 0;
+    display: block;
+    height: min(82dvh, 580px);
+    max-height: calc(100dvh - 24px);
+    width: 100%;
+}
+
+.mobile-auth-close {
+    background-color: #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 8px 20px rgba(7, 19, 59, 0.18);
+    opacity: 1;
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    z-index: 3;
+}
+
+.mobile-auth-backdrop {
+    background: rgba(0, 0, 0, 0.55);
+    bottom: 0;
+    left: 0;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 1050;
+}
+
+@media (min-width: 768px) {
+    .mobile-auth-modal {
+        display: none !important;
+    }
+}
+
+@media (max-width: 380px) {
+    .mobile-auth-modal .modal-dialog {
+        max-width: calc(100vw - 14px);
+    }
+
+    .mobile-auth-modal iframe {
+        height: calc(100dvh - 22px);
+    }
 }
 
 .enquiry-close {
@@ -2641,6 +2711,106 @@ ul {
         min-height: 52px !important;
         padding-top: 3px !important;
         padding-bottom: 3px !important;
+    }
+
+    .mobile-header-actions {
+        background: #ffffff;
+        border-top: 1px solid #d3d3d3;
+        border-bottom: 1px solid #d3d3d3;
+        box-shadow: none;
+        display: block;
+        left: 0;
+        position: fixed;
+        right: 0;
+        top: 82px;
+        z-index: 1028;
+    }
+
+    .mobile-header-actions-inner {
+        display: grid;
+        gap: 0;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        padding: 0;
+    }
+
+    .mobile-header-action {
+        align-items: center;
+        background: #ffffff;
+        border-right: 1px solid #d3d3d3;
+        color: #999999;
+        display: inline-flex;
+        font-family: 'Poppins', sans-serif;
+        font-size: 10.2px;
+        font-weight: 600;
+        gap: 3px;
+        justify-content: center;
+        line-height: 1.08;
+        min-height: 35px;
+        min-width: 0;
+        padding: 4px 3px;
+        text-align: center;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .mobile-header-action span {
+        display: block;
+        flex: 0 1 auto;
+        min-width: 0;
+    }
+
+    .mobile-header-action:last-child {
+        border-right: 0;
+    }
+
+    .mobile-header-action:hover,
+    .mobile-header-action:focus {
+        background: #f7f7f7;
+        color: #999999;
+    }
+
+    .mobile-action-img {
+        display: block;
+        flex: 0 0 24px;
+        filter: opacity(0.55);
+        height: 24px;
+        object-fit: contain;
+        width: 24px;
+    }
+
+    .mobile-action-img-pickup {
+        flex-basis: 30px;
+        height: 25px;
+        width: 30px;
+    }
+
+    .mobile-action-img-rate {
+        flex-basis: 20px;
+        height: 20px;
+        width: 20px;
+    }
+
+    .mobile-action-img-tracking {
+        flex-basis: 28px;
+        height: 28px;
+        width: 28px;
+    }
+
+    @media (max-width: 360px) {
+        .mobile-header-action {
+            font-size: 8px;
+            gap: 2px;
+        }
+
+        .mobile-action-img {
+            flex-basis: 18px;
+            height: 18px;
+            width: 18px;
+        }
+    }
+
+    .main-navbar:has(.navbar-toggler[aria-expanded="true"]) + .mobile-header-actions {
+        display: none;
     }
 
     .navbar-brand {
