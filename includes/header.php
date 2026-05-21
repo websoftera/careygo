@@ -55,6 +55,7 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <base href="<?= htmlspecialchars(SITE_URL . '/') ?>">
     <title><?= htmlspecialchars($pageTitle ?? 'Careygo Logistics') ?></title>
+    <link rel="icon" type="image/webp" href="assets/images/favicon_LOGO.webp">
     <?php if (!empty($metaDescription)): ?>
     <meta name="description" content="<?= htmlspecialchars($metaDescription) ?>">
     <?php endif; ?>

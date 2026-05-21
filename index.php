@@ -388,16 +388,16 @@ require_once 'includes/header.php';
                 <div class="col-lg-3 col-md-6 col-12">
                     <div class="feature-item h-100 pb-0">
                         <div class="feature-title-group mb-3 text-primary-custom">
-                            <h5 class="feature-title fw-bold mb-0">Moneyback Guarantee for</h5>
-                            <h5 class="feature-title fw-bold">Premium Express Services</h5>
+                            <h5 class="feature-title fw-bold mb-0">Startup Founder’s Qualification &</h5>
+                            <h5 class="feature-title fw-bold">Automotive Industry Experience</h5>
                         </div>
                         <p class="feature-desc text-muted mb-4" style="line-height: 1.6;">
-                            logistics company specializes in managing the transportation, storage, and distribution of
-                            goods.
+                            The founder is a Mechanical Engineer and an IIM Calcutta alumnus with 27 years of experience
+                            in the automotive industry.
                         </p>
                         <div
                             class="feature-icon-wrapper rounded-4 bg-white d-flex align-items-center justify-content-center">
-                            <img src="assets/images/why-choose-icon-1.png" alt="Moneyback Guarantee"
+                            <img src="assets/images/founder-icon.png" alt="Startup Founder"
                                 class="feature-icon" loading="lazy" decoding="async">
                         </div>
                     </div>
@@ -407,16 +407,16 @@ require_once 'includes/header.php';
                 <div class="col-lg-3 col-md-6 col-12">
                     <div class="feature-item h-100 pb-0">
                         <div class="feature-title-group mb-3 text-primary-custom">
-                            <h5 class="feature-title fw-bold mb-0">100% On Time for</h5>
-                            <h5 class="feature-title fw-bold">Premium Shipment</h5>
+                            <h5 class="feature-title fw-bold mb-0">100% On Time for Premium Shipment</h5>
+                            <h5 class="feature-title fw-bold">with Money Back Guarantee</h5>
                         </div>
                         <p class="feature-desc text-muted mb-4" style="line-height: 1.6;">
-                            logistics company specializes in managing the transportation, storage, and distribution of
-                            goods.
+                            Freight charges will be refunded in proportion to the delivery delay. Fast, reliable, and
+                            logistics you can trust.
                         </p>
                         <div
                             class="feature-icon-wrapper rounded-4 bg-white d-flex align-items-center justify-content-center">
-                            <img src="assets/images/why-choose-icon-2.png" alt="100% On Time" class="feature-icon" loading="lazy" decoding="async">
+                            <img src="assets/images/why-choose-icon-1.png" alt="Money Back Guarantee" class="feature-icon" loading="lazy" decoding="async">
                         </div>
                     </div>
                 </div>
@@ -426,11 +426,11 @@ require_once 'includes/header.php';
                     <div class="feature-item h-100 pb-0">
                         <div class="feature-title-group mb-3 text-primary-custom">
                             <h5 class="feature-title fw-bold mb-0">Secure Handling for</h5>
-                            <h5 class="feature-title fw-bold">Fragile Items</h5>
+                            <h5 class="feature-title fw-bold">Fragile <span class="mobile-feature-title-break">Items</span></h5>
                         </div>
                         <p class="feature-desc text-muted mb-4" style="line-height: 1.6;">
-                            logistics company specializes in managing the transportation, storage, and distribution of
-                            goods.
+                            Carefully packed and transported with extra protection. Safe, reliable, and damage-free
+                            delivery assurance.
                         </p>
                         <div
                             class="feature-icon-wrapper rounded-4 bg-white d-flex align-items-center justify-content-center">
@@ -447,8 +447,8 @@ require_once 'includes/header.php';
                             <h5 class="feature-title fw-bold">in 30 Seconds</h5>
                         </div>
                         <p class="feature-desc text-muted mb-4" style="line-height: 1.6;">
-                            logistics company specializes in managing the transportation, storage, and distribution of
-                            goods.
+                            Quick response support for all shipment queries. Fast, reliable, and customer-focused
+                            assistance.<br>
                         </p>
                         <div
                             class="feature-icon-wrapper rounded-4 bg-white d-flex align-items-center justify-content-center">
