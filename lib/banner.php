@@ -14,10 +14,11 @@ function banner_ensure_table(PDO $pdo): void
         CREATE TABLE IF NOT EXISTS home_banners (
             id INT UNSIGNED NOT NULL AUTO_INCREMENT,
             eyebrow VARCHAR(120) DEFAULT NULL,
-            title VARCHAR(180) NOT NULL,
+            title VARCHAR(180) DEFAULT NULL,
             button_text VARCHAR(80) DEFAULT NULL,
             button_url VARCHAR(255) DEFAULT NULL,
             image_path VARCHAR(255) DEFAULT NULL,
+            hide_mobile_content TINYINT(1) NOT NULL DEFAULT 0,
             status ENUM('draft','published') NOT NULL DEFAULT 'published',
             sort_order INT NOT NULL DEFAULT 0,
             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -26,6 +27,16 @@ function banner_ensure_table(PDO $pdo): void
             KEY idx_home_banners_status_sort (status, sort_order, id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ");
+
+    try {
+        $pdo->exec("ALTER TABLE home_banners MODIFY title VARCHAR(180) DEFAULT NULL");
+    } catch (Throwable $e) {
+    }
+
+    try {
+        $pdo->exec("ALTER TABLE home_banners ADD COLUMN hide_mobile_content TINYINT(1) NOT NULL DEFAULT 0 AFTER image_path");
+    } catch (Throwable $e) {
+    }
 
     $done = true;
 }
@@ -38,7 +49,19 @@ function banner_default(): array
         'button_text' => 'Connect With Us',
         'button_url' => '#enquiryModal',
         'image_path' => 'assets/images/Main-banner-1.jpg',
+        'hide_mobile_content' => 0,
     ];
+}
+
+function banner_normalize(array $banner): array
+{
+    $defaults = banner_default();
+    foreach ($banner as $key => $value) {
+        if ($value !== null) {
+            $defaults[$key] = $value;
+        }
+    }
+    return $defaults;
 }
 
 function banner_current(PDO $pdo): array
@@ -46,7 +69,7 @@ function banner_current(PDO $pdo): array
     banner_ensure_table($pdo);
 
     $stmt = $pdo->query("
-        SELECT eyebrow, title, button_text, button_url, image_path
+        SELECT eyebrow, title, button_text, button_url, image_path, hide_mobile_content
         FROM home_banners
         WHERE status = 'published'
         ORDER BY sort_order ASC, id DESC
@@ -58,7 +81,7 @@ function banner_current(PDO $pdo): array
         return banner_default();
     }
 
-    return array_merge(banner_default(), array_filter($banner, static fn($value) => $value !== null && $value !== ''));
+    return banner_normalize($banner);
 }
 
 function banner_published(PDO $pdo): array
@@ -66,7 +89,7 @@ function banner_published(PDO $pdo): array
     banner_ensure_table($pdo);
 
     $stmt = $pdo->query("
-        SELECT eyebrow, title, button_text, button_url, image_path
+        SELECT eyebrow, title, button_text, button_url, image_path, hide_mobile_content
         FROM home_banners
         WHERE status = 'published'
         ORDER BY sort_order ASC, id DESC
@@ -78,7 +101,7 @@ function banner_published(PDO $pdo): array
     }
 
     return array_map(
-        static fn(array $banner): array => array_merge(banner_default(), array_filter($banner, static fn($value) => $value !== null && $value !== '')),
+        static fn(array $banner): array => banner_normalize($banner),
         $banners
     );
 }

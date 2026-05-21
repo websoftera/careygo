@@ -17,6 +17,7 @@ $bannerFormDefaults = [
     'title' => '',
     'button_text' => 'Connect With Us',
     'button_url' => '#enquiryModal',
+    'hide_mobile_content' => 0,
     'status' => 'published',
     'sort_order' => 0,
     'image_path' => '',
@@ -52,6 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'title' => $_POST['title'] ?? '',
             'button_text' => $_POST['button_text'] ?? 'Connect With Us',
             'button_url' => $_POST['button_url'] ?? '#enquiryModal',
+            'hide_mobile_content' => isset($_POST['hide_mobile_content']) ? 1 : 0,
             'status' => $_POST['status'] ?? 'published',
             'sort_order' => $_POST['sort_order'] ?? 0,
             'image_path' => '',
@@ -89,13 +91,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $id = (int) ($_POST['id'] ?? 0);
             $title = trim($_POST['title'] ?? '');
-            if ($title === '') {
-                throw new RuntimeException('Banner title is required.');
-            }
-
             $eyebrow = trim($_POST['eyebrow'] ?? '');
             $buttonText = trim($_POST['button_text'] ?? '');
             $buttonUrl = banner_clean_url($_POST['button_url'] ?? '');
+            $hideMobileContent = isset($_POST['hide_mobile_content']) ? 1 : 0;
             $status = ($_POST['status'] ?? 'published') === 'draft' ? 'draft' : 'published';
             $sortOrder = (int) ($_POST['sort_order'] ?? 0);
             $imagePath = null;
@@ -111,10 +110,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $sql = "
                     UPDATE home_banners
-                    SET eyebrow = ?, title = ?, button_text = ?, button_url = ?, status = ?, sort_order = ?" . ($imagePath ? ', image_path = ?' : '') . "
+                    SET eyebrow = ?, title = ?, button_text = ?, button_url = ?, hide_mobile_content = ?, status = ?, sort_order = ?" . ($imagePath ? ', image_path = ?' : '') . "
                     WHERE id = ?
                 ";
-                $params = [$eyebrow, $title, $buttonText, $buttonUrl, $status, $sortOrder];
+                $params = [$eyebrow, $title, $buttonText, $buttonUrl, $hideMobileContent, $status, $sortOrder];
                 if ($imagePath) {
                     $params[] = $imagePath;
                 }
@@ -127,10 +126,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $message = 'Banner updated successfully.';
             } else {
                 $stmt = $pdo->prepare("
-                    INSERT INTO home_banners (eyebrow, title, button_text, button_url, image_path, status, sort_order)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO home_banners (eyebrow, title, button_text, button_url, image_path, hide_mobile_content, status, sort_order)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 ");
-                $stmt->execute([$eyebrow, $title, $buttonText, $buttonUrl, $imagePath, $status, $sortOrder]);
+                $stmt->execute([$eyebrow, $title, $buttonText, $buttonUrl, $imagePath, $hideMobileContent, $status, $sortOrder]);
                 $message = 'Banner added successfully.';
             }
         }
@@ -157,7 +156,7 @@ if ($submittedBanner && $error) {
 $csrfToken = csrf_token();
 
 $banners = $pdo->query("
-    SELECT id, eyebrow, title, button_text, button_url, image_path, status, sort_order, created_at
+    SELECT id, eyebrow, title, button_text, button_url, image_path, hide_mobile_content, status, sort_order, created_at
     FROM home_banners
     ORDER BY sort_order ASC, id DESC
 ")->fetchAll(PDO::FETCH_ASSOC);
@@ -195,8 +194,15 @@ require_once 'includes/header.php';
                         <input type="text" class="admin-form-control" name="eyebrow" maxlength="120" value="<?= h((string) ($bannerForm['eyebrow'] ?? '')) ?>" placeholder="Plan, Transport and Focus">
                     </div>
                     <div class="mb-3">
-                        <label class="admin-form-label">Main Title <span class="text-danger">*</span></label>
-                        <input type="text" class="admin-form-control" name="title" maxlength="180" value="<?= h((string) ($bannerForm['title'] ?? '')) ?>" required>
+                        <label class="admin-form-label">Main Title</label>
+                        <input type="text" class="admin-form-control" name="title" maxlength="180" value="<?= h((string) ($bannerForm['title'] ?? '')) ?>" placeholder="Leave blank for image-only banner">
+                    </div>
+                    <div class="mt-3">
+                        <label class="d-flex align-items-center gap-2" style="font-size:13px;font-weight:600;color:var(--text);">
+                            <input type="checkbox" name="hide_mobile_content" value="1" <?= !empty($bannerForm['hide_mobile_content']) ? 'checked' : '' ?>>
+                            Hide banner text/button on mobile view
+                        </label>
+                        <small class="d-block mt-1 text-muted">Desktop will still show the text. Mobile will show only the banner image.</small>
                     </div>
                     <div class="row g-3">
                         <div class="col-md-6">
@@ -266,8 +272,8 @@ require_once 'includes/header.php';
                                 <div class="banner-admin-cell">
                                     <img src="../<?= h(banner_image_url($banner['image_path'])) ?>" alt="">
                                     <div>
-                                        <div class="user-cell-name"><?= h($banner['title']) ?></div>
-                                        <div class="user-cell-sub"><?= h((string) ($banner['eyebrow'] ?: $banner['button_text'] ?: 'Home banner')) ?></div>
+                                        <div class="user-cell-name"><?= h((string) ($banner['title'] ?: 'Image-only banner')) ?></div>
+                                        <div class="user-cell-sub"><?= h((string) ($banner['eyebrow'] ?: $banner['button_text'] ?: (!empty($banner['hide_mobile_content']) ? 'Mobile text hidden' : 'Home banner'))) ?></div>
                                     </div>
                                 </div>
                             </td>
@@ -362,7 +368,7 @@ require_once 'includes/header.php';
     if (!form) return;
 
     const storageKey = 'careygo_admin_banner_draft_' + (form.querySelector('[name="id"]')?.value || 'new');
-    const fields = ['eyebrow', 'title', 'button_text', 'button_url', 'status', 'sort_order'];
+    const fields = ['eyebrow', 'title', 'button_text', 'button_url', 'hide_mobile_content', 'status', 'sort_order'];
 
     function readDraft() {
         try {
@@ -376,7 +382,8 @@ require_once 'includes/header.php';
         const draft = {};
         fields.forEach((name) => {
             const field = form.querySelector(`[name="${name}"]`);
-            if (field) draft[name] = field.value;
+            if (!field) return;
+            draft[name] = field.type === 'checkbox' ? field.checked : field.value;
         });
         try {
             localStorage.setItem(storageKey, JSON.stringify(draft));
@@ -388,6 +395,10 @@ require_once 'includes/header.php';
         fields.forEach((name) => {
             const field = form.querySelector(`[name="${name}"]`);
             if (!field || draft[name] === undefined) return;
+            if (field.type === 'checkbox') {
+                field.checked = !!draft[name];
+                return;
+            }
             if (name === 'title' || field.value === '' || field.value === 'Connect With Us' || field.value === '#enquiryModal') {
                 field.value = draft[name];
             }

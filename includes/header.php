@@ -153,7 +153,7 @@ try {
                         <a class="nav-link" href="public-tracking.php">TRACKING</a>
                     </li>
                     <li class="nav-item px-1 px-xl-2">
-                        <a class="nav-link" href="<?= $_navUser ? 'customer/new-booking.php' : 'login.php' ?>">PICKUP</a>
+                        <a class="nav-link" href="<?= $_navUser ? 'customer/new-booking.php' : 'login.php' ?>">BOOKING</a>
                     </li>
                     <li class="nav-item px-1 px-xl-2">
                         <a class="nav-link" href="<?= $_navUser ? 'customer/new-booking.php' : 'login.php' ?>">RATE CALCULATOR</a>
@@ -259,7 +259,7 @@ try {
             </a>
             <a href="<?= $_navUser ? 'customer/new-booking.php' : 'login.php' ?>" class="mobile-header-action<?= $_navUser ? '' : ' mobile-auth-modal-link' ?>"<?= $_navUser ? '' : ' data-auth-url="login.php?modal=1"' ?>>
                 <img src="assets/images/mobile-actions/pickup-icon.png" alt="" class="mobile-action-img mobile-action-img-pickup" decoding="async">
-                <span>Pickup</span>
+                <span>Booking</span>
             </a>
             <a href="<?= $_navUser ? 'customer/new-booking.php' : 'login.php' ?>" class="mobile-header-action<?= $_navUser ? '' : ' mobile-auth-modal-link' ?>"<?= $_navUser ? '' : ' data-auth-url="login.php?modal=1"' ?>>
                 <img src="assets/images/mobile-actions/rate-calculator-icon.png" alt="" class="mobile-action-img mobile-action-img-rate" decoding="async">

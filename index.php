@@ -17,18 +17,25 @@ require_once 'includes/header.php';
             $isModalButton = banner_is_modal_url($buttonUrl);
         ?>
         <?php $bannerImageUrl = banner_image_url($homeBanner['image_path'] ?? null); ?>
-        <div class="hero-slide <?= $index === 0 ? 'is-active' : '' ?>" data-hero-slide="<?= (int) $index ?>" data-bg="<?= h($bannerImageUrl) ?>"<?= $index === 0 ? ' style="background-image: url(\'' . h($bannerImageUrl) . '\');"' : '' ?>>
+        <?php
+            $hasBannerContent = !empty($homeBanner['eyebrow']) || !empty($homeBanner['title']) || !empty($homeBanner['button_text']);
+            $hideMobileContent = !empty($homeBanner['hide_mobile_content']);
+        ?>
+        <div class="hero-slide <?= $index === 0 ? 'is-active' : '' ?><?= $hideMobileContent ? ' hero-slide-hide-mobile-content' : '' ?>" data-hero-slide="<?= (int) $index ?>" data-bg="<?= h($bannerImageUrl) ?>"<?= $index === 0 ? ' style="background-image: url(\'' . h($bannerImageUrl) . '\');"' : '' ?>>
+            <?php if ($hasBannerContent): ?>
             <div class="container position-relative z-1 text-white">
                 <div class="row">
-                    <div class="col-lg-8 col-xl-7 hero-content">
+                    <div class="col-lg-9 col-xl-8 hero-content">
                         <?php if (!empty($homeBanner['eyebrow'])): ?>
                         <div class="hero-label rounded-pill">
                             <?= h($homeBanner['eyebrow']) ?>
                         </div>
                         <?php endif; ?>
+                        <?php if (!empty($homeBanner['title'])): ?>
                         <h1 class="hero-title fw-bold text-white">
                             <?= h($homeBanner['title']) ?>
                         </h1>
+                        <?php endif; ?>
                         <?php if (!empty($homeBanner['button_text'])): ?>
                         <div class="hero-btn-container">
                             <a href="<?= h($buttonUrl) ?>" class="btn btn-primary-custom" <?= $isModalButton ? 'data-bs-toggle="modal" data-bs-target="' . h($buttonUrl) . '"' : '' ?>>
@@ -39,6 +46,7 @@ require_once 'includes/header.php';
                     </div>
                 </div>
             </div>
+            <?php endif; ?>
         </div>
         <?php endforeach; ?>
 
@@ -50,6 +58,15 @@ require_once 'includes/header.php';
             <button type="button" class="hero-carousel-arrow" data-hero-next aria-label="Next banner">
                 <i class="bi bi-chevron-right"></i>
             </button>
+        </div>
+        <div class="hero-carousel-dots" aria-label="Banner slides">
+            <?php foreach ($homeBanners as $index => $_homeBanner): ?>
+            <button type="button"
+                class="hero-carousel-dot <?= $index === 0 ? 'is-active' : '' ?>"
+                data-hero-dot="<?= (int) $index ?>"
+                aria-label="Go to banner <?= (int) $index + 1 ?>"
+                aria-current="<?= $index === 0 ? 'true' : 'false' ?>"></button>
+            <?php endforeach; ?>
         </div>
         <?php endif; ?>
     </section>
@@ -100,7 +117,15 @@ require_once 'includes/header.php';
         z-index: 2;
     }
     .hero-carousel .hero-content {
-        padding-left: 50px !important;
+        padding-left: 74px !important;
+        flex: 0 0 min(900px, 68vw) !important;
+        max-width: min(900px, 68vw) !important;
+        width: min(900px, 68vw) !important;
+    }
+    .hero-carousel .hero-title {
+        font-size: 2.75rem !important;
+        line-height: 1.1 !important;
+        max-width: 900px;
     }
     .hero-slide .hero-label,
     .hero-slide .hero-title,
@@ -123,15 +148,15 @@ require_once 'includes/header.php';
     }
     .hero-carousel-controls {
         align-items: center;
-        bottom: 34px;
+        inset: 50% 18px auto 18px;
         display: flex;
-        gap: 8px;
+        justify-content: space-between;
         opacity: 1;
         position: absolute;
-        right: 42px;
-        transform: translateY(0);
+        transform: translateY(-50%);
         transition: opacity 0.2s ease, transform 0.2s ease;
         z-index: 6;
+        pointer-events: none;
     }
     .hero-carousel-arrow {
         align-items: center;
@@ -140,14 +165,45 @@ require_once 'includes/header.php';
         border-radius: 50%;
         color: #001A93;
         display: inline-flex;
-        height: 38px;
+        height: 30px;
         justify-content: center;
         transition: all 0.2s ease;
-        width: 38px;
+        width: 30px;
+        pointer-events: auto;
+    }
+    .hero-carousel-arrow i {
+        font-size: 14px;
+        line-height: 1;
     }
     .hero-carousel-arrow:hover {
         background: #001A93;
         color: #fff;
+    }
+    .hero-carousel-dots {
+        align-items: center;
+        bottom: 18px;
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        left: 50%;
+        position: absolute;
+        transform: translateX(-50%);
+        z-index: 7;
+    }
+    .hero-carousel-dot {
+        width: 8px;
+        height: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.45);
+        padding: 0;
+        transition: width 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+    }
+    .hero-carousel-dot.is-active {
+        width: 22px;
+        border-radius: 999px;
+        background: #ffffff;
+        border-color: #ffffff;
     }
     @media (max-width: 767.98px) {
         .hero-carousel::before {
@@ -165,9 +221,23 @@ require_once 'includes/header.php';
         .hero-carousel-controls {
             display: none;
         }
+        .hero-slide-hide-mobile-content .hero-content {
+            display: none !important;
+        }
         .hero-carousel-arrow {
             height: 34px;
             width: 34px;
+        }
+        .hero-carousel-dots {
+            bottom: 8px;
+            gap: 6px;
+        }
+        .hero-carousel-dot {
+            width: 7px;
+            height: 7px;
+        }
+        .hero-carousel-dot.is-active {
+            width: 18px;
         }
     }
     </style>
@@ -180,6 +250,7 @@ require_once 'includes/header.php';
         const slides = Array.from(carousel.querySelectorAll('[data-hero-slide]'));
         const prev = carousel.querySelector('[data-hero-prev]');
         const next = carousel.querySelector('[data-hero-next]');
+        const dots = Array.from(carousel.querySelectorAll('[data-hero-dot]'));
         if (slides.length <= 1) return;
 
         let current = 0;
@@ -198,6 +269,11 @@ require_once 'includes/header.php';
             loadSlide(slides[(current + 1) % slides.length]);
             slides.forEach((slide, slideIndex) => {
                 slide.classList.toggle('is-active', slideIndex === current);
+            });
+            dots.forEach((dot, dotIndex) => {
+                const isActive = dotIndex === current;
+                dot.classList.toggle('is-active', isActive);
+                dot.setAttribute('aria-current', isActive ? 'true' : 'false');
             });
         }
 
@@ -221,6 +297,13 @@ require_once 'includes/header.php';
         next?.addEventListener('click', () => {
             showSlide(current + 1);
             startAuto();
+        });
+
+        dots.forEach((dot) => {
+            dot.addEventListener('click', () => {
+                showSlide(Number(dot.dataset.heroDot || 0));
+                startAuto();
+            });
         });
 
         carousel.addEventListener('mouseenter', stopAuto);
