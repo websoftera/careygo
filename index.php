@@ -116,16 +116,18 @@ require_once 'includes/header.php';
         width: 100%;
         z-index: 2;
     }
-    .hero-carousel .hero-content {
-        padding-left: 74px !important;
-        flex: 0 0 min(900px, 68vw) !important;
-        max-width: min(900px, 68vw) !important;
-        width: min(900px, 68vw) !important;
-    }
-    .hero-carousel .hero-title {
-        font-size: 2.75rem !important;
-        line-height: 1.1 !important;
-        max-width: 900px;
+    @media (min-width: 768px) {
+        .hero-carousel .hero-content {
+            padding-left: 74px !important;
+            flex: 0 0 min(900px, 68vw) !important;
+            max-width: min(900px, 68vw) !important;
+            width: min(900px, 68vw) !important;
+        }
+        .hero-carousel .hero-title {
+            font-size: 2.75rem !important;
+            line-height: 1.1 !important;
+            max-width: 900px;
+        }
     }
     .hero-slide .hero-label,
     .hero-slide .hero-title,
