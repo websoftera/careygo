@@ -279,8 +279,8 @@ require_once 'includes/header.php';
                             </td>
                             <td><span class="badge-status badge-<?= $banner['status'] === 'published' ? 'approved' : 'pending' ?>"><?= h(ucfirst($banner['status'])) ?></span></td>
                             <td style="font-size:12px;color:var(--muted)" data-sort-order-cell><?= (int) $banner['sort_order'] ?></td>
-                            <td>
-                                <div class="d-flex gap-1">
+                            <td class="banner-actions-cell">
+                                <div class="banner-actions">
                                     <a class="btn-action" href="../index.php" target="_blank" title="View Home"><i class="bi bi-eye"></i></a>
                                     <a class="btn-action" href="banners.php?edit=<?= (int) $banner['id'] ?>" title="Edit"><i class="bi bi-pencil"></i></a>
                                     <form method="POST" onsubmit="return confirm('Delete this banner?');">
@@ -318,6 +318,25 @@ require_once 'includes/header.php';
 .banner-sort-table tbody tr.banner-row-over {
     background: #eef3ff;
 }
+.banner-sort-table {
+    table-layout: fixed;
+}
+.banner-sort-table th:nth-child(1),
+.banner-sort-table td:nth-child(1) {
+    width: 54px;
+}
+.banner-sort-table th:nth-child(3),
+.banner-sort-table td:nth-child(3) {
+    width: 138px;
+}
+.banner-sort-table th:nth-child(4),
+.banner-sort-table td:nth-child(4) {
+    width: 78px;
+}
+.banner-sort-table th:nth-child(5),
+.banner-sort-table td:nth-child(5) {
+    width: 146px;
+}
 .banner-drag-cell {
     text-align: center;
     width: 44px;
@@ -350,7 +369,10 @@ require_once 'includes/header.php';
     display: flex;
     align-items: center;
     gap: 10px;
-    min-width: 260px;
+    min-width: 0;
+}
+.banner-admin-cell > div {
+    min-width: 0;
 }
 .banner-admin-cell img {
     width: 78px;
@@ -359,6 +381,19 @@ require_once 'includes/header.php';
     border-radius: 8px;
     background: #eef2f7;
     flex-shrink: 0;
+}
+.banner-actions-cell {
+    white-space: nowrap !important;
+}
+.banner-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: flex-start;
+    min-width: 108px;
+}
+.banner-actions form {
+    margin: 0;
 }
 </style>
 
