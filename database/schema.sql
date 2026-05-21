@@ -45,10 +45,11 @@ CREATE TABLE IF NOT EXISTS `token_blacklist` (
 CREATE TABLE IF NOT EXISTS `home_banners` (
     `id`          INT UNSIGNED NOT NULL AUTO_INCREMENT,
     `eyebrow`     VARCHAR(120) DEFAULT NULL,
-    `title`       VARCHAR(180) NOT NULL,
+    `title`       VARCHAR(180) DEFAULT NULL,
     `button_text` VARCHAR(80) DEFAULT NULL,
     `button_url`  VARCHAR(255) DEFAULT NULL,
     `image_path`  VARCHAR(255) DEFAULT NULL,
+    `hide_mobile_content` TINYINT(1) NOT NULL DEFAULT 0,
     `status`      ENUM('draft','published') NOT NULL DEFAULT 'published',
     `sort_order`  INT NOT NULL DEFAULT 0,
     `created_at`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

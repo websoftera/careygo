@@ -169,6 +169,15 @@
     </div>
     <?php endif; ?>
 
+    <!-- WhatsApp Floating Button -->
+    <a href="https://wa.me/919850296178?text=Hi%20Careygo%2C%20I%20would%20like%20to%20know%20more%20about%20your%20courier%20services."
+        class="whatsapp-float"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Chat with Careygo on WhatsApp">
+        <i class="bi bi-whatsapp"></i>
+    </a>
+
     <!-- Back to Top Button -->
     <button id="backToTop" class="back-to-top" title="Go to top" type="button" aria-label="Scroll to top">
         <i class="bi bi-chevron-up"></i>
@@ -188,6 +197,120 @@
                 behavior: "smooth"
             });
         });
+
+        (function initServiceDropdowns() {
+            const selects = document.querySelectorAll("#contactService, #enquiryService");
+            const openDropdowns = [];
+
+            function closeDropdown(dropdown) {
+                dropdown.classList.remove("is-open");
+                dropdown.querySelector(".cg-service-select__button").setAttribute("aria-expanded", "false");
+            }
+
+            function closeAllDropdowns(except) {
+                openDropdowns.forEach(function (dropdown) {
+                    if (dropdown !== except) closeDropdown(dropdown);
+                });
+            }
+
+            selects.forEach(function (select) {
+                const dropdown = document.createElement("div");
+                const button = document.createElement("button");
+                const menu = document.createElement("div");
+                const menuId = select.id + "CustomMenu";
+
+                dropdown.className = "cg-service-select";
+                button.type = "button";
+                button.className = "cg-service-select__button";
+                button.setAttribute("aria-haspopup", "listbox");
+                button.setAttribute("aria-expanded", "false");
+                button.setAttribute("aria-controls", menuId);
+                menu.className = "cg-service-select__menu";
+                menu.id = menuId;
+                menu.setAttribute("role", "listbox");
+
+                function syncLabel() {
+                    const selectedOption = select.options[select.selectedIndex] || select.options[0];
+                    button.textContent = selectedOption ? selectedOption.text : "";
+                    menu.querySelectorAll(".cg-service-select__option").forEach(function (optionButton) {
+                        const isSelected = optionButton.dataset.value === select.value;
+                        optionButton.classList.toggle("is-selected", isSelected);
+                        optionButton.setAttribute("aria-selected", isSelected ? "true" : "false");
+                    });
+                }
+
+                Array.from(select.options).forEach(function (option) {
+                    const optionButton = document.createElement("button");
+                    optionButton.type = "button";
+                    optionButton.className = "cg-service-select__option";
+                    optionButton.textContent = option.text;
+                    optionButton.dataset.value = option.value;
+                    optionButton.setAttribute("role", "option");
+                    optionButton.addEventListener("click", function () {
+                        select.value = option.value;
+                        select.dispatchEvent(new Event("change", { bubbles: true }));
+                        syncLabel();
+                        closeDropdown(dropdown);
+                        button.focus();
+                    });
+                    menu.appendChild(optionButton);
+                });
+
+                button.addEventListener("click", function () {
+                    const isOpen = dropdown.classList.toggle("is-open");
+                    closeAllDropdowns(dropdown);
+                    button.setAttribute("aria-expanded", isOpen ? "true" : "false");
+                });
+
+                button.addEventListener("keydown", function (event) {
+                    if (event.key === "Escape") {
+                        closeDropdown(dropdown);
+                    }
+                    if (event.key === "ArrowDown" || event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        dropdown.classList.add("is-open");
+                        button.setAttribute("aria-expanded", "true");
+                        const selected = menu.querySelector(".cg-service-select__option.is-selected") || menu.querySelector(".cg-service-select__option");
+                        if (selected) selected.focus();
+                    }
+                });
+
+                menu.addEventListener("keydown", function (event) {
+                    const options = Array.from(menu.querySelectorAll(".cg-service-select__option"));
+                    const currentIndex = options.indexOf(document.activeElement);
+
+                    if (event.key === "Escape") {
+                        closeDropdown(dropdown);
+                        button.focus();
+                    }
+                    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                        event.preventDefault();
+                        const step = event.key === "ArrowDown" ? 1 : -1;
+                        const nextIndex = (currentIndex + step + options.length) % options.length;
+                        options[nextIndex].focus();
+                    }
+                });
+
+                select.classList.add("cg-service-select-native");
+                select.insertAdjacentElement("afterend", dropdown);
+                dropdown.appendChild(button);
+                dropdown.appendChild(menu);
+                openDropdowns.push(dropdown);
+                syncLabel();
+
+                if (select.form) {
+                    select.form.addEventListener("reset", function () {
+                        window.setTimeout(syncLabel, 0);
+                    });
+                }
+            });
+
+            document.addEventListener("click", function (event) {
+                if (!event.target.closest(".cg-service-select")) {
+                    closeAllDropdowns(null);
+                }
+            });
+        })();
 
         const contactForm = document.getElementById("contactForm");
         if (contactForm) {
