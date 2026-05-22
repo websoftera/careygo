@@ -18,10 +18,19 @@ require_once 'includes/header.php';
         ?>
         <?php $bannerImageUrl = banner_image_url($homeBanner['image_path'] ?? null); ?>
         <?php
-            $hasBannerContent = !empty($homeBanner['eyebrow']) || !empty($homeBanner['title']) || !empty($homeBanner['button_text']);
+            $hasBannerContent = trim((string) ($homeBanner['eyebrow'] ?? '')) !== ''
+                || trim((string) ($homeBanner['title'] ?? '')) !== ''
+                || trim((string) ($homeBanner['button_text'] ?? '')) !== '';
             $hideMobileContent = !empty($homeBanner['hide_mobile_content']);
+            $slideClasses = [
+                'hero-slide',
+                $index === 0 ? 'is-active' : '',
+                $hasBannerContent ? 'hero-slide-has-content' : '',
+                ($hasBannerContent && !$hideMobileContent) ? 'hero-slide-has-mobile-content' : '',
+                $hideMobileContent ? 'hero-slide-hide-mobile-content' : '',
+            ];
         ?>
-        <div class="hero-slide <?= $index === 0 ? 'is-active' : '' ?><?= $hideMobileContent ? ' hero-slide-hide-mobile-content' : '' ?>" data-hero-slide="<?= (int) $index ?>" data-bg="<?= h($bannerImageUrl) ?>"<?= $index === 0 ? ' style="background-image: url(\'' . h($bannerImageUrl) . '\');"' : '' ?>>
+        <div class="<?= h(trim(implode(' ', array_filter($slideClasses)))) ?>" data-hero-slide="<?= (int) $index ?>" data-bg="<?= h($bannerImageUrl) ?>"<?= $index === 0 ? ' style="background-image: url(\'' . h($bannerImageUrl) . '\');"' : '' ?>>
             <?php if ($hasBannerContent): ?>
             <div class="container position-relative z-1 text-white">
                 <div class="row">
@@ -95,7 +104,10 @@ require_once 'includes/header.php';
         z-index: 1;
     }
     .hero-slide::before {
-        background: linear-gradient(90deg, rgba(31, 23, 18, 0.85) 0%, rgba(20, 35, 60, 0.4) 55%, rgba(0, 0, 0, 0) 100%);
+        content: none;
+    }
+    .hero-slide-has-content::before {
+        background: linear-gradient(90deg, rgba(5, 16, 45, 0.48) 0%, rgba(5, 16, 45, 0.22) 46%, rgba(5, 16, 45, 0.04) 100%);
         content: '';
         height: 100%;
         left: 0;
@@ -135,6 +147,13 @@ require_once 'includes/header.php';
         opacity: 1;
         transform: none;
         transition: none;
+    }
+    .hero-slide .hero-label,
+    .hero-slide .hero-title {
+        text-shadow: 0 3px 12px rgba(0, 0, 0, 0.55);
+    }
+    .hero-slide .hero-title {
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
     }
     .hero-slide.is-active .hero-label {
         opacity: 1;
@@ -217,8 +236,12 @@ require_once 'includes/header.php';
         .hero-carousel .hero-content {
             padding: 12px 20px !important;
         }
-        .hero-slide::before {
-            background: linear-gradient(180deg, rgba(82, 60, 48, 0.8) 0%, rgba(26, 47, 76, 0.6) 50%, rgba(0, 0, 0, 0.4) 100%);
+        .hero-slide-has-content::before {
+            content: none;
+        }
+        .hero-slide-has-mobile-content::before {
+            background: linear-gradient(180deg, rgba(5, 16, 45, 0.4) 0%, rgba(5, 16, 45, 0.24) 55%, rgba(5, 16, 45, 0.12) 100%);
+            content: '';
         }
         .hero-carousel-controls {
             display: none;
