@@ -3056,6 +3056,14 @@ ul {
         border-right: 0;
     }
 
+    .mobile-header-action:first-child > span {
+        transform: translateX(-7px);
+    }
+
+    .mobile-header-action:nth-child(3) > span {
+        transform: translateX(5px);
+    }
+
     .mobile-header-action:hover,
     .mobile-header-action:focus {
         background: #f7f7f7;
@@ -3112,6 +3120,14 @@ ul {
         .mobile-header-action {
             font-size: 9px;
             gap: 8px;
+        }
+
+        .mobile-header-action:first-child > span {
+            transform: translateX(-5px);
+        }
+
+        .mobile-header-action:nth-child(3) > span {
+            transform: translateX(3px);
         }
 
         .mobile-action-icon {
