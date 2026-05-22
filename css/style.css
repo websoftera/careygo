@@ -3032,22 +3032,21 @@ ul {
         color: #111111;
         display: inline-flex;
         font-family: 'Poppins', sans-serif;
-        font-size: 8.2px;
+        font-size: 10.2px;
         font-weight: 600;
-        gap: 6px;
+        gap: 10px;
         justify-content: center;
         line-height: 1.08;
         height: 100%;
         min-height: 0;
         min-width: 0;
-        overflow: hidden;
-        padding: 3px 6px;
+        padding: 3px 2px;
         text-align: center;
         text-decoration: none;
         white-space: nowrap;
     }
 
-    .mobile-header-action > span:not(.mobile-action-icon) {
+    .mobile-header-action span {
         display: block;
         flex: 0 1 auto;
         min-width: 0;
@@ -3055,16 +3054,6 @@ ul {
 
     .mobile-header-action:last-child {
         border-right: 0;
-    }
-
-    .mobile-header-action:first-child {
-        justify-content: flex-start;
-        padding-left: 2px;
-    }
-
-    .mobile-header-action:last-child {
-        justify-content: flex-end;
-        padding-right: 2px;
     }
 
     .mobile-header-action:hover,
@@ -3077,13 +3066,13 @@ ul {
         align-items: center;
         color: #111111;
         display: inline-flex;
-        flex: 0 0 18px;
-        font-size: 18px;
-        height: 18px;
+        flex: 0 0 24px;
+        font-size: 22px;
+        height: 24px;
         justify-content: center;
         line-height: 1;
         position: relative;
-        width: 18px;
+        width: 24px;
     }
 
     .mobile-action-icon i {
@@ -3091,23 +3080,22 @@ ul {
         line-height: 1;
     }
 
-    .mobile-action-icon-rate .bi-calculator {
-        font-size: 18px;
+    .mobile-action-icon-rate .bi-calculator-fill {
+        font-size: 22px;
     }
 
     .mobile-action-icon-rate .bi-currency-rupee {
         align-items: center;
-        background: #ffffff;
-        border: 1.5px solid #17bfe6;
+        background: #111111;
         border-radius: 50%;
-        color: #111111;
+        color: #ffffff;
         display: inline-flex;
         font-size: 10px;
         height: 14px;
         justify-content: center;
         line-height: 1;
         position: absolute;
-        right: -6px;
+        right: -4px;
         top: -4px;
         width: 14px;
     }
@@ -3122,29 +3110,27 @@ ul {
         }
 
         .mobile-header-action {
-            font-size: 8px;
-            gap: 5px;
-            padding-left: 4px;
-            padding-right: 4px;
+            font-size: 9px;
+            gap: 8px;
         }
 
         .mobile-action-icon {
-            flex-basis: 16px;
-            font-size: 16px;
-            height: 16px;
-            width: 16px;
+            flex-basis: 20px;
+            font-size: 19px;
+            height: 20px;
+            width: 20px;
         }
 
-        .mobile-action-icon-rate .bi-calculator {
-            font-size: 16px;
+        .mobile-action-icon-rate .bi-calculator-fill {
+            font-size: 19px;
         }
 
         .mobile-action-icon-rate .bi-currency-rupee {
             font-size: 9px;
-            height: 13px;
-            right: -6px;
-            top: -5px;
-            width: 13px;
+            height: 12px;
+            right: -4px;
+            top: -4px;
+            width: 12px;
         }
     }
 

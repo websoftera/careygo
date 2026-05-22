@@ -254,15 +254,15 @@ try {
     <div class="mobile-header-actions" aria-label="Quick actions">
         <div class="mobile-header-actions-inner">
             <a href="public-tracking.php" class="mobile-header-action">
-                <span class="mobile-action-icon" aria-hidden="true"><i class="bi bi-geo-alt"></i></span>
+                <span class="mobile-action-icon mobile-action-icon-tracking" aria-hidden="true"><i class="bi bi-geo-alt-fill"></i></span>
                 <span>Tracking</span>
             </a>
             <a href="<?= $_navUser ? 'customer/new-booking.php' : 'login.php' ?>" class="mobile-header-action<?= $_navUser ? '' : ' mobile-auth-modal-link' ?>"<?= $_navUser ? '' : ' data-auth-url="login.php?modal=1"' ?>>
-                <span class="mobile-action-icon" aria-hidden="true"><i class="bi bi-box-seam-fill"></i></span>
+                <span class="mobile-action-icon mobile-action-icon-booking" aria-hidden="true"><i class="bi bi-box-seam-fill"></i></span>
                 <span>Booking</span>
             </a>
             <a href="<?= $_navUser ? 'customer/new-booking.php' : 'login.php' ?>" class="mobile-header-action<?= $_navUser ? '' : ' mobile-auth-modal-link' ?>"<?= $_navUser ? '' : ' data-auth-url="login.php?modal=1"' ?>>
-                <span class="mobile-action-icon mobile-action-icon-rate" aria-hidden="true"><i class="bi bi-calculator"></i><i class="bi bi-currency-rupee"></i></span>
+                <span class="mobile-action-icon mobile-action-icon-rate" aria-hidden="true"><i class="bi bi-calculator-fill"></i><i class="bi bi-currency-rupee"></i></span>
                 <span>Rate Calculator</span>
             </a>
         </div>
