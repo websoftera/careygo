@@ -123,17 +123,17 @@
                         </div>
                         <div class="mb-2">
                             <select class="form-select" id="enquiryService" name="service" aria-label="Service type" required>
-                                <option selected>Courier Services</option>
-                                <option>E-Commerce Services</option>
-                                <option>Business to Business - B2B</option>
-                                <option>Online Sellers - D2C</option>
-                                <option>Premium Express Services</option>
-                                <option>Express Services</option>
-                                <option>Reverse Pickup</option>
-                                <option>Cash on Delivery - COD</option>
+                                <option selected>Domestic Courier</option>
                                 <option>International Courier</option>
-                                <option>International - Airport to Airport</option>
-                                <option>Packaging Solutions</option>
+                                <option>Premium Express Service</option>
+                                <option>eCommerce Courier</option>
+                                <option>Cash on Delivery</option>
+                                <option>Online Sellers</option>
+                                <option>Express Service</option>
+                                <option>Business to Business</option>
+                                <option>Reverse Pickup</option>
+                                <option>International Airport to Airport</option>
+                                <option>Packing Solutions</option>
                             </select>
                             <div class="invalid-feedback">Please select a service type.</div>
                         </div>
@@ -312,6 +312,45 @@
             });
         })();
 
+        function submitCareygoForm(form, formType, status) {
+            const submitButton = form.querySelector('button[type="submit"]');
+            const originalText = submitButton ? submitButton.innerHTML : "";
+            const formData = new FormData(form);
+            formData.set("form_type", formType);
+
+            if (status) {
+                status.className = (formType === "contact" ? "contact-form-status" : "enquiry-form-status") + " is-pending";
+                status.textContent = "Sending...";
+            }
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.innerHTML = "Sending...";
+            }
+
+            return fetch("api/form-enquiry.php", {
+                method: "POST",
+                body: formData,
+                credentials: "same-origin"
+            })
+                .then(function (response) {
+                    return response.json().catch(function () {
+                        return { success: false, message: "Unable to send email right now. Please try again later." };
+                    });
+                })
+                .then(function (data) {
+                    if (!data.success) {
+                        throw new Error(data.message || "Unable to send email right now. Please try again later.");
+                    }
+                    return data;
+                })
+                .finally(function () {
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = originalText;
+                    }
+                });
+        }
+
         const contactForm = document.getElementById("contactForm");
         if (contactForm) {
             const nameInput = document.getElementById("contactName");
@@ -356,13 +395,21 @@
                     return;
                 }
 
-                contactForm.classList.remove("was-validated");
-                contactForm.reset();
-
-                if (status) {
-                    status.className = "contact-form-status is-success";
-                    status.textContent = "Thank you. Our team will contact you shortly.";
-                }
+                submitCareygoForm(contactForm, "contact", status)
+                    .then(function (data) {
+                        contactForm.classList.remove("was-validated");
+                        contactForm.reset();
+                        if (status) {
+                            status.className = "contact-form-status is-success";
+                            status.textContent = data.message || "Thank you. Our team will contact you shortly.";
+                        }
+                    })
+                    .catch(function (error) {
+                        if (status) {
+                            status.className = "contact-form-status is-error";
+                            status.textContent = error.message;
+                        }
+                    });
             });
         }
 
@@ -410,13 +457,21 @@
                     return;
                 }
 
-                enquiryForm.classList.remove("was-validated");
-                enquiryForm.reset();
-
-                if (status) {
-                    status.className = "enquiry-form-status is-success";
-                    status.textContent = "Thank you. Our team will contact you shortly.";
-                }
+                submitCareygoForm(enquiryForm, "enquiry", status)
+                    .then(function (data) {
+                        enquiryForm.classList.remove("was-validated");
+                        enquiryForm.reset();
+                        if (status) {
+                            status.className = "enquiry-form-status is-success";
+                            status.textContent = data.message || "Thank you. Our team will contact you shortly.";
+                        }
+                    })
+                    .catch(function (error) {
+                        if (status) {
+                            status.className = "enquiry-form-status is-error";
+                            status.textContent = error.message;
+                        }
+                    });
             });
 
             const enquiryModal = document.getElementById("enquiryModal");

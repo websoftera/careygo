@@ -1544,6 +1544,20 @@ ul {
     border: 1px solid #badbcc;
 }
 
+.contact-form-status.is-pending {
+    display: block;
+    color: #664d03;
+    background-color: #fff3cd;
+    border: 1px solid #ffecb5;
+}
+
+.contact-form-status.is-error {
+    display: block;
+    color: #842029;
+    background-color: #f8d7da;
+    border: 1px solid #f5c2c7;
+}
+
 .contact-submit {
     min-height: 46px;
     padding: 8px 8px 8px 22px !important;
@@ -1802,6 +1816,20 @@ ul {
     color: #0f5132;
     background-color: #d1e7dd;
     border: 1px solid #badbcc;
+}
+
+.enquiry-form-status.is-pending {
+    display: block;
+    color: #664d03;
+    background-color: #fff3cd;
+    border: 1px solid #ffecb5;
+}
+
+.enquiry-form-status.is-error {
+    display: block;
+    color: #842029;
+    background-color: #f8d7da;
+    border: 1px solid #f5c2c7;
 }
 
 /* ===== FOOTER SECTION ===== */

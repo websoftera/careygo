@@ -354,14 +354,9 @@ require_once 'includes/header.php';
             'image' => 'assets/images/International Courier.jpg',
         ],
         [
-            'title' => 'Reverse Pickup',
-            'description' => 'Easy reverse pickup service for returns, exchanges, and product collection from customers.',
-            'image' => 'assets/images/Reverse Pickup.jpg',
-        ],
-        [
-            'title' => 'Business to Business (B2B)',
-            'description' => 'Efficient logistics solutions for corporate, industrial, and commercial shipment requirements.',
-            'image' => 'assets/images/Business to Business - B2B.jpeg',
+            'title' => 'Premium Express Service',
+            'description' => 'Priority express delivery service for urgent, valuable, and time-sensitive shipments.',
+            'image' => 'assets/images/Premium Express Services.jpg',
         ],
         [
             'title' => 'eCommerce Courier',
@@ -369,14 +364,14 @@ require_once 'includes/header.php';
             'image' => 'assets/images/E-Commerce.jpg',
         ],
         [
+            'title' => 'Cash on Delivery',
+            'description' => 'Secure COD services with timely remittance and hassle-free payment collection support.',
+            'image' => 'assets/images/Cash on Delivery - COD.jpeg',
+        ],
+        [
             'title' => 'Online Sellers',
             'description' => 'Dedicated courier solutions for online sellers with COD and nationwide delivery services.',
             'image' => 'assets/images/Online Sellers - D2C.jpg',
-        ],
-        [
-            'title' => 'Premium Express Service',
-            'description' => 'Priority express delivery service for urgent, valuable, and time-sensitive shipments.',
-            'image' => 'assets/images/Premium Express Services.jpg',
         ],
         [
             'title' => 'Express Service',
@@ -384,9 +379,14 @@ require_once 'includes/header.php';
             'image' => 'assets/images/Express Services.jpeg',
         ],
         [
-            'title' => 'Cash on Delivery (COD)',
-            'description' => 'Secure COD services with timely remittance and hassle-free payment collection support.',
-            'image' => 'assets/images/Cash on Delivery - COD.jpeg',
+            'title' => 'Business to Business',
+            'description' => 'Efficient logistics solutions for corporate, industrial, and commercial shipment requirements.',
+            'image' => 'assets/images/Business to Business - B2B.jpeg',
+        ],
+        [
+            'title' => 'Reverse Pickup',
+            'description' => 'Easy reverse pickup service for returns, exchanges, and product collection from customers.',
+            'image' => 'assets/images/Reverse Pickup.jpg',
         ],
         [
             'title' => 'International Airport to Airport',
@@ -519,7 +519,7 @@ require_once 'includes/header.php';
                             <h5 class="feature-title fw-bold">with Money Back Guarantee</h5>
                         </div>
                         <p class="feature-desc text-muted mb-4" style="line-height: 1.6;">
-                            Freight charges will be refunded in proportion to the delivery delay. Fast, reliable, and
+                            Freight charges will be refunded in proportion to the delivery delay.Fast and reliable
                             logistics you can trust.
                         </p>
                         <div
