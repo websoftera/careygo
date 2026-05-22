@@ -11,8 +11,6 @@ if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
     $usePhpMailer = class_exists('PHPMailer\PHPMailer\PHPMailer');
 }
 
-require_once __DIR__ . '/receipt_pdf.php';
-
 class EmailService
 {
     private $from;
@@ -66,6 +64,8 @@ class EmailService
      */
     public function sendAWBReceipt(array $customer, array $shipment): bool
     {
+        require_once __DIR__ . '/receipt_pdf.php';
+
         $to      = $customer['email'];
         $subject = "📄 Your AWB Receipt - {$shipment['tracking_no']}";
         $body    = $this->buildReceiptEmail($customer, $shipment);
@@ -80,6 +80,14 @@ class EmailService
         ];
 
         return $this->send($to, $customer['full_name'], $subject, $body, $attachment);
+    }
+
+    /**
+     * Send website form notifications to the Careygo team.
+     */
+    public function sendFormNotification(string $to, string $toName, string $subject, string $htmlBody): bool
+    {
+        return $this->send($to, $toName, $subject, $htmlBody);
     }
 
     /**
@@ -597,8 +605,8 @@ HTML;
             return false;
         }
 
-        // Try SMTP first if available
-        if ($this->usePhpMailer && env('SMTP_ENABLED', '') === '1') {
+        // Try SMTP first if enabled.
+        if (env('SMTP_ENABLED', '') === '1') {
             return $this->sendViaSMTP($to, $toName, $subject, $htmlBody, $attachment);
         }
 
@@ -611,6 +619,10 @@ HTML;
      */
     private function sendViaSMTP(string $to, string $toName, string $subject, string $htmlBody, array $attachment = null): bool
     {
+        if (!$this->usePhpMailer) {
+            return $this->sendViaNativeSMTP($to, $toName, $subject, $htmlBody, $attachment);
+        }
+
         try {
             $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
 
@@ -651,6 +663,140 @@ HTML;
 
             return false;
         }
+    }
+
+    /**
+     * Send via SMTP without PHPMailer. Used on hosts where Composer dependencies are not installed.
+     */
+    private function sendViaNativeSMTP(string $to, string $toName, string $subject, string $htmlBody, array $attachment = null): bool
+    {
+        $host = $this->smtpEnv('SMTP_HOST', 'smtp.gmail.com');
+        $port = (int) $this->smtpEnv('SMTP_PORT', '587');
+        $secure = strtolower($this->smtpEnv('SMTP_SECURE', 'tls'));
+        $username = $this->smtpEnv('SMTP_USER', '');
+        $password = $this->smtpEnv('SMTP_PASS', '');
+        $from = filter_var($this->from, FILTER_VALIDATE_EMAIL) ? $this->from : $username;
+
+        if ($host === '' || $username === '' || $password === '' || !filter_var($from, FILTER_VALIDATE_EMAIL)) {
+            $this->logEmail($to, $subject, $htmlBody, 'Native-SMTP', false, 'SMTP configuration is incomplete.');
+            return false;
+        }
+
+        $remote = ($secure === 'ssl' ? 'ssl://' : '') . $host . ':' . $port;
+        $socket = @stream_socket_client($remote, $errno, $errstr, 30, STREAM_CLIENT_CONNECT);
+        if (!$socket) {
+            $this->logEmail($to, $subject, $htmlBody, 'Native-SMTP', false, trim($errstr) ?: 'Could not connect to SMTP server.');
+            return false;
+        }
+
+        stream_set_timeout($socket, 30);
+        $error = '';
+
+        $expect = function (array $codes) use ($socket, &$error): bool {
+            $response = '';
+            while (($line = fgets($socket, 515)) !== false) {
+                $response .= $line;
+                if (isset($line[3]) && $line[3] === ' ') {
+                    break;
+                }
+            }
+            $code = substr($response, 0, 3);
+            if (!in_array($code, $codes, true)) {
+                $error = trim($response);
+                return false;
+            }
+            return true;
+        };
+
+        $sendCommand = function (string $command, array $codes) use ($socket, $expect): bool {
+            fwrite($socket, $command . "\r\n");
+            return $expect($codes);
+        };
+
+        $message = $this->buildSmtpMessage($to, $toName, $subject, $htmlBody, $attachment);
+
+        $ok = $expect(['220'])
+            && $sendCommand('EHLO ' . ($_SERVER['SERVER_NAME'] ?? 'localhost'), ['250']);
+
+        if ($ok && $secure === 'tls') {
+            $ok = $sendCommand('STARTTLS', ['220'])
+                && stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)
+                && $sendCommand('EHLO ' . ($_SERVER['SERVER_NAME'] ?? 'localhost'), ['250']);
+        }
+
+        $ok = $ok
+            && $sendCommand('AUTH LOGIN', ['334'])
+            && $sendCommand(base64_encode($username), ['334'])
+            && $sendCommand(base64_encode($password), ['235'])
+            && $sendCommand('MAIL FROM:<' . $from . '>', ['250'])
+            && $sendCommand('RCPT TO:<' . $to . '>', ['250', '251'])
+            && $sendCommand('DATA', ['354']);
+
+        if ($ok) {
+            fwrite($socket, $this->dotStuff($message) . "\r\n.\r\n");
+            $ok = $expect(['250']);
+        }
+
+        $sendCommand('QUIT', ['221']);
+        fclose($socket);
+
+        $this->logEmail($to, $subject, $htmlBody, 'Native-SMTP', $ok, $ok ? '' : $error);
+        return $ok;
+    }
+
+    private function smtpEnv(string $key, string $default = ''): string
+    {
+        $value = trim(env($key, $default));
+        if (strlen($value) >= 2) {
+            $first = $value[0];
+            $last = $value[strlen($value) - 1];
+            if (($first === "'" && $last === "'") || ($first === '"' && $last === '"')) {
+                return substr($value, 1, -1);
+            }
+        }
+        return $value;
+    }
+
+    private function buildSmtpMessage(string $to, string $toName, string $subject, string $htmlBody, array $attachment = null): string
+    {
+        $boundary = '=_Careygo_' . md5((string) microtime(true));
+        $encodedSubject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
+        $headers = [
+            'MIME-Version: 1.0',
+            'From: ' . $this->fromName . ' <' . $this->from . '>',
+            'To: ' . ($toName !== '' ? $toName . ' <' . $to . '>' : $to),
+            'Reply-To: ' . $this->replyTo,
+            'Subject: ' . $encodedSubject,
+            'Date: ' . date('r'),
+            'X-Mailer: Careygo/1.0',
+        ];
+
+        if ($attachment) {
+            $headers[] = 'Content-Type: multipart/mixed; boundary="' . $boundary . '"';
+            $body = "--{$boundary}\r\n";
+            $body .= "Content-Type: text/html; charset=UTF-8\r\n";
+            $body .= "Content-Transfer-Encoding: base64\r\n\r\n";
+            $body .= chunk_split(base64_encode($htmlBody)) . "\r\n";
+            $body .= "--{$boundary}\r\n";
+            $body .= "Content-Type: application/pdf; name=\"{$attachment['name']}\"\r\n";
+            $body .= "Content-Disposition: attachment; filename=\"{$attachment['name']}\"\r\n";
+            $body .= "Content-Transfer-Encoding: base64\r\n\r\n";
+            $body .= chunk_split(base64_encode($attachment['data'])) . "\r\n";
+            $body .= "--{$boundary}--";
+        } else {
+            $headers[] = 'Content-Type: text/html; charset=UTF-8';
+            $headers[] = 'Content-Transfer-Encoding: base64';
+            $body = chunk_split(base64_encode($htmlBody));
+        }
+
+        return implode("\r\n", $headers) . "\r\n\r\n" . $body;
+    }
+
+    private function dotStuff(string $message): string
+    {
+        $normalized = str_replace(["\r\n", "\r"], "\n", $message);
+        $stuffed = preg_replace('/^\./m', '..', $normalized);
+        return str_replace("\n", "\r\n", $stuffed);
     }
 
     /**
