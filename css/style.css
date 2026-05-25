@@ -3088,7 +3088,8 @@ ul {
         min-width: 0;
     }
 
-    .mobile-header-action:first-child > span {
+    .mobile-header-action:first-child > span,
+    .mobile-header-action:nth-child(2) > span {
         transform: translateX(-4px);
     }
 
