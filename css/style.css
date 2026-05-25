@@ -1051,6 +1051,10 @@ ul {
     display: inline;
 }
 
+.feature-title-nowrap-wide {
+    white-space: normal;
+}
+
 .feature-desc {
     font-family: 'Poppins', sans-serif;
     font-size: 13px;
@@ -2238,6 +2242,10 @@ ul {
         margin-bottom: 14px !important;
     }
 
+    .why-choose-section .feature-title-nowrap-wide {
+        white-space: nowrap;
+    }
+
     .why-choose-section .feature-desc {
         margin-bottom: 24px !important;
     }
@@ -3078,6 +3086,10 @@ ul {
         display: block;
         flex: 0 1 auto;
         min-width: 0;
+    }
+
+    .mobile-header-action:first-child > span {
+        transform: translateX(-2px);
     }
 
     .mobile-header-action:last-child {

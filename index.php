@@ -515,7 +515,7 @@ require_once 'includes/header.php';
                 <div class="col-lg-3 col-md-6 col-12">
                     <div class="feature-item h-100 pb-0">
                         <div class="feature-title-group mb-3 text-primary-custom">
-                            <h5 class="feature-title fw-bold mb-0">100% On Time for Premium Shipment</h5>
+                            <h5 class="feature-title feature-title-nowrap-wide fw-bold mb-0">100% On Time for Premium Shipment</h5>
                             <h5 class="feature-title fw-bold">with Money Back Guarantee</h5>
                         </div>
                         <p class="feature-desc text-muted mb-4" style="line-height: 1.6;">
