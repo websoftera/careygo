@@ -1,8 +1,8 @@
 <?php
-require_once __DIR__ . '/config/jwt.php';
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/lib/helpers.php';
 require_once __DIR__ . '/lib/banner.php';
+require_once __DIR__ . '/config/jwt.php';
 
 $pageTitle = 'Careygo Logistics - Courier, Cargo and Delivery Services';
 $metaDescription = 'Careygo provides domestic courier, express delivery, ecommerce shipping, B2B logistics, cargo, packing, tracking, and courier rate estimates across India.';
