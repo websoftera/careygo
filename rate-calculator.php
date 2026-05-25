@@ -21,6 +21,11 @@ require_once __DIR__ . '/includes/header.php';
                         <p>Get a quick courier rate estimate without signing in.</p>
                     </div>
                 </div>
+                <div class="public-tool-actions" aria-label="Page actions">
+                    <a href="index.php" class="public-tool-action">
+                        <i class="bi bi-house-door"></i> Back to Home
+                    </a>
+                </div>
 
                 <div class="rate-card">
                     <div class="rc-field-group">
@@ -73,9 +78,14 @@ require_once __DIR__ . '/includes/header.php';
 
                     <div id="rc_error" class="cust-alert cust-alert-danger" style="display:none;margin-bottom:12px;"></div>
 
-                    <button type="button" class="btn-new-delivery w-100 justify-content-center" id="rc_calc_btn" onclick="rcCalculate()">
-                        <i class="bi bi-calculator me-2"></i> Calculate Rates
-                    </button>
+                    <div class="rc-button-row">
+                        <button type="button" class="btn-new-delivery justify-content-center" id="rc_calc_btn" onclick="rcCalculate()">
+                            <i class="bi bi-calculator me-2"></i> Calculate Rates
+                        </button>
+                        <button type="button" class="btn-reset-rate justify-content-center" id="rc_reset_btn" onclick="rcResetCalculator()">
+                            <i class="bi bi-arrow-counterclockwise me-2"></i> Reset
+                        </button>
+                    </div>
 
                     <div id="rc_results"></div>
                 </div>
@@ -113,6 +123,34 @@ require_once __DIR__ . '/includes/header.php';
     color: #6b7280;
     font-size: 14px;
     margin: 0;
+}
+.public-tool-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin: -8px 0 18px;
+}
+.public-tool-action {
+    align-items: center;
+    background: #fff;
+    border: 1.5px solid #e4e7f0;
+    border-radius: 10px;
+    color: #001A93;
+    cursor: pointer;
+    display: inline-flex;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    gap: 6px;
+    min-height: 38px;
+    padding: 8px 14px;
+    text-decoration: none;
+}
+.public-tool-action:hover,
+.public-tool-action:focus {
+    background: #001A93;
+    border-color: #001A93;
+    color: #fff;
 }
 .public-tool-icon {
     align-items: center;
@@ -269,6 +307,32 @@ require_once __DIR__ . '/includes/header.php';
     background: #001270;
     color: #fff;
 }
+.rc-button-row {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+.btn-reset-rate {
+    align-items: center;
+    background: #fff;
+    border: 1.5px solid #dbe2ee;
+    border-radius: 10px;
+    color: #001A93;
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 13px;
+    font-weight: 600;
+    gap: 6px;
+    min-height: 44px;
+    padding: 10px 18px;
+    text-decoration: none;
+}
+.btn-reset-rate:hover,
+.btn-reset-rate:focus {
+    background: #eef3ff;
+    border-color: #001A93;
+    color: #001A93;
+}
 .rc-results-header {
     align-items: center;
     border-top: 1.5px solid #e4e7f0;
@@ -350,8 +414,23 @@ require_once __DIR__ . '/includes/header.php';
     .public-tool-heading h1 {
         font-size: 25px;
     }
+    .public-tool-actions {
+        display: block;
+        margin-top: -4px;
+    }
+    .public-tool-action {
+        justify-content: center;
+        width: 100%;
+    }
     .rate-card {
         padding: 20px;
+    }
+    .rc-button-row {
+        grid-template-columns: 1fr;
+    }
+    .btn-reset-rate,
+    .btn-new-delivery {
+        width: 100%;
     }
     .rc-service-row {
         align-items: flex-start;
@@ -438,6 +517,38 @@ require_once __DIR__ . '/includes/header.php';
         if (r) r.innerHTML = '';
         const e = document.getElementById('rc_error');
         if (e) e.style.display = 'none';
+    };
+
+    window.rcResetCalculator = function () {
+        ['rc_pickup_pincode', 'rc_delivery_pincode', 'rc_weight', 'rc_packing_charge', 'rc_tempo_charge'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+
+        ['rc_pickup_result', 'rc_delivery_result'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.innerHTML = '';
+                el.classList.remove('show');
+            }
+        });
+
+        const packing = document.getElementById('rc_packing_material');
+        if (packing) packing.checked = false;
+        document.getElementById('rc_packing_wrap')?.classList.remove('checked');
+        const packHint = document.getElementById('rc_packing_charge_hint');
+        if (packHint) packHint.textContent = '(optional)';
+        rcPackingCharge = 0;
+        rcSetUnit('kg');
+
+        const btn = document.getElementById('rc_calc_btn');
+        if (btn) {
+            btn.innerHTML = '<i class="bi bi-calculator me-2"></i> Calculate Rates';
+            btn.disabled = false;
+        }
+
+        rcResetResults();
+        document.getElementById('rc_pickup_pincode')?.focus();
     };
 
     window.rcCalculate = function () {
