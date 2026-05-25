@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/config/jwt.php';
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/lib/helpers.php';
 require_once __DIR__ . '/lib/banner.php';
