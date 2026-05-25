@@ -3089,7 +3089,7 @@ ul {
     }
 
     .mobile-header-action:first-child > span {
-        transform: translateX(-2px);
+        transform: translateX(-4px);
     }
 
     .mobile-header-action:last-child {
