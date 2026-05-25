@@ -23,6 +23,11 @@ require_once __DIR__ . '/includes/header.php';
                         <p>Enter your Careygo tracking number to view the latest shipment status.</p>
                     </div>
                 </div>
+                <div class="public-tool-actions" aria-label="Page actions">
+                    <a href="index.php" class="public-tool-action">
+                        <i class="bi bi-house-door"></i> Back to Home
+                    </a>
+                </div>
 
                 <form class="tracking-search-card" id="trackingSearchForm" autocomplete="off">
                     <label for="trackingInput">Tracking Number</label>
@@ -87,6 +92,34 @@ require_once __DIR__ . '/includes/header.php';
     color: #6b7280;
     font-size: 14px;
     margin: 0;
+}
+.public-tool-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin: -8px 0 18px;
+}
+.public-tool-action {
+    align-items: center;
+    background: #fff;
+    border: 1.5px solid #e4e7f0;
+    border-radius: 10px;
+    color: #001A93;
+    cursor: pointer;
+    display: inline-flex;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    gap: 6px;
+    min-height: 38px;
+    padding: 8px 14px;
+    text-decoration: none;
+}
+.public-tool-action:hover,
+.public-tool-action:focus {
+    background: #001A93;
+    border-color: #001A93;
+    color: #fff;
 }
 .public-tool-icon {
     align-items: center;
@@ -321,6 +354,14 @@ require_once __DIR__ . '/includes/header.php';
     }
     .public-tool-heading h1 {
         font-size: 25px;
+    }
+    .public-tool-actions {
+        display: block;
+        margin-top: -4px;
+    }
+    .public-tool-action {
+        justify-content: center;
+        width: 100%;
     }
     .tracking-search-card,
     .tracking-card {
