@@ -8,6 +8,37 @@ require_once __DIR__ . '/../lib/auth.php';
 $_navUser = auth_user();   // null = guest, array = logged-in payload
 $_currentPage = basename($_SERVER['SCRIPT_NAME'] ?? 'index.php');
 $_styleVersion = @filemtime(__DIR__ . '/../css/style.css') ?: time();
+$_defaultTitle = 'Careygo Logistics - Courier, Cargo and Delivery Services';
+$_defaultDescription = 'Careygo provides courier, cargo, ecommerce shipping, B2B logistics, express delivery, shipment tracking, and rate estimates across India.';
+$_defaultKeywords = 'Careygo, courier service, logistics, cargo delivery, ecommerce shipping, express delivery, shipment tracking, rate calculator';
+$_pageTitle = $pageTitle ?? $_defaultTitle;
+$_metaDescription = $metaDescription ?? $_defaultDescription;
+$_metaKeywords = $metaKeywords ?? $_defaultKeywords;
+$_defaultCanonicalPath = $_currentPage === 'index.php' ? '' : $_currentPage;
+$_canonicalUrl = $canonicalUrl ?? (rtrim(SITE_URL, '/') . ($_defaultCanonicalPath !== '' ? '/' . $_defaultCanonicalPath : '/'));
+$_metaImage = $metaImage ?? (rtrim(SITE_URL, '/') . '/assets/images/Main-Careygo-logo-blue.png');
+$_schemaData = $schemaData ?? [
+    '@context' => 'https://schema.org',
+    '@graph' => [
+        [
+            '@type' => 'Organization',
+            '@id' => rtrim(SITE_URL, '/') . '/#organization',
+            'name' => 'Careygo Logistics',
+            'url' => rtrim(SITE_URL, '/') . '/',
+            'logo' => $_metaImage,
+            'email' => 'info@careygo.in',
+            'telephone' => '+91-9850296178',
+            'sameAs' => [],
+        ],
+        [
+            '@type' => 'WebSite',
+            '@id' => rtrim(SITE_URL, '/') . '/#website',
+            'url' => rtrim(SITE_URL, '/') . '/',
+            'name' => 'Careygo Logistics',
+            'publisher' => ['@id' => rtrim(SITE_URL, '/') . '/#organization'],
+        ],
+    ],
+];
 
 $_siteSearchItems = [
     ['title' => 'Home', 'category' => 'Page', 'url' => 'index.php', 'text' => 'home careygo logistics cargo delivery transport'],
@@ -15,6 +46,8 @@ $_siteSearchItems = [
     ['title' => 'Services', 'category' => 'Page', 'url' => 'index.php#services', 'text' => 'services business verticals domestic courier ecommerce b2b online sellers express cod international packing'],
     ['title' => 'Our Network', 'category' => 'Page', 'url' => 'index.php#our-network', 'text' => 'network value proposition moneyback on time secure handling call pickup'],
     ['title' => 'Contact Us', 'category' => 'Page', 'url' => 'index.php#contact-us', 'text' => 'contact phone email shipment details support connect with us'],
+    ['title' => 'Tracking', 'category' => 'Page', 'url' => 'public-tracking.php', 'text' => 'track shipment tracking number package status delivery'],
+    ['title' => 'Rate Calculator', 'category' => 'Page', 'url' => 'rate-calculator.php', 'text' => 'rate calculator courier price estimate pincode weight charges'],
     ['title' => 'Domestic Courier', 'category' => 'Service', 'url' => 'index.php#services', 'text' => 'domestic courier india secure handling tracking delivery'],
     ['title' => 'International Courier', 'category' => 'Service', 'url' => 'index.php#services', 'text' => 'international courier worldwide shipping customs safe transit timely delivery'],
     ['title' => 'Premium Express Service', 'category' => 'Service', 'url' => 'index.php#services', 'text' => 'premium express priority urgent valuable time sensitive delivery'],
@@ -54,23 +87,25 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <base href="<?= htmlspecialchars(SITE_URL . '/') ?>">
-    <title><?= htmlspecialchars($pageTitle ?? 'Careygo Logistics') ?></title>
+    <title><?= htmlspecialchars($_pageTitle) ?></title>
     <link rel="icon" type="image/webp" href="assets/images/favicon_LOGO.webp">
-    <?php if (!empty($metaDescription)): ?>
-    <meta name="description" content="<?= htmlspecialchars($metaDescription) ?>">
-    <?php endif; ?>
-    <?php if (!empty($metaKeywords)): ?>
-    <meta name="keywords" content="<?= htmlspecialchars($metaKeywords) ?>">
-    <?php endif; ?>
-    <?php if (!empty($canonicalUrl)): ?>
-    <link rel="canonical" href="<?= htmlspecialchars($canonicalUrl) ?>">
-    <?php endif; ?>
-    <meta property="og:title" content="<?= htmlspecialchars($pageTitle ?? 'Careygo Logistics') ?>">
-    <?php if (!empty($metaDescription)): ?>
-    <meta property="og:description" content="<?= htmlspecialchars($metaDescription) ?>">
-    <?php endif; ?>
-    <?php if (!empty($metaImage)): ?>
-    <meta property="og:image" content="<?= htmlspecialchars($metaImage) ?>">
+    <meta name="description" content="<?= htmlspecialchars($_metaDescription) ?>">
+    <meta name="keywords" content="<?= htmlspecialchars($_metaKeywords) ?>">
+    <meta name="robots" content="<?= htmlspecialchars($metaRobots ?? 'index, follow') ?>">
+    <link rel="canonical" href="<?= htmlspecialchars($_canonicalUrl) ?>">
+    <link rel="sitemap" type="application/xml" href="sitemap.xml">
+    <meta property="og:site_name" content="Careygo Logistics">
+    <meta property="og:type" content="<?= htmlspecialchars($ogType ?? 'website') ?>">
+    <meta property="og:title" content="<?= htmlspecialchars($_pageTitle) ?>">
+    <meta property="og:description" content="<?= htmlspecialchars($_metaDescription) ?>">
+    <meta property="og:url" content="<?= htmlspecialchars($_canonicalUrl) ?>">
+    <meta property="og:image" content="<?= htmlspecialchars($_metaImage) ?>">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<?= htmlspecialchars($_pageTitle) ?>">
+    <meta name="twitter:description" content="<?= htmlspecialchars($_metaDescription) ?>">
+    <meta name="twitter:image" content="<?= htmlspecialchars($_metaImage) ?>">
+    <?php if (!empty($_schemaData)): ?>
+    <script type="application/ld+json"><?= json_encode($_schemaData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?></script>
     <?php endif; ?>
 
     <!-- Bootstrap CSS -->
@@ -150,13 +185,13 @@ try {
                         <a class="nav-link <?= in_array($_currentPage, ['blog.php', 'blog-detail.php'], true) ? 'active' : '' ?>" href="blog">BLOG</a>
                     </li>
                     <li class="nav-item px-1 px-xl-2">
-                        <a class="nav-link" href="public-tracking.php">TRACKING</a>
+                        <a class="nav-link <?= $_currentPage === 'public-tracking.php' ? 'active' : '' ?>" href="public-tracking.php">TRACKING</a>
                     </li>
                     <li class="nav-item px-1 px-xl-2">
                         <a class="nav-link" href="<?= $_navUser ? 'customer/new-booking.php' : 'login.php' ?>">BOOKING</a>
                     </li>
                     <li class="nav-item px-1 px-xl-2">
-                        <a class="nav-link" href="<?= $_navUser ? 'customer/new-booking.php' : 'login.php' ?>">RATE CALCULATOR</a>
+                        <a class="nav-link <?= $_currentPage === 'rate-calculator.php' ? 'active' : '' ?>" href="rate-calculator.php">RATE CALCULATOR</a>
                     </li>
                     <li class="nav-item px-1 px-xl-2">
                         <a class="nav-link" href="index.php#contact-us">CONTACT US</a>
@@ -261,7 +296,7 @@ try {
                 <span class="mobile-action-icon mobile-action-icon-booking" aria-hidden="true"><i class="bi bi-box-seam-fill"></i></span>
                 <span>Booking</span>
             </a>
-            <a href="<?= $_navUser ? 'customer/new-booking.php' : 'login.php' ?>" class="mobile-header-action<?= $_navUser ? '' : ' mobile-auth-modal-link' ?>"<?= $_navUser ? '' : ' data-auth-url="login.php?modal=1"' ?>>
+            <a href="rate-calculator.php" class="mobile-header-action">
                 <span class="mobile-action-icon mobile-action-icon-rate" aria-hidden="true"><i class="bi bi-calculator-fill"></i><i class="bi bi-currency-rupee"></i></span>
                 <span>Rate Calculator</span>
             </a>

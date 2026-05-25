@@ -3,6 +3,11 @@ require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/lib/helpers.php';
 require_once __DIR__ . '/lib/banner.php';
 
+$pageTitle = 'Careygo Logistics - Courier, Cargo and Delivery Services';
+$metaDescription = 'Careygo provides domestic courier, express delivery, ecommerce shipping, B2B logistics, cargo, packing, tracking, and courier rate estimates across India.';
+$metaKeywords = 'Careygo, courier service, logistics, cargo delivery, domestic courier, ecommerce shipping, express delivery, shipment tracking, courier rate calculator';
+$canonicalUrl = SITE_URL . '/';
+
 $homeBanners = banner_published($pdo);
 $homeBannerCount = count($homeBanners);
 

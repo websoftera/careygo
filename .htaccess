@@ -36,6 +36,8 @@ RewriteRule ^(config|lib|database|database\/.*\.sql)(/|$) - [F,L]
 # Clean blog URLs
 RewriteRule ^blog/?$ blog.php [L,QSA]
 RewriteRule ^blog/([A-Za-z0-9-]+)/?$ blog-detail.php?slug=$1 [L,QSA]
+RewriteRule ^robots\.txt$ robots.php [L]
+RewriteRule ^sitemap\.xml$ sitemap.php [L]
 
 # ── Security headers ─────────────────────────────────────────
 <IfModule mod_headers.c>
