@@ -217,12 +217,13 @@ if (false) try {
 } catch (Exception $e) {}
 
 try {
-    // Max weight caps per service (enforced after slab lookup)
+    // Standard express remains capped; cargo services can proceed above 60 kg
+    // after the frontend confirmation.
     $serviceConstraints = [
         'standard'  => 2.000,
-        'premium'   => 60.000,
-        'air_cargo' => 60.000,
-        'surface'   => 60.000,
+        'premium'   => PHP_FLOAT_MAX,
+        'air_cargo' => PHP_FLOAT_MAX,
+        'surface'   => PHP_FLOAT_MAX,
     ];
 
     foreach ($serviceTypes as $type) {
@@ -263,6 +264,7 @@ try {
         'weight'   => $weight,
         'zone'     => $zone,
         'packing_charge' => $packingCharge,
+        'overweight_warning' => $weight > 60.0 ? 'Shipment is above 60 kg. Final charges may require manual review.' : null,
     ]);
 } catch (Exception $e) {
     error_log('PRICING_ERROR: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());

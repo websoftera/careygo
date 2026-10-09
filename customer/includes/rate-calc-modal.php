@@ -180,6 +180,7 @@
     const RC_URL = '<?= rtrim(SITE_URL, '/') ?>';
     let rcUnit = 'kg';
     let rcPackingCharge = 0;
+    let rcOverweightConfirmedKg = 0;
 
     false && fetch(`${RC_URL}/api/settings.php?key=packing_charge`)
         .then(r => r.json())
@@ -221,6 +222,7 @@
     /* Unit toggle */
     window.rcSetUnit = function (u) {
         rcUnit = u;
+        rcOverweightConfirmedKg = 0;
         document.getElementById('rc_unit_kg').classList.toggle('active', u === 'kg');
         document.getElementById('rc_unit_gm').classList.toggle('active', u === 'gm');
     };
@@ -264,6 +266,9 @@
     window.rcResetResults = function () {
         const r = document.getElementById('rc_results');
         if (r) r.innerHTML = '';
+        const e = document.getElementById('rc_error');
+        if (e) e.style.display = 'none';
+        rcOverweightConfirmedKg = 0;
     };
 
     /* Calculate */
@@ -287,8 +292,13 @@
         if (weight <= 0) {
             if (errEl) { errEl.textContent = 'Enter a valid weight.'; errEl.style.display = 'block'; } return;
         }
-        if (weight > 60) {
-            if (errEl) { errEl.textContent = 'Maximum allowable weight is 60 kg'; errEl.style.display = 'block'; } return;
+        if (weight > 60 && Math.abs(rcOverweightConfirmedKg - weight) >= 0.001) {
+            const proceed = window.confirm('This shipment is above 60 kg. It may need manual handling or special cargo confirmation, and final charges may be reviewed. Do you want to proceed?');
+            if (!proceed) {
+                if (errEl) { errEl.textContent = 'Weight is above 60 kg. Confirm to proceed or edit the weight.'; errEl.style.display = 'block'; }
+                return;
+            }
+            rcOverweightConfirmedKg = weight;
         }
 
         if (btn) { btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Calculating...'; btn.disabled = true; }
@@ -336,6 +346,9 @@
             return;
         }
         const packingCharge = includePacking ? rcPackingCharge : 0;
+        const overweightNotice = weight > 60
+            ? '<div class="cust-alert cust-alert-warning mt-3">Weight is above 60 kg. Final charges may require manual review.</div>'
+            : '';
         const rows = services.map(svc => {
             const m = svcMap[svc.type] || { icon: 'bi-box', label: svc.type };
             const basePrice = parseFloat(svc.price) || 0;
@@ -355,6 +368,7 @@
         }).join('');
 
         results.innerHTML = `
+            ${overweightNotice}
             <div class="rc-results-header">
                 <span><i class="bi bi-weight me-1"></i>${weight.toFixed(3)} kg</span>
                 ${zoneTxt ? `<span class="rc-zone-badge"><i class="bi bi-geo-alt me-1"></i>${esc(zoneTxt)}</span>` : ''}

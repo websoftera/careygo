@@ -9,8 +9,10 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../lib/auth.php';
 require_once __DIR__ . '/../lib/dtdc.php';
+require_once __DIR__ . '/../lib/tracking.php';
 
 header('Content-Type: application/json');
+tracking_ensure_schema($pdo);
 
 // ── Resolve shipment ─────────────────────────────────────────
 $tracking = trim($_GET['tracking'] ?? '');
@@ -55,7 +57,7 @@ $dtdcAwb    = trim($shipment['dtdc_awb'] ?? '');
 // 1. Fetch manual / cached events from DB
 try {
     $stmt = $pdo->prepare(
-        "SELECT id, event_time, location, status, description, source
+        "SELECT id, event_time, location, next_destination, expected_at, status, description, destination_details, source
          FROM shipment_tracking_events
          WHERE shipment_id = ?
          ORDER BY event_time DESC"
@@ -66,8 +68,11 @@ try {
         $events[] = [
             'event_time'  => $e['event_time'],
             'location'    => $e['location'] ?? '',
+            'next_destination' => $e['next_destination'] ?? '',
+            'expected_at'  => $e['expected_at'] ?? null,
             'status'      => $e['status'],
             'description' => $e['description'] ?? '',
+            'destination_details' => $e['destination_details'] ?? '',
             'source'      => $e['source'],
         ];
     }
@@ -105,8 +110,11 @@ if (empty($events)) {
     $events[] = [
         'event_time'  => $shipment['updated_at'] ?? $shipment['created_at'],
         'location'    => $shipment['pickup_city'] ?? '',
+        'next_destination' => $shipment['delivery_city'] ?? '',
+        'expected_at'  => $shipment['estimated_delivery'] ?? null,
         'status'      => $shipment['status'],
         'description' => $statusDescriptions[$shipment['status']] ?? ucwords(str_replace('_', ' ', $shipment['status'])),
+        'destination_details' => '',
         'source'      => 'manual',
     ];
 }

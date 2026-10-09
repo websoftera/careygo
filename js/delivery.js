@@ -13,6 +13,7 @@
     const MAX_DIM_L = 130; // cm
     const MAX_DIM_W = 60;  // cm
     const MAX_DIM_H = 60;  // cm
+    let overweightConfirmedKg = 0;
 
     /* ── State ── */
     function getDefaultState() {
@@ -237,9 +238,16 @@
             const absoluteMax = MAX_PIECE_WEIGHT_KG;
             if (!wt || wt <= 0) {
                 showErr('weight', 'Enter a valid weight'); ok = false;
-            } else if (wt > absoluteMax) {
-                showWeightAlert(wt, absoluteMax);
-                showErr('weight', `Maximum allowable weight is ${absoluteMax} kg`); ok = false;
+            } else if (wt > absoluteMax && !isOverweightConfirmed(wt)) {
+                showWeightAlert(wt, absoluteMax, () => {
+                    overweightConfirmedKg = wt;
+                    clearErrors();
+                    if (state.step === 2) {
+                        loadServices();
+                        goToStep(3);
+                    }
+                });
+                showErr('weight', `Weight is above ${absoluteMax} kg. Confirm to proceed.`); ok = false;
             }
 
             if (!state.pieces || state.pieces < 1) { showErr('pieces', 'Min 1 piece required'); ok = false; }
@@ -332,7 +340,15 @@
     }
 
     /* ── Weight alert popup ── */
-    function showWeightAlert(wt, max = MAX_PIECE_WEIGHT_KG) {
+    function isOverweightConfirmed(wt) {
+        return overweightConfirmedKg > MAX_PIECE_WEIGHT_KG && Math.abs(overweightConfirmedKg - wt) < 0.001;
+    }
+
+    function resetOverweightConfirmation() {
+        overweightConfirmedKg = 0;
+    }
+
+    function showWeightAlert(wt, max = MAX_PIECE_WEIGHT_KG, onProceed = null) {
         // Create or reuse alert modal
         let modal = document.getElementById('weightAlertModal');
         if (modal) modal.remove();
@@ -343,20 +359,34 @@
         modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
         modal.innerHTML = `
             <div style="background:#fff;border-radius:16px;padding:28px;max-width:420px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-                <div style="font-size:48px;margin-bottom:12px;">⚠️</div>
-                <h5 style="color:#dc2626;margin-bottom:8px;">Weight Limit Exceeded</h5>
+                <div style="font-size:44px;margin-bottom:12px;color:#f59e0b;"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                <h5 style="color:#92400e;margin-bottom:8px;">Weight above ${max} kg</h5>
                 <p style="font-size:14px;color:#555;margin-bottom:6px;">
-                    Maximum allowable weight is <strong>${max} kg</strong>.
+                    Your entered weight is <strong>${enteredWeight} kg</strong>.
                 </p>
                 <p style="font-size:13px;color:#777;margin-bottom:20px;">
-                    Your entered weight is <strong>${enteredWeight} kg</strong>. For heavier shipments, please contact our support team for specialized cargo rates.
+                    This shipment may need manual handling or special cargo confirmation. You can proceed, but final charges may be reviewed.
                 </p>
-                <button onclick="document.getElementById('weightAlertModal').remove()"
-                        style="background:#001a93;color:#fff;border:none;border-radius:8px;padding:10px 28px;font-size:14px;font-weight:600;cursor:pointer;">
-                    OK, I'll Fix It
-                </button>
+                <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+                    <button type="button" data-weight-edit
+                            style="background:#fff;color:#001a93;border:1.5px solid #dbe2ee;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer;">
+                        Edit Weight
+                    </button>
+                    <button type="button" data-weight-proceed
+                            style="background:#001a93;color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer;">
+                        Confirm & Proceed
+                    </button>
+                </div>
             </div>`;
         document.body.appendChild(modal);
+        modal.querySelector('[data-weight-edit]')?.addEventListener('click', () => {
+            modal.remove();
+            weightInput?.focus();
+        });
+        modal.querySelector('[data-weight-proceed]')?.addEventListener('click', () => {
+            modal.remove();
+            if (typeof onProceed === 'function') onProceed();
+        });
     }
 
     /* ── Next / Back ── */
@@ -601,15 +631,12 @@
         return state.unit === 'gm' ? val / 1000 : val;
     }
 
-    unitKg && unitKg.addEventListener('click', () => { state.unit = 'kg'; unitKg.classList.add('active'); unitGm && unitGm.classList.remove('active'); });
-    unitGm && unitGm.addEventListener('click', () => { state.unit = 'gm'; unitGm.classList.add('active'); unitKg && unitKg.classList.remove('active'); });
+    unitKg && unitKg.addEventListener('click', () => { state.unit = 'kg'; resetOverweightConfirmation(); unitKg.classList.add('active'); unitGm && unitGm.classList.remove('active'); });
+    unitGm && unitGm.addEventListener('click', () => { state.unit = 'gm'; resetOverweightConfirmation(); unitGm.classList.add('active'); unitKg && unitKg.classList.remove('active'); });
     weightInput && weightInput.addEventListener('input', () => {
+        resetOverweightConfirmation();
         state.weight = getWeightInKg();
         updateChargeableWeight();
-    });
-    weightInput && weightInput.addEventListener('blur', () => {
-        const wt = getWeightInKg();
-        if (wt > MAX_PIECE_WEIGHT_KG) showWeightAlert(wt);
     });
 
     const piecesInput = document.getElementById('pieces');
