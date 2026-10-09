@@ -57,7 +57,7 @@ $dtdcAwb    = trim($shipment['dtdc_awb'] ?? '');
 // 1. Fetch manual / cached events from DB
 try {
     $stmt = $pdo->prepare(
-        "SELECT id, event_time, location, next_destination, expected_at, status, description, destination_details, source
+        "SELECT id, event_time, location, next_destination, status, description, destination_details, source
          FROM shipment_tracking_events
          WHERE shipment_id = ?
          ORDER BY event_time DESC"
@@ -69,7 +69,6 @@ try {
             'event_time'  => $e['event_time'],
             'location'    => $e['location'] ?? '',
             'next_destination' => $e['next_destination'] ?? '',
-            'expected_at'  => $e['expected_at'] ?? null,
             'status'      => $e['status'],
             'description' => $e['description'] ?? '',
             'destination_details' => $e['destination_details'] ?? '',
@@ -111,7 +110,6 @@ if (empty($events)) {
         'event_time'  => $shipment['updated_at'] ?? $shipment['created_at'],
         'location'    => $shipment['pickup_city'] ?? '',
         'next_destination' => $shipment['delivery_city'] ?? '',
-        'expected_at'  => $shipment['estimated_delivery'] ?? null,
         'status'      => $shipment['status'],
         'description' => $statusDescriptions[$shipment['status']] ?? ucwords(str_replace('_', ' ', $shipment['status'])),
         'destination_details' => '',

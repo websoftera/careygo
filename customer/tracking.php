@@ -40,7 +40,6 @@ if (!$shipment) { header('Location: dashboard.php'); exit; }
     .timeline-status { font-size: 14px; font-weight: 600; color: var(--text); margin-top: 2px; }
     .timeline-location { font-size: 12px; color: var(--muted); margin-top: 2px; }
     .timeline-next { font-size: 12px; color: var(--text); font-weight: 600; margin-top: 2px; }
-    .timeline-expected { font-size: 11px; color: var(--muted); margin-top: 2px; }
     .timeline-desc { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
     .dtdc-badge { display: inline-block; background: rgba(0,26,147,0.1); color: var(--primary); padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; margin-left: 8px; }
     .no-events { text-align: center; padding: 40px 20px; color: var(--muted); }
@@ -118,7 +117,6 @@ function renderTracking(data) {
                 <div class="timeline-status">${esc(e.status)} ${dtdcLabel}</div>
                 ${e.location ? `<div class="timeline-location"><i class="bi bi-geo-alt me-1"></i>${esc(e.location)}</div>` : ''}
                 ${e.next_destination ? `<div class="timeline-next"><i class="bi bi-arrow-right-circle me-1"></i>Next destination: ${esc(e.next_destination)}</div>` : ''}
-                ${e.expected_at ? `<div class="timeline-expected"><i class="bi bi-clock me-1"></i>Expected arrival: ${formatTime(e.expected_at)}</div>` : ''}
                 ${e.description ? `<div class="timeline-desc">${esc(e.description)}</div>` : ''}
                 ${e.destination_details ? `<div class="timeline-desc">${esc(e.destination_details)}</div>` : ''}
             </div>`;

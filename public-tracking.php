@@ -298,7 +298,6 @@ require_once __DIR__ . '/includes/header.php';
 }
 .timeline-location,
 .timeline-next,
-.timeline-expected,
 .timeline-desc {
     color: #6b7280;
     font-size: 12px;
@@ -307,9 +306,6 @@ require_once __DIR__ . '/includes/header.php';
 .timeline-next {
     color: #1a1a2e;
     font-weight: 600;
-}
-.timeline-expected {
-    font-size: 11px;
 }
 .timeline-desc {
     line-height: 1.5;
@@ -502,7 +498,6 @@ function renderTracking(data) {
                 <div class="timeline-status">${esc(e.status)} ${dtdcLabel}</div>
                 ${e.location ? `<div class="timeline-location"><i class="bi bi-geo-alt me-1"></i>${esc(e.location)}</div>` : ''}
                 ${e.next_destination ? `<div class="timeline-next"><i class="bi bi-arrow-right-circle me-1"></i>Next destination: ${esc(e.next_destination)}</div>` : ''}
-                ${e.expected_at ? `<div class="timeline-expected"><i class="bi bi-clock me-1"></i>Expected arrival: ${formatTime(e.expected_at)}</div>` : ''}
                 ${e.description ? `<div class="timeline-desc">${esc(e.description)}</div>` : ''}
                 ${e.destination_details ? `<div class="timeline-desc">${esc(e.destination_details)}</div>` : ''}
             </div>`;
