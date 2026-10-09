@@ -4,7 +4,7 @@
  *
  * GET  ?shipment_id=N               — load tracking info + events for a shipment
  * POST {action:'save_awb',  id, dtdc_awb}       — update DTDC AWB
- * POST {action:'add_event', shipment_id, event_time, location, next_destination, expected_at, status, description, destination_details} — add manual event
+ * POST {action:'add_event', shipment_id, event_time, location, status, description} — add manual event
  * DELETE {event_id}                 — remove a manual tracking event
  */
 require_once __DIR__ . '/../../config/database.php';
@@ -22,6 +22,28 @@ if (!$user || $user['role'] !== 'admin') {
 
 $method = $_SERVER['REQUEST_METHOD'];
 tracking_ensure_schema($pdo);
+
+function admin_tracking_customer_message(string $status, string $location, string $description): string
+{
+    if ($description !== '') {
+        return $description;
+    }
+
+    $where = $location !== '' ? ' at ' . $location : '';
+    $normalized = strtolower(trim($status));
+
+    $messages = [
+        'booked' => 'Shipment booking has been created and is waiting for pickup.',
+        'picked up' => 'Shipment has been picked up' . $where . '.',
+        'in transit' => 'Shipment is moving through the courier network' . $where . '.',
+        'out for delivery' => 'Shipment is out for delivery' . $where . '.',
+        'delivered' => 'Shipment has been delivered successfully.',
+        'exception' => 'Shipment needs attention. Our team is checking the issue' . $where . '.',
+        'returned' => 'Shipment is being returned' . $where . '.',
+    ];
+
+    return $messages[$normalized] ?? 'Shipment status updated' . $where . '.';
+}
 
 // ── GET: load tracking data ───────────────────────────────────
 if ($method === 'GET') {
@@ -128,11 +150,9 @@ if ($method === 'POST') {
         $sid         = (int)   ($body['shipment_id'] ?? 0);
         $eventTime   = trim($body['event_time']   ?? '');
         $location    = trim($body['location']     ?? '');
-        $nextDestination = trim($body['next_destination'] ?? '');
-        $expectedAt   = trim($body['expected_at'] ?? '');
         $status      = trim($body['status']       ?? '');
         $description = trim($body['description']  ?? '');
-        $destinationDetails = trim($body['destination_details'] ?? '');
+        $description = admin_tracking_customer_message($status, $location, $description);
 
         if (!$sid || !$eventTime || !$status) {
             json_response(['success' => false, 'message' => 'shipment_id, event_time and status are required.'], 422);
@@ -142,13 +162,6 @@ if ($method === 'POST') {
         $ts = strtotime($eventTime);
         if (!$ts) json_response(['success' => false, 'message' => 'Invalid event_time.'], 422);
         $eventTime = date('Y-m-d H:i:s', $ts);
-
-        $expectedAtValue = null;
-        if ($expectedAt !== '') {
-            $expectedTs = strtotime($expectedAt);
-            if (!$expectedTs) json_response(['success' => false, 'message' => 'Invalid expected arrival date/time.'], 422);
-            $expectedAtValue = date('Y-m-d H:i:s', $expectedTs);
-        }
 
         // Verify shipment exists
         $chk = $pdo->prepare("SELECT id FROM shipments WHERE id = ?");
@@ -165,11 +178,11 @@ if ($method === 'POST') {
                 $sid,
                 $eventTime,
                 $location ?: null,
-                $nextDestination ?: null,
-                $expectedAtValue,
+                null,
+                null,
                 $status,
                 $description ?: null,
-                $destinationDetails ?: null,
+                null,
             ]);
             $newId = (int) $pdo->lastInsertId();
 
@@ -185,11 +198,11 @@ if ($method === 'POST') {
                     'shipment_id' => $sid,
                     'event_time'  => $eventTime,
                     'location'    => $location,
-                    'next_destination' => $nextDestination,
-                    'expected_at'  => $expectedAtValue,
+                    'next_destination' => '',
+                    'expected_at'  => null,
                     'status'      => $status,
                     'description' => $description,
-                    'destination_details' => $destinationDetails,
+                    'destination_details' => '',
                     'source'      => 'manual',
                 ],
             ]);

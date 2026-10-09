@@ -294,10 +294,7 @@ function trackingModal(id, trackingNo) {
                             <strong>${escH(e.status)}</strong> <span style="color:var(--muted);">${e.event_time}</span>
                             ${e.source === 'dtdc' ? '<span style="background:#fef3c7;color:#92400e;padding:2px 6px;border-radius:3px;font-size:9px;margin-left:6px;font-weight:600;">DTDC</span>' : ''}
                             <div style="color:var(--muted);margin-top:2px;">${escH(e.location||'')}</div>
-                            ${e.next_destination ? `<div style="color:#1a1a2e;margin-top:3px;font-weight:600;"><i class="bi bi-arrow-right-circle me-1"></i>Next: ${escH(e.next_destination)}</div>` : ''}
-                            ${e.expected_at ? `<div style="color:var(--muted);margin-top:2px;font-size:10px;"><i class="bi bi-clock me-1"></i>Expected: ${formatAdminDateTime(e.expected_at)}</div>` : ''}
                             <div style="color:var(--muted);margin-top:2px;font-size:10px;">${escH(e.description||'')}</div>
-                            ${e.destination_details ? `<div style="color:var(--muted);margin-top:2px;font-size:10px;">${escH(e.destination_details)}</div>` : ''}
                         </div>
                         ${isMgmt ? `<button class="btn-action danger" style="margin-left:8px;" onclick="deleteEvent(${e.id}, ${id})"><i class="bi bi-trash"></i></button>` : ''}
                     </div>
@@ -312,27 +309,22 @@ function trackingModal(id, trackingNo) {
 
         <div>
             <h6 style="font-size:12px;font-weight:700;margin-bottom:12px;">Add Manual Update</h6>
+            <p style="font-size:11px;color:var(--muted);margin-top:-6px;margin-bottom:10px;">Add one clear customer-facing update. Leave the note blank to use an automatic message.</p>
             <div style="display:grid;gap:10px;">
                 <input type="datetime-local" id="eventTime" placeholder="Date &amp; Time" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;">
-                <input type="text" id="eventLocation" placeholder="Current location / hub (e.g., Pune Sorting Hub)" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;">
-                <input type="text" id="eventNextDestination" placeholder="Next destination / hub (e.g., Mumbai Hub)" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;">
-                <input type="datetime-local" id="eventExpectedAt" placeholder="Expected arrival" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;">
                 <select id="eventStatus" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;">
                     <option value="">— Select Status —</option>
                     <option value="Booked">Booked</option>
                     <option value="Picked Up">Picked Up</option>
                     <option value="In Transit">In Transit</option>
-                    <option value="Reached Hub">Reached Hub</option>
-                    <option value="Departed Hub">Departed Hub</option>
-                    <option value="Arrived at Destination Hub">Arrived at Destination Hub</option>
                     <option value="Out for Delivery">Out for Delivery</option>
                     <option value="Delivered">Delivered</option>
                     <option value="Exception">Exception</option>
                     <option value="Returned">Returned</option>
                 </select>
-                <textarea id="eventDesc" placeholder="Status description shown to customer" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;min-height:60px;"></textarea>
-                <textarea id="eventDestinationDetails" placeholder="Destination / transit details (vehicle, route, branch note, delay reason, contact point, etc.)" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;min-height:70px;"></textarea>
-                <button class="btn-primary-admin" onclick="addTrackingEvent(${id})"><i class="bi bi-plus-lg me-1"></i> Add Event</button>
+                <input type="text" id="eventLocation" placeholder="Location (optional, e.g., Pune Hub)" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;">
+                <textarea id="eventDesc" placeholder="Customer update (optional, e.g., Parcel left Pune hub and is moving to Mumbai.)" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;min-height:70px;"></textarea>
+                <button class="btn-primary-admin" onclick="addTrackingEvent(${id})"><i class="bi bi-plus-lg me-1"></i> Save Update</button>
             </div>
         </div>`;
 
@@ -360,11 +352,8 @@ function saveDtdcAwb(id) {
 function addTrackingEvent(id) {
     const eventTime = document.getElementById('eventTime').value;
     const location = document.getElementById('eventLocation').value.trim();
-    const nextDestination = document.getElementById('eventNextDestination').value.trim();
-    const expectedAt = document.getElementById('eventExpectedAt').value;
     const status = document.getElementById('eventStatus').value;
     const desc = document.getElementById('eventDesc').value.trim();
-    const destinationDetails = document.getElementById('eventDestinationDetails').value.trim();
 
     if (!eventTime || !status) { showToast('Date/Time and Status are required', 'warning'); return; }
 
@@ -376,11 +365,8 @@ function addTrackingEvent(id) {
             shipment_id: id,
             event_time: eventTime.replace('T',' '),
             location,
-            next_destination: nextDestination,
-            expected_at: expectedAt ? expectedAt.replace('T',' ') : '',
             status,
-            description: desc,
-            destination_details: destinationDetails
+            description: desc
         }),
         credentials: 'same-origin'
     })
@@ -390,11 +376,8 @@ function addTrackingEvent(id) {
         if (data.success) {
             document.getElementById('eventTime').value = '';
             document.getElementById('eventLocation').value = '';
-            document.getElementById('eventNextDestination').value = '';
-            document.getElementById('eventExpectedAt').value = '';
             document.getElementById('eventStatus').value = '';
             document.getElementById('eventDesc').value = '';
-            document.getElementById('eventDestinationDetails').value = '';
             trackingModal(id, '');
         }
     })

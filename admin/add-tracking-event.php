@@ -20,11 +20,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $shipmentId = (int) ($_POST['shipment_id'] ?? 0);
     $eventTime  = trim($_POST['event_time'] ?? '');
     $location   = trim($_POST['location'] ?? '');
-    $nextDestination = trim($_POST['next_destination'] ?? '');
-    $expectedAt = trim($_POST['expected_at'] ?? '');
     $status     = trim($_POST['status'] ?? '');
     $description = trim($_POST['description'] ?? '');
-    $destinationDetails = trim($_POST['destination_details'] ?? '');
+    if ($description === '') {
+        $where = $location !== '' ? ' at ' . $location : '';
+        $messages = [
+            'booked' => 'Shipment booking has been created and is waiting for pickup.',
+            'picked up' => 'Shipment has been picked up' . $where . '.',
+            'in transit' => 'Shipment is moving through the courier network' . $where . '.',
+            'out for delivery' => 'Shipment is out for delivery' . $where . '.',
+            'delivered' => 'Shipment has been delivered successfully.',
+            'exception' => 'Shipment needs attention. Our team is checking the issue' . $where . '.',
+            'returned' => 'Shipment is being returned' . $where . '.',
+        ];
+        $description = $messages[strtolower($status)] ?? 'Shipment status updated' . $where . '.';
+    }
 
     if (!$shipmentId || !$eventTime || !$status) {
         $message = 'Shipment ID, Event Time, and Status are required.';
@@ -39,7 +49,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $message = 'Shipment not found.';
             } else {
                 // Insert tracking event
-                $expectedAtValue = $expectedAt !== '' ? date('Y-m-d H:i:s', strtotime($expectedAt)) : null;
                 $pdo->prepare(
                     "INSERT INTO shipment_tracking_events
                      (shipment_id, event_time, location, next_destination, expected_at, status, description, destination_details, source)
@@ -48,11 +57,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $shipmentId,
                     date('Y-m-d H:i:s', strtotime($eventTime)),
                     $location ?: null,
-                    $nextDestination ?: null,
-                    $expectedAtValue,
+                    null,
+                    null,
                     $status,
                     $description ?: null,
-                    $destinationDetails ?: null,
+                    null,
                 ]);
 
                 $success = true;
@@ -135,28 +144,13 @@ try {
             <div class="mb-3">
                 <label class="form-label">Location</label>
                 <input type="text" class="form-control" name="location" placeholder="e.g., Delhi Sorting Hub">
-                <small class="text-muted">Where is the package?</small>
+                <small class="text-muted">Optional. Where is the package now?</small>
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Next Destination / Hub</label>
-                <input type="text" class="form-control" name="next_destination" placeholder="e.g., Mumbai Hub">
-                <small class="text-muted">Where will the shipment travel next?</small>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Expected Arrival</label>
-                <input type="datetime-local" class="form-control" name="expected_at">
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Description</label>
-                <textarea class="form-control" name="description" rows="2" placeholder="Additional details (optional)"></textarea>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Destination / Transit Details</label>
-                <textarea class="form-control" name="destination_details" rows="3" placeholder="Vehicle, route, branch notes, delay reason, contact point, etc."></textarea>
+                <label class="form-label">Customer Update</label>
+                <textarea class="form-control" name="description" rows="3" placeholder="Optional. Example: Parcel left Delhi Hub and is moving toward Mumbai."></textarea>
+                <small class="text-muted">Leave blank to use an automatic customer-friendly update.</small>
             </div>
 
             <button type="submit" class="btn btn-primary btn-lg w-100">Add Event</button>
