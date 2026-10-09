@@ -58,7 +58,7 @@ if ($method === 'DELETE') {
 
     try {
         try {
-            $pdo->prepare("DELETE FROM tracking_events WHERE shipment_id = ?")->execute([$id]);
+            $pdo->prepare("DELETE FROM shipment_tracking_events WHERE shipment_id = ?")->execute([$id]);
         } catch (Exception $e) {}
         $stmt = $pdo->prepare("DELETE FROM shipments WHERE id = ?");
         $stmt->execute([$id]);

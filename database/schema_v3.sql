@@ -16,8 +16,11 @@ CREATE TABLE IF NOT EXISTS `shipment_tracking_events` (
     `shipment_id` INT UNSIGNED  NOT NULL,
     `event_time`  DATETIME      NOT NULL,
     `location`    VARCHAR(200)  DEFAULT NULL,
+    `next_destination` VARCHAR(200) DEFAULT NULL,
+    `expected_at` DATETIME DEFAULT NULL,
     `status`      VARCHAR(100)  NOT NULL,
     `description` TEXT          DEFAULT NULL,
+    `destination_details` TEXT DEFAULT NULL,
     `source`      ENUM('manual','dtdc') NOT NULL DEFAULT 'manual',
     `created_at`  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
@@ -47,4 +50,23 @@ CREATE TABLE IF NOT EXISTS `blogs` (
     PRIMARY KEY (`id`),
     UNIQUE KEY `uq_blogs_slug` (`slug`),
     KEY `idx_blogs_status_published` (`status`, `published_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- Password reset tokens for admin and customer accounts
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `password_resets` (
+    `id`         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `user_id`    INT UNSIGNED NOT NULL,
+    `email`      VARCHAR(191) NOT NULL,
+    `token_hash` CHAR(64) NOT NULL,
+    `expires_at` DATETIME NOT NULL,
+    `used_at`    DATETIME DEFAULT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `request_ip` VARCHAR(64) DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uniq_token_hash` (`token_hash`),
+    KEY `idx_user_id` (`user_id`),
+    KEY `idx_email` (`email`),
+    KEY `idx_expires_at` (`expires_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

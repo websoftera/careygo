@@ -4,13 +4,14 @@
  *
  * GET  ?shipment_id=N               — load tracking info + events for a shipment
  * POST {action:'save_awb',  id, dtdc_awb}       — update DTDC AWB
- * POST {action:'add_event', shipment_id, event_time, location, status, description} — add manual event
+ * POST {action:'add_event', shipment_id, event_time, location, next_destination, expected_at, status, description, destination_details} — add manual event
  * DELETE {event_id}                 — remove a manual tracking event
  */
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../lib/auth.php';
 require_once __DIR__ . '/../../lib/dtdc.php';
 require_once __DIR__ . '/../../lib/helpers.php';
+require_once __DIR__ . '/../../lib/tracking.php';
 
 header('Content-Type: application/json');
 
@@ -20,6 +21,7 @@ if (!$user || $user['role'] !== 'admin') {
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
+tracking_ensure_schema($pdo);
 
 // ── GET: load tracking data ───────────────────────────────────
 if ($method === 'GET') {
@@ -81,7 +83,7 @@ if ($method === 'GET') {
 
         // ── Fetch all events from database (including cached DTDC events) ──
         $eStmt = $pdo->prepare(
-            "SELECT id, event_time, location, status, description, source, created_at
+            "SELECT id, event_time, location, next_destination, expected_at, status, description, destination_details, source, created_at
              FROM shipment_tracking_events
              WHERE shipment_id = ?
              ORDER BY event_time DESC"
@@ -126,8 +128,11 @@ if ($method === 'POST') {
         $sid         = (int)   ($body['shipment_id'] ?? 0);
         $eventTime   = trim($body['event_time']   ?? '');
         $location    = trim($body['location']     ?? '');
+        $nextDestination = trim($body['next_destination'] ?? '');
+        $expectedAt   = trim($body['expected_at'] ?? '');
         $status      = trim($body['status']       ?? '');
         $description = trim($body['description']  ?? '');
+        $destinationDetails = trim($body['destination_details'] ?? '');
 
         if (!$sid || !$eventTime || !$status) {
             json_response(['success' => false, 'message' => 'shipment_id, event_time and status are required.'], 422);
@@ -138,6 +143,13 @@ if ($method === 'POST') {
         if (!$ts) json_response(['success' => false, 'message' => 'Invalid event_time.'], 422);
         $eventTime = date('Y-m-d H:i:s', $ts);
 
+        $expectedAtValue = null;
+        if ($expectedAt !== '') {
+            $expectedTs = strtotime($expectedAt);
+            if (!$expectedTs) json_response(['success' => false, 'message' => 'Invalid expected arrival date/time.'], 422);
+            $expectedAtValue = date('Y-m-d H:i:s', $expectedTs);
+        }
+
         // Verify shipment exists
         $chk = $pdo->prepare("SELECT id FROM shipments WHERE id = ?");
         $chk->execute([$sid]);
@@ -146,11 +158,25 @@ if ($method === 'POST') {
         try {
             $stmt = $pdo->prepare(
                 "INSERT INTO shipment_tracking_events
-                    (shipment_id, event_time, location, status, description, source)
-                 VALUES (?, ?, ?, ?, ?, 'manual')"
+                    (shipment_id, event_time, location, next_destination, expected_at, status, description, destination_details, source)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'manual')"
             );
-            $stmt->execute([$sid, $eventTime, $location ?: null, $status, $description ?: null]);
+            $stmt->execute([
+                $sid,
+                $eventTime,
+                $location ?: null,
+                $nextDestination ?: null,
+                $expectedAtValue,
+                $status,
+                $description ?: null,
+                $destinationDetails ?: null,
+            ]);
             $newId = (int) $pdo->lastInsertId();
+
+            $shipmentStatus = tracking_status_to_shipment_status($status);
+            if ($shipmentStatus) {
+                $pdo->prepare("UPDATE shipments SET status = ? WHERE id = ?")->execute([$shipmentStatus, $sid]);
+            }
 
             json_response([
                 'success' => true,
@@ -159,8 +185,11 @@ if ($method === 'POST') {
                     'shipment_id' => $sid,
                     'event_time'  => $eventTime,
                     'location'    => $location,
+                    'next_destination' => $nextDestination,
+                    'expected_at'  => $expectedAtValue,
                     'status'      => $status,
                     'description' => $description,
+                    'destination_details' => $destinationDetails,
                     'source'      => 'manual',
                 ],
             ]);

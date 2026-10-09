@@ -40,6 +40,8 @@ try {
             PDO::ATTR_EMULATE_PREPARES => false,
         ]
     );
+    require_once __DIR__ . '/../lib/migrations.php';
+    cgo_run_auto_migrations($pdo);
 } catch (PDOException $e) {
     // Don't leak DB details in production
     $msg = defined('IS_HTTPS') && IS_HTTPS

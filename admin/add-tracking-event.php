@@ -4,11 +4,14 @@
  */
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../lib/auth.php';
+require_once __DIR__ . '/../lib/tracking.php';
 
 $user = auth_user();
 if (!$user || $user['role'] !== 'admin') {
     die('Access Denied');
 }
+
+tracking_ensure_schema($pdo);
 
 $success = false;
 $message = '';
@@ -17,8 +20,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $shipmentId = (int) ($_POST['shipment_id'] ?? 0);
     $eventTime  = trim($_POST['event_time'] ?? '');
     $location   = trim($_POST['location'] ?? '');
+    $nextDestination = trim($_POST['next_destination'] ?? '');
+    $expectedAt = trim($_POST['expected_at'] ?? '');
     $status     = trim($_POST['status'] ?? '');
     $description = trim($_POST['description'] ?? '');
+    $destinationDetails = trim($_POST['destination_details'] ?? '');
 
     if (!$shipmentId || !$eventTime || !$status) {
         $message = 'Shipment ID, Event Time, and Status are required.';
@@ -33,16 +39,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $message = 'Shipment not found.';
             } else {
                 // Insert tracking event
+                $expectedAtValue = $expectedAt !== '' ? date('Y-m-d H:i:s', strtotime($expectedAt)) : null;
                 $pdo->prepare(
                     "INSERT INTO shipment_tracking_events
-                     (shipment_id, event_time, location, status, description, source)
-                     VALUES (?, ?, ?, ?, ?, 'manual')"
+                     (shipment_id, event_time, location, next_destination, expected_at, status, description, destination_details, source)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'manual')"
                 )->execute([
                     $shipmentId,
                     date('Y-m-d H:i:s', strtotime($eventTime)),
                     $location ?: null,
+                    $nextDestination ?: null,
+                    $expectedAtValue,
                     $status,
                     $description ?: null,
+                    $destinationDetails ?: null,
                 ]);
 
                 $success = true;
@@ -129,8 +139,24 @@ try {
             </div>
 
             <div class="mb-3">
+                <label class="form-label">Next Destination / Hub</label>
+                <input type="text" class="form-control" name="next_destination" placeholder="e.g., Mumbai Hub">
+                <small class="text-muted">Where will the shipment travel next?</small>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Expected Arrival</label>
+                <input type="datetime-local" class="form-control" name="expected_at">
+            </div>
+
+            <div class="mb-3">
                 <label class="form-label">Description</label>
                 <textarea class="form-control" name="description" rows="2" placeholder="Additional details (optional)"></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Destination / Transit Details</label>
+                <textarea class="form-control" name="destination_details" rows="3" placeholder="Vehicle, route, branch notes, delay reason, contact point, etc."></textarea>
             </div>
 
             <button type="submit" class="btn btn-primary btn-lg w-100">Add Event</button>

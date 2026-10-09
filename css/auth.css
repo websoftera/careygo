@@ -189,6 +189,26 @@
     background: #f8fafc;
 }
 
+.auth-form-row {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin: -8px 0 18px;
+}
+
+.auth-small-link {
+    color: #001A93;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.auth-small-link:hover,
+.auth-small-link:focus {
+    color: #001270;
+    text-decoration: underline;
+}
+
 /* Row layout for two-column fields */
 .auth-row {
     display: grid;

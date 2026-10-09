@@ -446,6 +446,7 @@ require_once __DIR__ . '/includes/header.php';
     const RC_URL = '<?= rtrim(SITE_URL, '/') ?>';
     let rcUnit = 'kg';
     let rcPackingCharge = 0;
+    let rcOverweightConfirmedKg = 0;
 
     document.getElementById('rc_packing_wrap')?.addEventListener('click', e => {
         e.preventDefault();
@@ -478,6 +479,7 @@ require_once __DIR__ . '/includes/header.php';
 
     window.rcSetUnit = function (u) {
         rcUnit = u;
+        rcOverweightConfirmedKg = 0;
         document.getElementById('rc_unit_kg').classList.toggle('active', u === 'kg');
         document.getElementById('rc_unit_gm').classList.toggle('active', u === 'gm');
         rcResetResults();
@@ -517,6 +519,7 @@ require_once __DIR__ . '/includes/header.php';
         if (r) r.innerHTML = '';
         const e = document.getElementById('rc_error');
         if (e) e.style.display = 'none';
+        rcOverweightConfirmedKg = 0;
     };
 
     window.rcResetCalculator = function () {
@@ -571,8 +574,13 @@ require_once __DIR__ . '/includes/header.php';
         if (weight <= 0) {
             if (errEl) { errEl.textContent = 'Enter a valid weight.'; errEl.style.display = 'block'; } return;
         }
-        if (weight > 60) {
-            if (errEl) { errEl.textContent = 'Maximum allowable weight is 60 kg'; errEl.style.display = 'block'; } return;
+        if (weight > 60 && Math.abs(rcOverweightConfirmedKg - weight) >= 0.001) {
+            const proceed = window.confirm('This shipment is above 60 kg. It may need manual handling or special cargo confirmation, and final charges may be reviewed. Do you want to proceed?');
+            if (!proceed) {
+                if (errEl) { errEl.textContent = 'Weight is above 60 kg. Confirm to proceed or edit the weight.'; errEl.style.display = 'block'; }
+                return;
+            }
+            rcOverweightConfirmedKg = weight;
         }
 
         if (btn) { btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Calculating...'; btn.disabled = true; }
@@ -619,6 +627,9 @@ require_once __DIR__ . '/includes/header.php';
             return;
         }
         const packingCharge = includePacking ? rcPackingCharge : 0;
+        const overweightNotice = weight > 60
+            ? '<div class="cust-alert cust-alert-warning mt-3">Weight is above 60 kg. Final charges may require manual review.</div>'
+            : '';
         const rows = services.map(svc => {
             const m = svcMap[svc.type] || { icon: 'bi-box', label: svc.type };
             const basePrice = parseFloat(svc.price) || 0;
@@ -637,6 +648,7 @@ require_once __DIR__ . '/includes/header.php';
         }).join('');
 
         results.innerHTML = `
+            ${overweightNotice}
             <div class="rc-results-header">
                 <span><i class="bi bi-weight me-1"></i>${weight.toFixed(3)} kg</span>
                 ${zoneTxt ? `<span class="rc-zone-badge"><i class="bi bi-geo-alt me-1"></i>${esc(zoneTxt)}</span>` : ''}

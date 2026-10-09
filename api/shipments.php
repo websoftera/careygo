@@ -366,12 +366,13 @@ if ($method === 'POST') {
             json_response(['success' => false, 'message' => 'Total value of consignment cannot exceed ₹ 1000.'], 422);
         }
 
-        // Service weight constraints (production-ready)
+        // Standard express remains capped; cargo services can proceed above 60 kg
+        // after the customer confirms the warning in the booking flow.
         $serviceConstraints = [
             'standard'  => 2.000,
-            'premium'   => 60.000,
-            'air_cargo' => 60.000,
-            'surface'   => 60.000,
+            'premium'   => PHP_FLOAT_MAX,
+            'air_cargo' => PHP_FLOAT_MAX,
+            'surface'   => PHP_FLOAT_MAX,
         ];
         $maxWeight = $serviceConstraints[$serviceType] ?? PHP_FLOAT_MAX;
         if ($chargeableWeight > $maxWeight) {
