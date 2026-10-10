@@ -266,6 +266,8 @@ function trackingModal(id, trackingNo) {
 
         const ship = data.shipment;
         const events = data.events || [];
+        window.trackingEventsById = Object.fromEntries(events.filter(e => e.source === 'manual').map(e => [e.id, e]));
+        editingTrackingEventId = null;
 
         let html = `
         <div class="mb-3">
@@ -291,12 +293,12 @@ function trackingModal(id, trackingNo) {
                 <div style="padding:10px;background:#f9fafb;border-radius:6px;margin-bottom:8px;border-left:3px solid ${isMgmt ? '#3B5BDB' : '#f59e0b'};">
                     <div style="display:flex;justify-content:space-between;align-items:start;">
                         <div style="flex:1;font-size:11px;">
-                            <strong>${escH(e.status)}</strong> <span style="color:var(--muted);">${e.event_time}</span>
+                            <strong>${escH(e.status)}</strong> <span style="color:var(--muted);">${formatAdminDateTime(e.event_time)}</span>
                             ${e.source === 'dtdc' ? '<span style="background:#fef3c7;color:#92400e;padding:2px 6px;border-radius:3px;font-size:9px;margin-left:6px;font-weight:600;">DTDC</span>' : ''}
                             <div style="color:var(--muted);margin-top:2px;">${escH(e.location||'')}</div>
                             <div style="color:var(--muted);margin-top:2px;font-size:10px;">${escH(e.description||'')}</div>
                         </div>
-                        ${isMgmt ? `<button class="btn-action danger" style="margin-left:8px;" onclick="deleteEvent(${e.id}, ${id})"><i class="bi bi-trash"></i></button>` : ''}
+                        ${isMgmt ? `<div style="display:flex;gap:6px;margin-left:8px;"><button class="btn-action" type="button" title="Edit event" aria-label="Edit event" onclick="editTrackingEvent(${e.id})"><i class="bi bi-pencil-square"></i></button><button class="btn-action danger" type="button" title="Delete event" aria-label="Delete event" onclick="deleteEvent(${e.id}, ${id})"><i class="bi bi-trash"></i></button></div>` : ''}
                     </div>
                 </div>`;
             }
@@ -308,7 +310,7 @@ function trackingModal(id, trackingNo) {
         <hr style="margin:16px 0;">
 
         <div>
-            <h6 style="font-size:12px;font-weight:700;margin-bottom:12px;">Add Manual Update</h6>
+            <h6 id="trackingEventFormTitle" style="font-size:12px;font-weight:700;margin-bottom:12px;">Add Manual Update</h6>
             <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,0.9fr);gap:10px;margin-bottom:10px;">
                 <select id="eventStatus" aria-label="Shipment status" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px;min-width:0;">
                     <option value="">— Select Status —</option>
@@ -325,7 +327,10 @@ function trackingModal(id, trackingNo) {
                 <input type="datetime-local" id="eventTime" aria-label="Update date and time" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px;min-width:0;">
             </div>
             <textarea id="eventDesc" placeholder="Destination / transit details (vehicle, route, branch note, delay reason, contact point, etc.)" aria-label="Destination or transit details" style="display:block;width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px;min-height:70px;margin-bottom:10px;"></textarea>
-            <button class="btn-primary-admin" style="width:100%;justify-content:center;" onclick="addTrackingEvent(${id})"><i class="bi bi-plus-lg me-1"></i> Add Event</button>
+            <div style="display:flex;gap:8px;">
+                <button class="btn-primary-admin" id="trackingEventSubmit" style="width:100%;justify-content:center;" onclick="addTrackingEvent(${id})"><i class="bi bi-plus-lg me-1"></i> Add Event</button>
+                <button class="btn-action" id="cancelTrackingEventEdit" type="button" style="display:none;" onclick="cancelTrackingEventEdit()">Cancel</button>
+            </div>
         </div>`;
 
         document.getElementById('trackingModalBody').innerHTML = html;
@@ -349,6 +354,38 @@ function saveDtdcAwb(id) {
     .catch(() => showToast('Network error', 'error'));
 }
 
+let editingTrackingEventId = null;
+
+function editTrackingEvent(eventId) {
+    const event = window.trackingEventsById?.[eventId];
+    if (!event) return;
+
+    editingTrackingEventId = Number(eventId);
+    const time = String(event.event_time || '').replace(' ', 'T').slice(0, 16);
+    document.getElementById('eventTime').value = time;
+
+    const statusSelect = document.getElementById('eventStatus');
+    if (![...statusSelect.options].some(option => option.value === event.status)) {
+        statusSelect.add(new Option(event.status, event.status));
+    }
+    statusSelect.value = event.status;
+    document.getElementById('eventDesc').value = event.description || event.destination_details || '';
+    document.getElementById('trackingEventFormTitle').textContent = 'Edit Tracking Event';
+    document.getElementById('trackingEventSubmit').innerHTML = '<i class="bi bi-check-lg me-1"></i> Update Event';
+    document.getElementById('cancelTrackingEventEdit').style.display = 'inline-flex';
+    document.getElementById('eventTime').scrollIntoView({behavior: 'smooth', block: 'center'});
+}
+
+function cancelTrackingEventEdit() {
+    editingTrackingEventId = null;
+    document.getElementById('eventTime').value = '';
+    document.getElementById('eventStatus').value = '';
+    document.getElementById('eventDesc').value = '';
+    document.getElementById('trackingEventFormTitle').textContent = 'Add Manual Update';
+    document.getElementById('trackingEventSubmit').innerHTML = '<i class="bi bi-plus-lg me-1"></i> Add Event';
+    document.getElementById('cancelTrackingEventEdit').style.display = 'none';
+}
+
 function addTrackingEvent(id) {
     const eventTime = document.getElementById('eventTime').value;
     const status = document.getElementById('eventStatus').value;
@@ -360,7 +397,8 @@ function addTrackingEvent(id) {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({
-            action:'add_event',
+            action: editingTrackingEventId ? 'edit_event' : 'add_event',
+            ...(editingTrackingEventId ? {event_id: editingTrackingEventId} : {}),
             shipment_id: id,
             event_time: eventTime.replace('T',' '),
             status,
@@ -370,7 +408,7 @@ function addTrackingEvent(id) {
     })
     .then(r => r.json())
     .then(data => {
-        showToast(data.success ? 'Event added' : 'Error', data.success ? 'success' : 'error');
+        showToast(data.success ? (editingTrackingEventId ? 'Event updated' : 'Event added') : (data.message || 'Error'), data.success ? 'success' : 'error');
         if (data.success) {
             document.getElementById('eventTime').value = '';
             document.getElementById('eventStatus').value = '';
@@ -398,9 +436,9 @@ function deleteEvent(eventId, shipmentId) {
 }
 
 function formatAdminDateTime(dt) {
-    const d = new Date(dt);
+    const d = new Date(String(dt).replace(' ', 'T'));
     if (Number.isNaN(d.getTime())) return escH(dt);
-    return d.toLocaleDateString('en-IN') + ' ' + d.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
+    return d.toLocaleString('en-IN', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true}).replace(/\b(am|pm)\b/i, value => value.toUpperCase());
 }
 </script>
 

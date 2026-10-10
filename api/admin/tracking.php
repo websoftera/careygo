@@ -149,8 +149,10 @@ if ($method === 'POST') {
         }
     }
 
-    // ── Add manual tracking event ─────────────────────────
-    if ($action === 'add_event') {
+    // ── Add or edit a manual tracking event ────────────────
+    if ($action === 'add_event' || $action === 'edit_event') {
+        $isEdit      = $action === 'edit_event';
+        $eventId     = (int)   ($body['event_id']   ?? 0);
         $sid         = (int)   ($body['shipment_id'] ?? 0);
         $eventTime   = trim($body['event_time']   ?? '');
         $location    = trim($body['location']     ?? '');
@@ -160,14 +162,14 @@ if ($method === 'POST') {
             'Pickup Requested', 'Booked', 'In Transit', 'Out for Delivery',
             'Delivered', 'On Hold', 'Return to Origin', 'Damage', 'Exception',
         ];
+        $legacyStatuses = ['Picked Up', 'Reached Hub', 'Departed Hub', 'Arrived at Destination Hub', 'Returned'];
 
-        if (!$sid || !$eventTime || !$status) {
+        if ((!$sid || !$eventTime || !$status) || ($isEdit && !$eventId)) {
             json_response(['success' => false, 'message' => 'shipment_id, event_time and status are required.'], 422);
         }
-        if (!in_array($status, $allowedStatuses, true)) {
+        if (!in_array($status, $allowedStatuses, true) && (!$isEdit || !in_array($status, $legacyStatuses, true))) {
             json_response(['success' => false, 'message' => 'Select a valid shipment status.'], 422);
         }
-        $description = admin_tracking_customer_message($status, $location, $description);
 
         // Validate datetime
         $ts = strtotime($eventTime);
@@ -180,6 +182,18 @@ if ($method === 'POST') {
         if (!$chk->fetch()) json_response(['success' => false, 'message' => 'Shipment not found.'], 404);
 
         try {
+            if ($isEdit) {
+                $eventCheck = $pdo->prepare("SELECT id, location FROM shipment_tracking_events WHERE id = ? AND shipment_id = ? AND source = 'manual'");
+                $eventCheck->execute([$eventId, $sid]);
+                $existingEvent = $eventCheck->fetch(PDO::FETCH_ASSOC);
+                if (!$existingEvent) json_response(['success' => false, 'message' => 'Manual tracking event not found.'], 404);
+
+                $location = $existingEvent['location'] ?? '';
+                $description = admin_tracking_customer_message($status, $location, $description);
+                $stmt = $pdo->prepare("UPDATE shipment_tracking_events SET event_time = ?, status = ?, description = ? WHERE id = ? AND shipment_id = ? AND source = 'manual'");
+                $stmt->execute([$eventTime, $status, $description ?: null, $eventId, $sid]);
+            } else {
+                $description = admin_tracking_customer_message($status, $location, $description);
             $stmt = $pdo->prepare(
                 "INSERT INTO shipment_tracking_events
                     (shipment_id, event_time, location, next_destination, expected_at, status, description, destination_details, source)
@@ -196,6 +210,7 @@ if ($method === 'POST') {
                 null,
             ]);
             $newId = (int) $pdo->lastInsertId();
+            }
 
             $shipmentStatus = tracking_status_to_shipment_status($status);
             if ($shipmentStatus) {
@@ -204,8 +219,9 @@ if ($method === 'POST') {
 
             json_response([
                 'success' => true,
+                'message' => $isEdit ? 'Tracking event updated.' : 'Tracking event added.',
                 'event'   => [
-                    'id'          => $newId,
+                    'id'          => $isEdit ? $eventId : $newId,
                     'shipment_id' => $sid,
                     'event_time'  => $eventTime,
                     'location'    => $location,
