@@ -311,8 +311,8 @@ function trackingModal(id, trackingNo) {
 
         <div>
             <h6 id="trackingEventFormTitle" style="font-size:12px;font-weight:700;margin-bottom:12px;">Add Manual Update</h6>
-            <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,0.9fr);gap:10px;margin-bottom:10px;">
-                <select id="eventStatus" aria-label="Shipment status" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px;min-width:0;">
+            <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+                <select id="eventStatus" aria-label="Shipment status" style="flex:1 1 170px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px;min-width:0;">
                     <option value="">— Select Status —</option>
                     <option value="Pickup Requested">Pickup Requested</option>
                     <option value="Booked">Booked</option>
@@ -324,7 +324,12 @@ function trackingModal(id, trackingNo) {
                     <option value="Damage">Damage</option>
                     <option value="Exception">Exception</option>
                 </select>
-                <input type="datetime-local" id="eventTime" aria-label="Update date and time" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px;min-width:0;">
+                <div style="display:grid;flex:2 1 270px;grid-template-columns:minmax(110px,1.5fr) minmax(42px,.55fr) minmax(42px,.55fr) minmax(54px,.7fr);gap:5px;min-width:0;">
+                    <input type="date" id="eventDate" aria-label="Update date" style="padding:8px 6px;border:1px solid var(--border);border-radius:8px;font-size:12px;min-width:0;width:100%;">
+                    <input type="number" id="eventHour" min="1" max="12" step="1" inputmode="numeric" placeholder="HH" aria-label="Hour, 1 to 12" style="padding:8px 4px;border:1px solid var(--border);border-radius:8px;font-size:12px;min-width:0;width:100%;">
+                    <input type="number" id="eventMinute" min="0" max="59" step="1" inputmode="numeric" placeholder="MM" aria-label="Minute, 0 to 59" style="padding:8px 4px;border:1px solid var(--border);border-radius:8px;font-size:12px;min-width:0;width:100%;">
+                    <select id="eventPeriod" aria-label="AM or PM" style="padding:8px 4px;border:1px solid var(--border);border-radius:8px;font-size:12px;min-width:0;width:100%;"><option value="AM">AM</option><option value="PM">PM</option></select>
+                </div>
             </div>
             <textarea id="eventDesc" placeholder="Destination / transit details (vehicle, route, branch note, delay reason, contact point, etc.)" aria-label="Destination or transit details" style="display:block;width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px;min-height:70px;margin-bottom:10px;"></textarea>
             <div style="display:flex;gap:8px;">
@@ -361,8 +366,7 @@ function editTrackingEvent(eventId) {
     if (!event) return;
 
     editingTrackingEventId = Number(eventId);
-    const time = String(event.event_time || '').replace(' ', 'T').slice(0, 16);
-    document.getElementById('eventTime').value = time;
+    setTrackingEventDateTime(event.event_time);
 
     const statusSelect = document.getElementById('eventStatus');
     if (![...statusSelect.options].some(option => option.value === event.status)) {
@@ -373,25 +377,51 @@ function editTrackingEvent(eventId) {
     document.getElementById('trackingEventFormTitle').textContent = 'Edit Tracking Event';
     document.getElementById('trackingEventSubmit').innerHTML = '<i class="bi bi-check-lg me-1"></i> Update Event';
     document.getElementById('cancelTrackingEventEdit').style.display = 'inline-flex';
-    document.getElementById('eventTime').scrollIntoView({behavior: 'smooth', block: 'center'});
+    document.getElementById('eventDate').scrollIntoView({behavior: 'smooth', block: 'center'});
+}
+
+function setTrackingEventDateTime(value) {
+    const [date = '', time = ''] = String(value || '').replace('T', ' ').split(' ');
+    const [hour24 = '', minute = ''] = time.split(':');
+    const hour = Number(hour24);
+    document.getElementById('eventDate').value = date;
+    document.getElementById('eventHour').value = hour ? String(hour % 12 || 12) : '';
+    document.getElementById('eventMinute').value = minute ? String(Number(minute)) : (minute === '00' ? '0' : '');
+    document.getElementById('eventPeriod').value = hour >= 12 ? 'PM' : 'AM';
+}
+
+function clearTrackingEventForm() {
+    document.getElementById('eventDate').value = '';
+    document.getElementById('eventHour').value = '';
+    document.getElementById('eventMinute').value = '';
+    document.getElementById('eventPeriod').value = 'AM';
+    document.getElementById('eventStatus').value = '';
+    document.getElementById('eventDesc').value = '';
 }
 
 function cancelTrackingEventEdit() {
     editingTrackingEventId = null;
-    document.getElementById('eventTime').value = '';
-    document.getElementById('eventStatus').value = '';
-    document.getElementById('eventDesc').value = '';
+    clearTrackingEventForm();
     document.getElementById('trackingEventFormTitle').textContent = 'Add Manual Update';
     document.getElementById('trackingEventSubmit').innerHTML = '<i class="bi bi-plus-lg me-1"></i> Add Event';
     document.getElementById('cancelTrackingEventEdit').style.display = 'none';
 }
 
 function addTrackingEvent(id) {
-    const eventTime = document.getElementById('eventTime').value;
+    const eventDate = document.getElementById('eventDate').value;
+    const hour = Number(document.getElementById('eventHour').value);
+    const minuteValue = document.getElementById('eventMinute').value;
+    const minute = Number(minuteValue);
+    const period = document.getElementById('eventPeriod').value;
     const status = document.getElementById('eventStatus').value;
     const desc = document.getElementById('eventDesc').value.trim();
 
-    if (!eventTime || !status) { showToast('Date/Time and Status are required', 'warning'); return; }
+    if (!eventDate || !Number.isInteger(hour) || hour < 1 || hour > 12 || minuteValue === '' || !Number.isInteger(minute) || minute < 0 || minute > 59 || !status) {
+        showToast('Date, valid time, and Status are required', 'warning');
+        return;
+    }
+    const hour24 = (hour % 12) + (period === 'PM' ? 12 : 0);
+    const eventTime = `${eventDate} ${String(hour24).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
 
     fetch('<?= SITE_URL ?>/api/admin/tracking.php', {
         method: 'POST',
@@ -400,7 +430,7 @@ function addTrackingEvent(id) {
             action: editingTrackingEventId ? 'edit_event' : 'add_event',
             ...(editingTrackingEventId ? {event_id: editingTrackingEventId} : {}),
             shipment_id: id,
-            event_time: eventTime.replace('T',' '),
+            event_time: eventTime,
             status,
             description: desc
         }),
@@ -410,9 +440,7 @@ function addTrackingEvent(id) {
     .then(data => {
         showToast(data.success ? (editingTrackingEventId ? 'Event updated' : 'Event added') : (data.message || 'Error'), data.success ? 'success' : 'error');
         if (data.success) {
-            document.getElementById('eventTime').value = '';
-            document.getElementById('eventStatus').value = '';
-            document.getElementById('eventDesc').value = '';
+            clearTrackingEventForm();
             trackingModal(id, '');
         }
     })
