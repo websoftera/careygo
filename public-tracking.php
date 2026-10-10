@@ -540,8 +540,8 @@ function renderTracking(data) {
     document.getElementById('trackingNumberLabel').textContent = currentTrackingNo;
 
     document.getElementById('shipmentInfo').innerHTML = `
-        <span>Origin: ${esc(s.pickup_city || '')}, ${esc(s.pickup_pincode || '')}, India</span>
-        <span>Destination: ${esc(s.delivery_city || '')}, ${esc(s.delivery_pincode || '')}, India</span>
+        <span>Origin: ${esc(s.pickup_city || '')}, ${esc(s.pickup_pincode || '')}, ${s.pickup_state ? `${esc(s.pickup_state)}, ` : ''}India</span>
+        <span>Destination: ${esc(s.delivery_city || '')}, ${esc(s.delivery_pincode || '')}, ${s.delivery_state ? `${esc(s.delivery_state)}, ` : ''}India</span>
     `;
 
     renderTrackingProgress(s.status, events);
