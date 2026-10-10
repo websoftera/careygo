@@ -193,7 +193,7 @@ function trackingStatusIcon(status) {
         booked: 'bi-box-arrow-in-down',
         'picked up': 'bi-box-seam',
         'in transit': 'bi-truck',
-        'out for delivery': 'bi-bicycle',
+        'out for delivery': 'bi-box-seam',
         delivered: 'bi-box2-heart',
         'on hold': 'bi-pause-circle',
         'return to origin': 'bi-arrow-return-left',
