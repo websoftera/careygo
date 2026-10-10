@@ -73,7 +73,7 @@ require_once __DIR__ . '/includes/header.php';
     padding: 48px 0 64px;
 }
 .public-tool-shell {
-    max-width: 760px;
+    max-width: 1100px;
     margin: 0 auto;
 }
 .public-tool-heading {
@@ -255,7 +255,9 @@ require_once __DIR__ . '/includes/header.php';
 .tracking-stage {
     border-top: 3px solid #9ca3af;
     color: #555;
-    font-size: 11px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
     min-width: 0;
     padding: 14px 6px 0;
     position: relative;
@@ -443,7 +445,7 @@ require_once __DIR__ . '/includes/header.php';
         flex-direction: column;
     }
     .tracking-progress { margin-left: 0; margin-right: 0; }
-    .tracking-stage { font-size: 9px; padding-left: 2px; padding-right: 2px; }
+    .tracking-stage { font-size: 10px; padding-left: 2px; padding-right: 2px; }
     .tracking-stage-label { flex-direction: column; gap: 3px; }
     .tracking-stage-label i { font-size: 16px; }
 }

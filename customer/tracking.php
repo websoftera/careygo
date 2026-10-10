@@ -44,7 +44,7 @@ if (!$shipment) { header('Location: dashboard.php'); exit; }
     .timeline-next { font-size: 12px; color: var(--text); font-weight: 600; margin-top: 2px; }
     .timeline-desc { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
     .tracking-progress { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin: 28px 4px 0; }
-    .tracking-stage { border-top: 3px solid #9ca3af; color: #555; font-size: 11px; min-width: 0; padding: 14px 6px 0; position: relative; text-align: center; }
+    .tracking-stage { border-top: 3px solid #9ca3af; color: #555; font-size: 13px; font-weight: 600; line-height: 1.35; min-width: 0; padding: 14px 6px 0; position: relative; text-align: center; }
     .tracking-stage::before { background: #9ca3af; border: 2px solid #fff; border-radius: 50%; content: ''; height: 15px; left: 0; position: absolute; top: -9px; width: 15px; }
     .tracking-stage.done, .tracking-stage.active { border-color: #16a34a; }
     .tracking-stage.done::before, .tracking-stage.active::before { background: #16a34a; }
@@ -59,7 +59,7 @@ if (!$shipment) { header('Location: dashboard.php'); exit; }
     @media (max-width: 575.98px) {
         .tracking-route { align-items: flex-start; border-radius: 14px; flex-direction: column; }
         .tracking-progress { margin-left: 0; margin-right: 0; }
-        .tracking-stage { font-size: 9px; padding-left: 2px; padding-right: 2px; }
+        .tracking-stage { font-size: 10px; padding-left: 2px; padding-right: 2px; }
         .tracking-stage-label { flex-direction: column; gap: 3px; }
         .tracking-stage-label i { font-size: 16px; }
     }
