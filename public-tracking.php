@@ -278,10 +278,10 @@ require_once __DIR__ . '/includes/header.php';
 .tracking-stage.active { border-color: #16a34a; }
 .tracking-stage.done::before,
 .tracking-stage.active::before { background: #16a34a; }
-.tracking-stage-label { display: inline-flex; align-items: center; gap: 5px; }
-.tracking-stage-label i { font-size: 14px; }
-.pickup-location-box { display: inline-block; flex: 0 0 1.15em; height: 1.2em; position: relative; vertical-align: middle; width: 1.15em; }
-.pickup-location-pin { font-size: 1.2em !important; left: 0; position: absolute; top: 0; }
+.tracking-stage-label { display: inline-flex; align-items: center; gap: 6px; line-height: 1.35; }
+.tracking-stage-label > i { font-size: 17px; line-height: 1; }
+.pickup-location-box { display: inline-block; flex: 0 0 1.3em; height: 1.35em; position: relative; vertical-align: middle; width: 1.3em; }
+.pickup-location-pin { font-size: 1.35em !important; left: 0; position: absolute; top: 0; }
 .pickup-location-parcel { background: #fff; font-size: .42em !important; left: 35%; position: absolute; top: 29%; }
 .tracking-section-title {
     border-bottom: 1px solid #d1d5db;
@@ -461,7 +461,7 @@ require_once __DIR__ . '/includes/header.php';
     .tracking-progress { margin-left: 0; margin-right: 0; }
     .tracking-stage { font-size: 10px; padding-left: 2px; padding-right: 2px; }
     .tracking-stage-label { flex-direction: column; gap: 3px; }
-    .tracking-stage-label i { font-size: 16px; }
+    .tracking-stage-label > i { font-size: 18px; }
 }
 </style>
 

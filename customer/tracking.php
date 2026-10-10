@@ -50,10 +50,10 @@ if (!$shipment) { header('Location: dashboard.php'); exit; }
     .tracking-stage::before { background: #9ca3af; border: 2px solid #fff; border-radius: 50%; content: ''; height: 15px; left: 0; position: absolute; top: -9px; width: 15px; }
     .tracking-stage.done, .tracking-stage.active { border-color: #16a34a; }
     .tracking-stage.done::before, .tracking-stage.active::before { background: #16a34a; }
-    .tracking-stage-label { display: inline-flex; align-items: center; gap: 5px; }
-    .tracking-stage-label i { font-size: 14px; }
-    .pickup-location-box { display: inline-block; flex: 0 0 1.15em; height: 1.2em; position: relative; vertical-align: middle; width: 1.15em; }
-    .pickup-location-pin { font-size: 1.2em !important; left: 0; position: absolute; top: 0; }
+    .tracking-stage-label { display: inline-flex; align-items: center; gap: 6px; line-height: 1.35; }
+    .tracking-stage-label > i { font-size: 17px; line-height: 1; }
+    .pickup-location-box { display: inline-block; flex: 0 0 1.3em; height: 1.35em; position: relative; vertical-align: middle; width: 1.3em; }
+    .pickup-location-pin { font-size: 1.35em !important; left: 0; position: absolute; top: 0; }
     .pickup-location-parcel { background: #fff; font-size: .42em !important; left: 35%; position: absolute; top: 29%; }
     .tracking-route { align-items: center; background: var(--bg); border-radius: 28px; color: var(--muted); display: flex; font-size: 12px; font-weight: 600; justify-content: space-between; margin: 20px 0 30px; padding: 13px 18px; gap: 12px; }
     .tracking-section-title { border-bottom: 1px solid var(--border); color: var(--text); font-size: 16px; font-weight: 600; margin: 0; padding-bottom: 10px; }
@@ -66,7 +66,7 @@ if (!$shipment) { header('Location: dashboard.php'); exit; }
         .tracking-progress { margin-left: 0; margin-right: 0; }
         .tracking-stage { font-size: 10px; padding-left: 2px; padding-right: 2px; }
         .tracking-stage-label { flex-direction: column; gap: 3px; }
-        .tracking-stage-label i { font-size: 16px; }
+        .tracking-stage-label > i { font-size: 18px; }
     }
 </style>
 
