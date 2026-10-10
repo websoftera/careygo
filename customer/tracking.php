@@ -41,10 +41,26 @@ if (!$shipment) { header('Location: dashboard.php'); exit; }
     .timeline-location { font-size: 12px; color: var(--muted); margin-top: 2px; }
     .timeline-next { font-size: 12px; color: var(--text); font-weight: 600; margin-top: 2px; }
     .timeline-desc { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+    .tracking-progress { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin: 28px 4px 0; }
+    .tracking-stage { border-top: 3px solid #9ca3af; color: #555; font-size: 11px; min-width: 0; padding: 14px 6px 0; position: relative; text-align: center; }
+    .tracking-stage::before { background: #9ca3af; border: 2px solid #fff; border-radius: 50%; content: ''; height: 15px; left: 0; position: absolute; top: -9px; width: 15px; }
+    .tracking-stage.done, .tracking-stage.active { border-color: #16a34a; }
+    .tracking-stage.done::before, .tracking-stage.active::before { background: #16a34a; }
+    .tracking-stage-label { display: inline-flex; align-items: center; gap: 5px; }
+    .tracking-stage-label i { font-size: 14px; }
+    .tracking-route { align-items: center; background: var(--bg); border-radius: 28px; color: var(--muted); display: flex; font-size: 12px; font-weight: 600; justify-content: space-between; margin: 20px 0 30px; padding: 13px 18px; gap: 12px; }
+    .tracking-section-title { border-bottom: 1px solid var(--border); color: var(--text); font-size: 16px; font-weight: 600; margin: 0; padding-bottom: 10px; }
     .dtdc-badge { display: inline-block; background: rgba(0,26,147,0.1); color: var(--primary); padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; margin-left: 8px; }
     .no-events { text-align: center; padding: 40px 20px; color: var(--muted); }
     .no-events i { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
     .loading { text-align: center; padding: 40px; }
+    @media (max-width: 575.98px) {
+        .tracking-route { align-items: flex-start; border-radius: 14px; flex-direction: column; }
+        .tracking-progress { margin-left: 0; margin-right: 0; }
+        .tracking-stage { font-size: 9px; padding-left: 2px; padding-right: 2px; }
+        .tracking-stage-label { flex-direction: column; gap: 3px; }
+        .tracking-stage-label i { font-size: 16px; }
+    }
 </style>
 
 <div class="tracking-card">
@@ -58,7 +74,9 @@ if (!$shipment) { header('Location: dashboard.php'); exit; }
             <button class="btn-share" onclick="shareTracking()"><i class="bi bi-share me-1"></i> Share</button>
         </div>
     </div>
-    <div id="statusBadge" style="margin-bottom:16px;"></div>
+    <div id="trackingProgress" class="tracking-progress"></div>
+    <div id="trackingRoute" class="tracking-route"></div>
+    <h6 class="tracking-section-title">Shipment Progress</h6>
     <div id="trackingContent">
         <div class="loading"><span class="spinner-border spinner-border-sm text-primary"></span></div>
     </div>
@@ -96,10 +114,10 @@ function renderTracking(data) {
     const s = data.shipment;
     const events = data.events || [];
 
-    const statusMap = { booked: 'Booked', picked_up: 'Picked Up', in_transit: 'In Transit', out_for_delivery: 'Out for Delivery', delivered: 'Delivered', cancelled: 'Cancelled' };
-    const statusColors = { booked: '#3B5BDB', picked_up: '#f59e0b', in_transit: '#6366f1', out_for_delivery: '#f59e0b', delivered: '#22c55e', cancelled: '#ef4444' };
-    const color = statusColors[s.status] || '#001A93';
-    document.getElementById('statusBadge').innerHTML = `<span class="status-badge" style="background:${color}"><i class="bi bi-circle-fill me-1" style="font-size:8px"></i> ${statusMap[s.status] || s.status}</span>`;
+    document.getElementById('trackingRoute').innerHTML = `
+        <span>Origin: ${esc(s.pickup_city || '')}, ${esc(s.pickup_pincode || '')}, India</span>
+        <span>Destination: ${esc(s.delivery_city || '')}, ${esc(s.delivery_pincode || '')}, India</span>`;
+    renderTrackingProgress(s.status, events);
 
     let html = '<div class="timeline">';
     if (events.length === 0) {
@@ -132,6 +150,36 @@ function renderTracking(data) {
     }
 
     document.getElementById('trackingContent').innerHTML = html;
+}
+
+function renderTrackingProgress(shipmentStatus, events) {
+    const stages = [
+        ['Pickup Requested', 'bi-inbox'],
+        ['Booked', 'bi-box-arrow-in-down'],
+        ['In Transit', 'bi-truck'],
+        ['Out for Delivery', 'bi-box-seam'],
+        ['Delivered', 'bi-box2-heart'],
+    ];
+    const latestStatus = events.length ? events[0].status : shipmentStatus;
+    const normalized = String(latestStatus || shipmentStatus || '').toLowerCase().replace(/[_-]+/g, ' ').trim();
+    const stageByStatus = {
+        'pickup requested': 0,
+        booked: 1,
+        'picked up': 2,
+        'in transit': 2,
+        'on hold': 2,
+        damage: 2,
+        exception: 2,
+        'return to origin': 2,
+        returned: 2,
+        'out for delivery': 3,
+        delivered: 4,
+    };
+    const stageIndex = stageByStatus[normalized] ?? stageByStatus[String(shipmentStatus || '').toLowerCase().replace(/[_-]+/g, ' ').trim()] ?? 0;
+    document.getElementById('trackingProgress').innerHTML = stages.map((stage, index) => `
+        <div class="tracking-stage ${index < stageIndex ? 'done' : ''} ${index === stageIndex ? 'active' : ''}">
+            <span class="tracking-stage-label"><i class="bi ${stage[1]}"></i>${stage[0]}</span>
+        </div>`).join('');
 }
 
 function formatTime(dt) {

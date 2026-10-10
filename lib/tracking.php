@@ -64,16 +64,20 @@ function tracking_status_to_shipment_status(string $status): ?string
     $normalized = trim($normalized, '_');
 
     $map = [
+        'pickup_requested' => 'booked',
         'booked' => 'booked',
         'picked_up' => 'picked_up',
         'pickup_done' => 'picked_up',
         'in_transit' => 'in_transit',
+        'on_hold' => 'in_transit',
+        'damage' => 'in_transit',
         'reached_hub' => 'in_transit',
         'departed_hub' => 'in_transit',
         'arrived_at_destination_hub' => 'in_transit',
         'out_for_delivery' => 'out_for_delivery',
         'delivered' => 'delivered',
         'cancelled' => 'cancelled',
+        'return_to_origin' => 'cancelled',
         'exception' => 'in_transit',
         'returned' => 'cancelled',
     ];

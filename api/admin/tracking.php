@@ -33,11 +33,15 @@ function admin_tracking_customer_message(string $status, string $location, strin
     $normalized = strtolower(trim($status));
 
     $messages = [
+        'pickup requested' => 'Pickup has been requested for this shipment.',
         'booked' => 'Shipment booking has been created and is waiting for pickup.',
         'picked up' => 'Shipment has been picked up' . $where . '.',
         'in transit' => 'Shipment is moving through the courier network' . $where . '.',
         'out for delivery' => 'Shipment is out for delivery' . $where . '.',
         'delivered' => 'Shipment has been delivered successfully.',
+        'on hold' => 'Shipment is temporarily on hold. Our team is checking the next steps.',
+        'return to origin' => 'Shipment is being returned to the origin.',
+        'damage' => 'A damage issue was reported for this shipment. Our team is reviewing it.',
         'exception' => 'Shipment needs attention. Our team is checking the issue' . $where . '.',
         'returned' => 'Shipment is being returned' . $where . '.',
     ];
@@ -152,11 +156,18 @@ if ($method === 'POST') {
         $location    = trim($body['location']     ?? '');
         $status      = trim($body['status']       ?? '');
         $description = trim($body['description']  ?? '');
-        $description = admin_tracking_customer_message($status, $location, $description);
+        $allowedStatuses = [
+            'Pickup Requested', 'Booked', 'In Transit', 'Out for Delivery',
+            'Delivered', 'On Hold', 'Return to Origin', 'Damage', 'Exception',
+        ];
 
         if (!$sid || !$eventTime || !$status) {
             json_response(['success' => false, 'message' => 'shipment_id, event_time and status are required.'], 422);
         }
+        if (!in_array($status, $allowedStatuses, true)) {
+            json_response(['success' => false, 'message' => 'Select a valid shipment status.'], 422);
+        }
+        $description = admin_tracking_customer_message($status, $location, $description);
 
         // Validate datetime
         $ts = strtotime($eventTime);

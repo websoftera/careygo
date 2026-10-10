@@ -309,23 +309,23 @@ function trackingModal(id, trackingNo) {
 
         <div>
             <h6 style="font-size:12px;font-weight:700;margin-bottom:12px;">Add Manual Update</h6>
-            <p style="font-size:11px;color:var(--muted);margin-top:-6px;margin-bottom:10px;">Add one clear customer-facing update. Leave the note blank to use an automatic message.</p>
-            <div style="display:grid;gap:10px;">
-                <input type="datetime-local" id="eventTime" placeholder="Date &amp; Time" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;">
-                <select id="eventStatus" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;">
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,0.9fr);gap:10px;margin-bottom:10px;">
+                <select id="eventStatus" aria-label="Shipment status" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px;min-width:0;">
                     <option value="">— Select Status —</option>
+                    <option value="Pickup Requested">Pickup Requested</option>
                     <option value="Booked">Booked</option>
-                    <option value="Picked Up">Picked Up</option>
                     <option value="In Transit">In Transit</option>
                     <option value="Out for Delivery">Out for Delivery</option>
                     <option value="Delivered">Delivered</option>
+                    <option value="On Hold">On Hold</option>
+                    <option value="Return to Origin">Return to Origin</option>
+                    <option value="Damage">Damage</option>
                     <option value="Exception">Exception</option>
-                    <option value="Returned">Returned</option>
                 </select>
-                <input type="text" id="eventLocation" placeholder="Location (optional, e.g., Pune Hub)" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;">
-                <textarea id="eventDesc" placeholder="Customer update (optional, e.g., Parcel left Pune hub and is moving to Mumbai.)" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;min-height:70px;"></textarea>
-                <button class="btn-primary-admin" onclick="addTrackingEvent(${id})"><i class="bi bi-plus-lg me-1"></i> Save Update</button>
+                <input type="datetime-local" id="eventTime" aria-label="Update date and time" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px;min-width:0;">
             </div>
+            <textarea id="eventDesc" placeholder="Destination / transit details (vehicle, route, branch note, delay reason, contact point, etc.)" aria-label="Destination or transit details" style="display:block;width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px;min-height:70px;margin-bottom:10px;"></textarea>
+            <button class="btn-primary-admin" style="width:100%;justify-content:center;" onclick="addTrackingEvent(${id})"><i class="bi bi-plus-lg me-1"></i> Add Event</button>
         </div>`;
 
         document.getElementById('trackingModalBody').innerHTML = html;
@@ -351,7 +351,6 @@ function saveDtdcAwb(id) {
 
 function addTrackingEvent(id) {
     const eventTime = document.getElementById('eventTime').value;
-    const location = document.getElementById('eventLocation').value.trim();
     const status = document.getElementById('eventStatus').value;
     const desc = document.getElementById('eventDesc').value.trim();
 
@@ -364,7 +363,6 @@ function addTrackingEvent(id) {
             action:'add_event',
             shipment_id: id,
             event_time: eventTime.replace('T',' '),
-            location,
             status,
             description: desc
         }),
@@ -375,7 +373,6 @@ function addTrackingEvent(id) {
         showToast(data.success ? 'Event added' : 'Error', data.success ? 'success' : 'error');
         if (data.success) {
             document.getElementById('eventTime').value = '';
-            document.getElementById('eventLocation').value = '';
             document.getElementById('eventStatus').value = '';
             document.getElementById('eventDesc').value = '';
             trackingModal(id, '');

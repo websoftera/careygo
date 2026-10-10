@@ -19,21 +19,21 @@ $message = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $shipmentId = (int) ($_POST['shipment_id'] ?? 0);
     $eventTime  = trim($_POST['event_time'] ?? '');
-    $location   = trim($_POST['location'] ?? '');
     $status     = trim($_POST['status'] ?? '');
     $description = trim($_POST['description'] ?? '');
     if ($description === '') {
-        $where = $location !== '' ? ' at ' . $location : '';
         $messages = [
+            'pickup requested' => 'Pickup has been requested for this shipment.',
             'booked' => 'Shipment booking has been created and is waiting for pickup.',
-            'picked up' => 'Shipment has been picked up' . $where . '.',
-            'in transit' => 'Shipment is moving through the courier network' . $where . '.',
-            'out for delivery' => 'Shipment is out for delivery' . $where . '.',
+            'in transit' => 'Shipment is moving through the courier network.',
+            'out for delivery' => 'Shipment is out for delivery.',
             'delivered' => 'Shipment has been delivered successfully.',
-            'exception' => 'Shipment needs attention. Our team is checking the issue' . $where . '.',
-            'returned' => 'Shipment is being returned' . $where . '.',
+            'on hold' => 'Shipment is temporarily on hold. Our team is checking the next steps.',
+            'return to origin' => 'Shipment is being returned to the origin.',
+            'damage' => 'A damage issue was reported for this shipment. Our team is reviewing it.',
+            'exception' => 'Shipment needs attention. Our team is checking the issue.',
         ];
-        $description = $messages[strtolower($status)] ?? 'Shipment status updated' . $where . '.';
+        $description = $messages[strtolower($status)] ?? 'Shipment status updated.';
     }
 
     if (!$shipmentId || !$eventTime || !$status) {
@@ -52,16 +52,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo->prepare(
                     "INSERT INTO shipment_tracking_events
                      (shipment_id, event_time, location, next_destination, expected_at, status, description, destination_details, source)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'manual')"
+                     VALUES (?, ?, NULL, NULL, NULL, ?, ?, NULL, 'manual')"
                 )->execute([
                     $shipmentId,
                     date('Y-m-d H:i:s', strtotime($eventTime)),
-                    $location ?: null,
-                    null,
-                    null,
                     $status,
                     $description ?: null,
-                    null,
                 ]);
 
                 $success = true;
@@ -121,36 +117,32 @@ try {
                 </select>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label"><strong>Event Time</strong></label>
-                <input type="datetime-local" class="form-control" name="event_time" required
-                       value="<?= date('Y-m-d\TH:i') ?>">
-                <small class="text-muted">When did this event occur?</small>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label"><strong>Status</strong></label>
+                    <select class="form-control" name="status" required>
+                        <option value="">Select status...</option>
+                        <option value="Pickup Requested">Pickup Requested</option>
+                        <option value="Booked">Booked</option>
+                        <option value="In Transit">In Transit</option>
+                        <option value="Out for Delivery">Out for Delivery</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="On Hold">On Hold</option>
+                        <option value="Return to Origin">Return to Origin</option>
+                        <option value="Damage">Damage</option>
+                        <option value="Exception">Exception</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label"><strong>Date &amp; Time</strong></label>
+                    <input type="datetime-local" class="form-control" name="event_time" required
+                           value="<?= date('Y-m-d\TH:i') ?>">
+                </div>
             </div>
 
             <div class="mb-3">
-                <label class="form-label"><strong>Status</strong></label>
-                <select class="form-control" name="status" required>
-                    <option value="">Select status...</option>
-                    <option value="Picked Up">Picked Up</option>
-                    <option value="In Transit">In Transit</option>
-                    <option value="Out for Delivery">Out for Delivery</option>
-                    <option value="Delivered">Delivered</option>
-                    <option value="Exception">Exception</option>
-                    <option value="Returned">Returned</option>
-                </select>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Location</label>
-                <input type="text" class="form-control" name="location" placeholder="e.g., Delhi Sorting Hub">
-                <small class="text-muted">Optional. Where is the package now?</small>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Customer Update</label>
-                <textarea class="form-control" name="description" rows="3" placeholder="Optional. Example: Parcel left Delhi Hub and is moving toward Mumbai."></textarea>
-                <small class="text-muted">Leave blank to use an automatic customer-friendly update.</small>
+                <label class="form-label"><strong>Destination / Transit Details</strong></label>
+                <textarea class="form-control" name="description" rows="3" placeholder="Vehicle, route, branch note, delay reason, contact point, etc."></textarea>
             </div>
 
             <button type="submit" class="btn btn-primary btn-lg w-100">Add Event</button>
