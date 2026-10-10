@@ -334,11 +334,20 @@ require_once __DIR__ . '/includes/header.php';
     font-size: 12px;
     font-weight: 600;
 }
+.timeline-heading {
+    align-items: baseline;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+}
 .timeline-status {
     color: #1a1a2e;
     font-size: 14px;
     font-weight: 600;
-    margin-top: 2px;
+}
+.timeline-status i {
+    color: #6b7280;
+    margin-right: 4px;
 }
 .timeline-location,
 .timeline-next,
@@ -537,8 +546,10 @@ function renderTracking(data) {
             <div class="timeline-item ${isCompleted ? 'completed' : ''}">
                 <div class="timeline-line"></div>
                 <div class="timeline-dot"></div>
-                <div class="timeline-time">${formatTime(e.event_time)}</div>
-                <div class="timeline-status">${esc(e.status)} ${dtdcLabel}</div>
+                <div class="timeline-heading">
+                    <span class="timeline-time">${formatTime(e.event_time)}</span>
+                    <span class="timeline-status"><i class="bi ${trackingStatusIcon(e.status)}"></i>${esc(e.status)} ${dtdcLabel}</span>
+                </div>
                 ${e.location ? `<div class="timeline-location"><i class="bi bi-geo-alt me-1"></i>${esc(e.location)}</div>` : ''}
                 ${e.next_destination ? `<div class="timeline-next"><i class="bi bi-arrow-right-circle me-1"></i>Next destination: ${esc(e.next_destination)}</div>` : ''}
                 ${e.description ? `<div class="timeline-desc">${esc(e.description)}</div>` : ''}
@@ -588,6 +599,23 @@ function renderTrackingProgress(shipmentStatus, events) {
         <div class="tracking-stage ${index < stageIndex ? 'done' : ''} ${index === stageIndex ? 'active' : ''}">
             <span class="tracking-stage-label"><i class="bi ${stage[1]}"></i>${stage[0]}</span>
         </div>`).join('');
+}
+
+function trackingStatusIcon(status) {
+    const normalized = String(status || '').toLowerCase().replace(/[_-]+/g, ' ').trim();
+    const icons = {
+        'pickup requested': 'bi-inbox',
+        booked: 'bi-box-arrow-in-down',
+        'picked up': 'bi-box-seam',
+        'in transit': 'bi-truck',
+        'out for delivery': 'bi-bicycle',
+        delivered: 'bi-box2-heart',
+        'on hold': 'bi-pause-circle',
+        'return to origin': 'bi-arrow-return-left',
+        damage: 'bi-exclamation-triangle',
+        exception: 'bi-exclamation-octagon',
+    };
+    return icons[normalized] || 'bi-box-seam';
 }
 
 function formatTime(dt) {

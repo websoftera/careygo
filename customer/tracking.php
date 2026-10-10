@@ -37,7 +37,9 @@ if (!$shipment) { header('Location: dashboard.php'); exit; }
     .timeline-line { position: absolute; left: 8px; top: 28px; width: 2px; height: calc(100% + 20px); background: var(--border); }
     .timeline-item:last-child .timeline-line { display: none; }
     .timeline-time { font-size: 12px; font-weight: 600; color: var(--primary); font-family: 'Montserrat', sans-serif; }
-    .timeline-status { font-size: 14px; font-weight: 600; color: var(--text); margin-top: 2px; }
+    .timeline-heading { align-items: baseline; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+    .timeline-status { font-size: 14px; font-weight: 600; color: var(--text); }
+    .timeline-status i { color: var(--muted); margin-right: 4px; }
     .timeline-location { font-size: 12px; color: var(--muted); margin-top: 2px; }
     .timeline-next { font-size: 12px; color: var(--text); font-weight: 600; margin-top: 2px; }
     .timeline-desc { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
@@ -131,8 +133,10 @@ function renderTracking(data) {
             <div class="timeline-item ${isCompleted ? 'completed' : ''}">
                 <div class="timeline-line"></div>
                 <div class="timeline-dot"></div>
-                <div class="timeline-time">${formatTime(e.event_time)}</div>
-                <div class="timeline-status">${esc(e.status)} ${dtdcLabel}</div>
+                <div class="timeline-heading">
+                    <span class="timeline-time">${formatTime(e.event_time)}</span>
+                    <span class="timeline-status"><i class="bi ${trackingStatusIcon(e.status)}"></i>${esc(e.status)} ${dtdcLabel}</span>
+                </div>
                 ${e.location ? `<div class="timeline-location"><i class="bi bi-geo-alt me-1"></i>${esc(e.location)}</div>` : ''}
                 ${e.next_destination ? `<div class="timeline-next"><i class="bi bi-arrow-right-circle me-1"></i>Next destination: ${esc(e.next_destination)}</div>` : ''}
                 ${e.description ? `<div class="timeline-desc">${esc(e.description)}</div>` : ''}
@@ -180,6 +184,23 @@ function renderTrackingProgress(shipmentStatus, events) {
         <div class="tracking-stage ${index < stageIndex ? 'done' : ''} ${index === stageIndex ? 'active' : ''}">
             <span class="tracking-stage-label"><i class="bi ${stage[1]}"></i>${stage[0]}</span>
         </div>`).join('');
+}
+
+function trackingStatusIcon(status) {
+    const normalized = String(status || '').toLowerCase().replace(/[_-]+/g, ' ').trim();
+    const icons = {
+        'pickup requested': 'bi-inbox',
+        booked: 'bi-box-arrow-in-down',
+        'picked up': 'bi-box-seam',
+        'in transit': 'bi-truck',
+        'out for delivery': 'bi-bicycle',
+        delivered: 'bi-box2-heart',
+        'on hold': 'bi-pause-circle',
+        'return to origin': 'bi-arrow-return-left',
+        damage: 'bi-exclamation-triangle',
+        exception: 'bi-exclamation-octagon',
+    };
+    return icons[normalized] || 'bi-box-seam';
 }
 
 function formatTime(dt) {
