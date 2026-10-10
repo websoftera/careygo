@@ -639,7 +639,7 @@ function trackingStatusIcon(status) {
         damage: 'bi-exclamation-triangle',
         exception: 'bi-exclamation-octagon',
     };
-    return icons[normalized] || 'bi-box-seam';
+    return `<i class="bi ${icons[normalized] || 'bi-box-seam'}" aria-hidden="true"></i>`;
 }
 
 function formatTime(dt) {
