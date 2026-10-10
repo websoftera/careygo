@@ -41,6 +41,7 @@ if (!$shipment) { header('Location: dashboard.php'); exit; }
     .timeline-heading { align-items: baseline; display: flex; flex-wrap: wrap; gap: 4px 14px; }
     .timeline-status { font-size: 14px; font-weight: 600; color: var(--text); }
     .timeline-status i { color: var(--muted); margin-right: 4px; }
+    .timeline-status .pickup-location-box { color: var(--muted); margin-right: 4px; }
     .timeline-location { font-size: 12px; color: var(--muted); margin-top: 2px; }
     .timeline-next { font-size: 12px; color: var(--text); font-weight: 600; margin-top: 2px; }
     .timeline-desc { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
@@ -51,6 +52,9 @@ if (!$shipment) { header('Location: dashboard.php'); exit; }
     .tracking-stage.done::before, .tracking-stage.active::before { background: #16a34a; }
     .tracking-stage-label { display: inline-flex; align-items: center; gap: 5px; }
     .tracking-stage-label i { font-size: 14px; }
+    .pickup-location-box { display: inline-block; flex: 0 0 1.15em; height: 1.2em; position: relative; vertical-align: middle; width: 1.15em; }
+    .pickup-location-pin { font-size: 1.2em !important; left: 0; position: absolute; top: 0; }
+    .pickup-location-parcel { background: #fff; font-size: .42em !important; left: 35%; position: absolute; top: 29%; }
     .tracking-route { align-items: center; background: var(--bg); border-radius: 28px; color: var(--muted); display: flex; font-size: 12px; font-weight: 600; justify-content: space-between; margin: 20px 0 30px; padding: 13px 18px; gap: 12px; }
     .tracking-section-title { border-bottom: 1px solid var(--border); color: var(--text); font-size: 16px; font-weight: 600; margin: 0; padding-bottom: 10px; }
     .dtdc-badge { display: inline-block; background: rgba(0,26,147,0.1); color: var(--primary); padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; margin-left: 8px; }
@@ -135,7 +139,7 @@ function renderTracking(data) {
                 <div class="timeline-line"></div>
                 <div class="timeline-dot"></div>
                 <div class="timeline-heading">
-                    <span class="timeline-status"><i class="bi ${trackingStatusIcon(e.status)}"></i>${esc(e.status)} ${dtdcLabel}</span>
+                    <span class="timeline-status">${trackingStatusIcon(e.status)}${esc(e.status)} ${dtdcLabel}</span>
                     <span class="timeline-time">${formatTime(e.event_time)}</span>
                 </div>
                 ${e.location ? `<div class="timeline-location"><i class="bi bi-geo-alt me-1"></i>${esc(e.location)}</div>` : ''}
@@ -159,7 +163,7 @@ function renderTracking(data) {
 
 function renderTrackingProgress(shipmentStatus, events) {
     const stages = [
-        ['Pickup Requested', 'bi-inbox'],
+        ['Pickup Requested', 'pickup-location-box'],
         ['Booked', 'bi-box-arrow-in-down'],
         ['In Transit', 'bi-truck'],
         ['Out for Delivery', 'bi-box-seam'],
@@ -183,14 +187,22 @@ function renderTrackingProgress(shipmentStatus, events) {
     const stageIndex = stageByStatus[normalized] ?? stageByStatus[String(shipmentStatus || '').toLowerCase().replace(/[_-]+/g, ' ').trim()] ?? 0;
     document.getElementById('trackingProgress').innerHTML = stages.map((stage, index) => `
         <div class="tracking-stage ${index < stageIndex ? 'done' : ''} ${index === stageIndex ? 'active' : ''}">
-            <span class="tracking-stage-label"><i class="bi ${stage[1]}"></i>${stage[0]}</span>
+            <span class="tracking-stage-label">${trackingStageIcon(stage[1])}${stage[0]}</span>
         </div>`).join('');
+}
+
+function pickupRequestIcon() {
+    return '<span class="pickup-location-box" aria-hidden="true"><i class="bi bi-geo-alt pickup-location-pin"></i><i class="bi bi-box-seam pickup-location-parcel"></i></span>';
+}
+
+function trackingStageIcon(icon) {
+    return icon === 'pickup-location-box' ? pickupRequestIcon() : `<i class="bi ${icon}" aria-hidden="true"></i>`;
 }
 
 function trackingStatusIcon(status) {
     const normalized = String(status || '').toLowerCase().replace(/[_-]+/g, ' ').trim();
+    if (normalized === 'pickup requested') return pickupRequestIcon();
     const icons = {
-        'pickup requested': 'bi-inbox',
         booked: 'bi-box-arrow-in-down',
         'picked up': 'bi-box-seam',
         'in transit': 'bi-truck',
