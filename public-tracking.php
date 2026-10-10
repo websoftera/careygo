@@ -623,7 +623,9 @@ function trackingStatusIcon(status) {
 function formatTime(dt) {
     const d = new Date(dt);
     if (Number.isNaN(d.getTime())) return '';
-    return d.toLocaleDateString('en-IN') + ' ' + d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    const date = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).replace(' ', '');
+    return date + ' ' + time;
 }
 
 function formatDate(dt) {
