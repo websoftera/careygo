@@ -365,7 +365,7 @@ require_once __DIR__ . '/includes/header.php';
     color: #6b7280;
     margin-right: 4px;
 }
-.timeline-status .pickup-location-box { color: #6b7280; margin-right: 4px; }
+.timeline-status .pickup-location-box { color: #6b7280; margin-right: 4px; transform: translateY(-3px); }
 .timeline-location,
 .timeline-next,
 .timeline-desc {

@@ -41,7 +41,7 @@ if (!$shipment) { header('Location: dashboard.php'); exit; }
     .timeline-heading { align-items: baseline; display: flex; flex-wrap: wrap; gap: 4px 14px; }
     .timeline-status { font-size: 14px; font-weight: 600; color: var(--text); }
     .timeline-status i { color: var(--muted); margin-right: 4px; }
-    .timeline-status .pickup-location-box { color: var(--muted); margin-right: 4px; }
+    .timeline-status .pickup-location-box { color: var(--muted); margin-right: 4px; transform: translateY(-3px); }
     .timeline-location { font-size: 12px; color: var(--muted); margin-top: 2px; }
     .timeline-next { font-size: 12px; color: var(--text); font-weight: 600; margin-top: 2px; }
     .timeline-desc { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
