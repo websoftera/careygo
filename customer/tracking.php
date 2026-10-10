@@ -36,7 +36,8 @@ if (!$shipment) { header('Location: dashboard.php'); exit; }
     .timeline-item.completed .timeline-dot { background: #22c55e; box-shadow: 0 0 0 2px #22c55e; }
     .timeline-line { position: absolute; left: 8px; top: 28px; width: 2px; height: calc(100% + 20px); background: var(--border); }
     .timeline-item:last-child .timeline-line { display: none; }
-    .timeline-time { border-left: 1px solid #d1d5db; font-size: 12px; font-weight: 600; color: var(--primary); font-family: 'Montserrat', sans-serif; padding-left: 12px; }
+    .timeline-time { align-items: center; border-left: 1px solid #d1d5db; display: inline-flex; font-size: 12px; font-weight: 600; color: var(--primary); font-family: 'Montserrat', sans-serif; padding-left: 12px; white-space: nowrap; }
+    .timeline-time-divider { border-left: 1px solid #d1d5db; height: 1em; margin: 0 10px; }
     .timeline-heading { align-items: baseline; display: flex; flex-wrap: wrap; gap: 4px 14px; }
     .timeline-status { font-size: 14px; font-weight: 600; color: var(--text); }
     .timeline-status i { color: var(--muted); margin-right: 4px; }
@@ -208,7 +209,7 @@ function formatTime(dt) {
     if (Number.isNaN(d.getTime())) return '';
     const date = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).replace(' ', '');
-    return date + ' ' + time;
+    return `<span>${date}</span><span class="timeline-time-divider" aria-hidden="true"></span><span>${time}</span>`;
 }
 
 function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }

@@ -333,10 +333,18 @@ require_once __DIR__ . '/includes/header.php';
 .timeline-time {
     border-left: 1px solid #d1d5db;
     color: #001A93;
+    display: inline-flex;
+    align-items: center;
     font-family: 'Montserrat', sans-serif;
     font-size: 12px;
     font-weight: 600;
     padding-left: 12px;
+    white-space: nowrap;
+}
+.timeline-time-divider {
+    border-left: 1px solid #d1d5db;
+    height: 1em;
+    margin: 0 10px;
 }
 .timeline-heading {
     align-items: baseline;
@@ -627,7 +635,7 @@ function formatTime(dt) {
     if (Number.isNaN(d.getTime())) return '';
     const date = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).replace(' ', '');
-    return date + ' ' + time;
+    return `<span>${date}</span><span class="timeline-time-divider" aria-hidden="true"></span><span>${time}</span>`;
 }
 
 function formatDate(dt) {
