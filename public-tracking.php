@@ -549,8 +549,8 @@ function renderTracking(data) {
                 <div class="timeline-line"></div>
                 <div class="timeline-dot"></div>
                 <div class="timeline-heading">
-                    <span class="timeline-time">${formatTime(e.event_time)}</span>
                     <span class="timeline-status"><i class="bi ${trackingStatusIcon(e.status)}"></i>${esc(e.status)} ${dtdcLabel}</span>
+                    <span class="timeline-time">${formatTime(e.event_time)}</span>
                 </div>
                 ${e.location ? `<div class="timeline-location"><i class="bi bi-geo-alt me-1"></i>${esc(e.location)}</div>` : ''}
                 ${e.next_destination ? `<div class="timeline-next"><i class="bi bi-arrow-right-circle me-1"></i>Next destination: ${esc(e.next_destination)}</div>` : ''}
