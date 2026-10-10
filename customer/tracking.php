@@ -36,7 +36,7 @@ if (!$shipment) { header('Location: dashboard.php'); exit; }
     .timeline-item.completed .timeline-dot { background: #22c55e; box-shadow: 0 0 0 2px #22c55e; }
     .timeline-line { position: absolute; left: 8px; top: 28px; width: 2px; height: calc(100% + 20px); background: var(--border); }
     .timeline-item:last-child .timeline-line { display: none; }
-    .timeline-time { font-size: 12px; font-weight: 600; color: var(--primary); font-family: 'Montserrat', sans-serif; }
+    .timeline-time { border-left: 1px solid #d1d5db; font-size: 12px; font-weight: 600; color: var(--primary); font-family: 'Montserrat', sans-serif; padding-left: 12px; }
     .timeline-heading { align-items: baseline; display: flex; flex-wrap: wrap; gap: 4px 14px; }
     .timeline-status { font-size: 14px; font-weight: 600; color: var(--text); }
     .timeline-status i { color: var(--muted); margin-right: 4px; }

@@ -331,10 +331,12 @@ require_once __DIR__ . '/includes/header.php';
     display: none;
 }
 .timeline-time {
+    border-left: 1px solid #d1d5db;
     color: #001A93;
     font-family: 'Montserrat', sans-serif;
     font-size: 12px;
     font-weight: 600;
+    padding-left: 12px;
 }
 .timeline-heading {
     align-items: baseline;
