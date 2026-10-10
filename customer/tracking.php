@@ -53,6 +53,7 @@ if (!$shipment) { header('Location: dashboard.php'); exit; }
     .tracking-stage-label { display: inline-flex; align-items: center; gap: 6px; line-height: 1.35; }
     .tracking-stage-label > i { font-size: 17px; line-height: 1; }
     .pickup-location-box { display: inline-block; flex: 0 0 1.3em; height: 1.35em; position: relative; vertical-align: middle; width: 1.3em; }
+    .tracking-stage-label .pickup-location-box { transform: translateY(-3px); }
     .pickup-location-pin { font-size: 1.35em !important; left: 0; position: absolute; top: 0; }
     .pickup-location-parcel { background: #fff; font-size: .42em !important; left: 35%; position: absolute; top: 29%; }
     .tracking-route { align-items: center; background: var(--bg); border-radius: 28px; color: var(--muted); display: flex; font-size: 12px; font-weight: 600; justify-content: space-between; margin: 20px 0 30px; padding: 13px 18px; gap: 12px; }

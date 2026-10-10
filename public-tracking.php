@@ -281,6 +281,7 @@ require_once __DIR__ . '/includes/header.php';
 .tracking-stage-label { display: inline-flex; align-items: center; gap: 6px; line-height: 1.35; }
 .tracking-stage-label > i { font-size: 17px; line-height: 1; }
 .pickup-location-box { display: inline-block; flex: 0 0 1.3em; height: 1.35em; position: relative; vertical-align: middle; width: 1.3em; }
+.tracking-stage-label .pickup-location-box { transform: translateY(-3px); }
 .pickup-location-pin { font-size: 1.35em !important; left: 0; position: absolute; top: 0; }
 .pickup-location-parcel { background: #fff; font-size: .42em !important; left: 35%; position: absolute; top: 29%; }
 .tracking-section-title {
