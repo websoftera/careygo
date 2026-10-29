@@ -59,6 +59,12 @@
                 </a>
             </li>
             <li>
+                <a href="international-tracking.php" class="sidebar-link <?= ($activePage ?? '') === 'international-tracking' ? 'active' : '' ?>">
+                    <i class="bi bi-globe2"></i>
+                    <span>International Tracking</span>
+                </a>
+            </li>
+            <li>
                 <a href="pricing.php" class="sidebar-link <?= ($activePage ?? '') === 'pricing' ? 'active' : '' ?>">
                     <i class="bi bi-tags"></i>
                     <span>Pricing</span>

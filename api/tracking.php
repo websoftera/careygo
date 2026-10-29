@@ -19,6 +19,66 @@ $tracking = trim($_GET['tracking'] ?? '');
 $id       = (int) ($_GET['id'] ?? 0);
 $shipment = null;
 
+// International tracking is stored separately so domestic records and DTDC
+// tracking behavior remain unchanged. INT numbers use the same public page.
+if ($tracking !== '' && stripos($tracking, 'INT') === 0) {
+    try {
+        $stmt = $pdo->prepare('SELECT * FROM international_shipments WHERE tracking_no = ?');
+        $stmt->execute([$tracking]);
+        $international = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$international) json_response(['success' => false, 'message' => 'Shipment not found.'], 404);
+
+        $eventStmt = $pdo->prepare('SELECT event_time, location, status, description FROM international_tracking_events WHERE shipment_id = ? ORDER BY event_time DESC, id DESC');
+        $eventStmt->execute([$international['id']]);
+        $events = $eventStmt->fetchAll(PDO::FETCH_ASSOC);
+        if (!$events) {
+            $events[] = [
+                'event_time' => $international['updated_at'] ?: $international['created_at'],
+                'location' => $international['origin_city'] . ', ' . $international['origin_country'],
+                'next_destination' => '',
+                'status' => $international['status'],
+                'description' => 'International shipment tracking has been created.',
+                'destination_details' => '',
+                'source' => 'manual',
+            ];
+        }
+        foreach ($events as &$event) {
+            $event['next_destination'] = '';
+            $event['destination_details'] = '';
+            $event['source'] = 'manual';
+        }
+        unset($event);
+
+        json_response([
+            'success' => true,
+            'shipment' => [
+                'id' => (int)$international['id'],
+                'tracking_no' => $international['tracking_no'],
+                'status' => strtolower(str_replace(' ', '_', $international['status'])),
+                'service_type' => 'international',
+                'service_label' => 'International Courier',
+                'pickup_city' => $international['origin_city'],
+                'pickup_state' => $international['origin_region'],
+                'pickup_pincode' => $international['origin_postal_code'],
+                'pickup_country' => $international['origin_country'],
+                'pickup_address' => $international['origin_address'],
+                'delivery_city' => $international['destination_city'],
+                'delivery_state' => $international['destination_region'],
+                'delivery_pincode' => $international['destination_postal_code'],
+                'delivery_country' => $international['destination_country'],
+                'delivery_address' => $international['destination_address'],
+                'created_at' => $international['created_at'],
+            ],
+            'events' => $events,
+            'dtdc_live' => false,
+            'dtdc_error' => null,
+        ]);
+    } catch (Throwable $e) {
+        error_log('International tracking lookup failed: ' . $e->getMessage());
+        json_response(['success' => false, 'message' => 'Tracking is temporarily unavailable.'], 500);
+    }
+}
+
 try {
     if ($id) {
         // Requires auth — customer can only see own shipments; admin sees all

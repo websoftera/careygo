@@ -64,6 +64,43 @@ function cgo_run_auto_migrations(PDO $pdo): void
             }
         }
 
+        $pdo->exec("CREATE TABLE IF NOT EXISTS international_shipments (
+            id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+            tracking_no VARCHAR(40) DEFAULT NULL,
+            customer_name VARCHAR(160) NOT NULL,
+            customer_phone VARCHAR(30) DEFAULT NULL,
+            origin_city VARCHAR(120) NOT NULL,
+            origin_region VARCHAR(120) DEFAULT NULL,
+            origin_postal_code VARCHAR(30) DEFAULT NULL,
+            origin_country VARCHAR(120) NOT NULL,
+            origin_address TEXT DEFAULT NULL,
+            destination_city VARCHAR(120) NOT NULL,
+            destination_region VARCHAR(120) DEFAULT NULL,
+            destination_postal_code VARCHAR(30) DEFAULT NULL,
+            destination_country VARCHAR(120) NOT NULL,
+            destination_address TEXT DEFAULT NULL,
+            status VARCHAR(40) NOT NULL DEFAULT 'Booked',
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY uniq_international_tracking_no (tracking_no),
+            KEY idx_international_status (status),
+            KEY idx_international_created (created_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+        $pdo->exec("CREATE TABLE IF NOT EXISTS international_tracking_events (
+            id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+            shipment_id INT UNSIGNED NOT NULL,
+            event_time DATETIME NOT NULL,
+            location VARCHAR(200) DEFAULT NULL,
+            status VARCHAR(100) NOT NULL,
+            description TEXT DEFAULT NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY idx_int_event_shipment_time (shipment_id, event_time),
+            CONSTRAINT fk_int_tracking_shipment FOREIGN KEY (shipment_id) REFERENCES international_shipments(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
         $pdo->exec("
             CREATE TABLE IF NOT EXISTS password_resets (
                 id INT UNSIGNED NOT NULL AUTO_INCREMENT,
