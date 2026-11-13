@@ -52,10 +52,8 @@ try {
     require_once __DIR__ . '/../lib/migrations.php';
     cgo_run_auto_migrations($pdo);
 } catch (PDOException $e) {
-    // Don't leak DB details in production
-    $msg = defined('IS_HTTPS') && IS_HTTPS
-        ? 'Service temporarily unavailable. Please try again later.'
-        : 'Database connection failed: ' . $e->getMessage();
+    // Never expose connection details (hostnames, users, or driver errors) to visitors.
+    error_log('Careygo database connection failed: ' . $e->getMessage());
     http_response_code(503);
-    die($msg);
+    die('Service temporarily unavailable. Please try again later.');
 }
