@@ -23,7 +23,7 @@ class EmailService
     {
         global $usePhpMailer;
 
-        $this->fromName     = 'Careygo Logistics';
+        $this->fromName     = env('CGO_EMAIL_FROM_NAME', 'Careygo Logistics');
         $this->from         = env('CGO_EMAIL_FROM', 'noreply@careygo.in');
         $this->replyTo      = env('CGO_EMAIL_REPLY', 'support@careygo.in');
         $this->adminEmail   = ADMIN_EMAIL;
