@@ -44,12 +44,7 @@ if (empty($_FILES['photo']) || $_FILES['photo']['error'] !== UPLOAD_ERR_OK) {
 
 $file     = $_FILES['photo'];
 $maxSize  = 5 * 1024 * 1024; // 5 MB
-$allowed = [
-    'image/jpeg' => 'jpg',
-    'image/png'  => 'png',
-    'image/gif'  => 'gif',
-    'image/webp' => 'webp',
-];
+$allowed  = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
 // Validate size
 if ($file['size'] > $maxSize) {
@@ -59,7 +54,7 @@ if ($file['size'] > $maxSize) {
 // Validate MIME type
 $finfo    = new finfo(FILEINFO_MIME_TYPE);
 $mimeType = $finfo->file($file['tmp_name']);
-if (!isset($allowed[$mimeType])) {
+if (!in_array($mimeType, $allowed, true)) {
     json_response(['success' => false, 'message' => 'Only JPEG, PNG, GIF, or WebP images are allowed.'], 422);
 }
 
@@ -69,8 +64,8 @@ if (!is_dir($uploadDir)) {
     @mkdir($uploadDir, 0755, true);
 }
 
-// Use the extension determined from the file contents, never the user-supplied filename.
-$ext      = $allowed[$mimeType];
+// Generate unique filename
+$ext      = pathinfo($file['name'], PATHINFO_EXTENSION) ?: 'jpg';
 $fileName = 'booking_' . $type . '_' . $user['sub'] . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . strtolower($ext);
 $destPath = $uploadDir . $fileName;
 
