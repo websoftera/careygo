@@ -15,12 +15,12 @@ ErrorDocument 500 /500.php
 ErrorDocument 403 /404.php
 
 # ── Environment overrides (uncomment & set on production) ────
-# SetEnv CGO_SITE_URL    https://careygo.in
+# SetEnv CGO_SITE_URL    https://careygo.everythingb2c.in
 # SetEnv CGO_JWT_SECRET  your-long-random-secret-here
 # SetEnv CGO_DB_HOST     localhost
-# SetEnv CGO_DB_USER     your_database_user
-# SetEnv CGO_DB_PASS     your_database_password
-# SetEnv CGO_DB_NAME     your_database_name
+# SetEnv CGO_DB_USER     u141519101_careygo
+# SetEnv CGO_DB_PASS     +DgrP256
+# SetEnv CGO_DB_NAME     u141519101_careygo
 
 # ── Force HTTPS (uncomment on live server) ───────────────────
 # RewriteEngine On
@@ -30,14 +30,8 @@ ErrorDocument 403 /404.php
 # ── Rewrite engine (needed for clean redirects) ──────────────
 RewriteEngine On
 
-# Block web requests for application internals, repository metadata, and
-# maintenance utilities. PHP can still include these files internally.
-RewriteRule ^(?:config|lib|database|scratch|vendor|\.git|\.github)(?:/|$) - [F,L,NC]
-RewriteRule ^(?:debug-[^/]*|test-[^/]*|api_test|check_pricing|diagnosis|dtdc_test|import_pricing|setup(?:-production)?|view_logs)\.php$ - [F,L,NC]
-
-# Never execute an uploaded script, even if a malicious upload is given a PHP
-# extension. Image files in this directory continue to be served normally.
-RewriteRule ^uploads/.*\.(?:php[0-9]?|phtml|phar|php[0-9]?s)$ - [F,L,NC]
+# Deny direct access to sensitive directories
+RewriteRule ^(config|lib|database|database\/.*\.sql)(/|$) - [F,L]
 
 # Clean blog URLs
 RewriteRule ^blog/?$ blog.php [L,QSA]
@@ -56,16 +50,10 @@ RewriteRule ^sitemap\.xml$ sitemap.php [L]
     # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
 </IfModule>
 
-# ── Deny direct downloads of secrets and server-side artifacts ────────────
-# Supports both Apache 2.4+ and older Apache access-control syntax.
-<FilesMatch "(?i)^(?:\.env(?:\..*)?|\.htaccess|\.htpasswd|composer\.(?:json|lock)|.*\.(?:sql|log|ini|bak|dist|sh|py|pem|key))$">
-    <IfModule mod_authz_core.c>
-        Require all denied
-    </IfModule>
-    <IfModule !mod_authz_core.c>
-        Order Allow,Deny
-        Deny from all
-    </IfModule>
+# ── PHP files: deny direct browsing of sensitive dirs ────────
+<FilesMatch "\.(sql|log|env|bak|sh|py)$">
+    Order Allow,Deny
+    Deny from all
 </FilesMatch>
 
 # ── Cache static assets ──────────────────────────────────────
