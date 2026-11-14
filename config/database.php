@@ -24,12 +24,29 @@ if (file_exists(__DIR__ . '/../.env')) {
  * Credentials can be overridden via environment variables for production.
  */
 
-// Use a database-specific reader so no other application helper can override
-// the database credentials selected from this deployment's .env file.
+// Read database settings directly from this deployment's .env file. This
+// avoids inherited hosting variables with stale credentials.
 function cgo_database_env(string $key, string $default): string
 {
-    $value = $_ENV[$key] ?? getenv($key);
-    return ($value !== false && $value !== '') ? $value : $default;
+    $envPath = __DIR__ . '/../.env';
+    if (!is_readable($envPath)) {
+        return $default;
+    }
+
+    $envLines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
+    foreach ($envLines as $line) {
+        if (strpos($line, '#') === 0 || strpos($line, '=') === false) {
+            continue;
+        }
+
+        [$envKey, $value] = explode('=', $line, 2);
+        if (trim($envKey) === $key) {
+            $value = trim($value);
+            return $value !== '' ? $value : $default;
+        }
+    }
+
+    return $default;
 }
 
 define('DB_HOST', cgo_database_env('CGO_DB_HOST', 'localhost'));
