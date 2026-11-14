@@ -24,30 +24,35 @@ if (file_exists(__DIR__ . '/../.env')) {
  * Credentials can be overridden via environment variables for production.
  */
 
-// ── Helper: read env var or fall back to a default ───────────
-if (!function_exists('_cfg')) {
-    function _cfg(string $key, string $default): string
-    {
-        $v = $_ENV[$key] ?? getenv($key);
-        return ($v !== false && $v !== '') ? $v : $default;
+// Read database settings directly from this deployment's .env file. This
+// avoids inherited hosting variables with stale credentials.
+function cgo_database_env(string $key, string $default): string
+{
+    $envPath = __DIR__ . '/../.env';
+    if (!is_readable($envPath)) {
+        return $default;
     }
+
+    $envLines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
+    foreach ($envLines as $line) {
+        if (strpos($line, '#') === 0 || strpos($line, '=') === false) {
+            continue;
+        }
+
+        [$envKey, $value] = explode('=', $line, 2);
+        if (trim($envKey) === $key) {
+            $value = trim($value);
+            return $value !== '' ? $value : $default;
+        }
+    }
+
+    return $default;
 }
 
-// define('DB_HOST', _cfg('CGO_DB_HOST', 'localhost'));
-// define('DB_USER', _cfg('CGO_DB_USER', 'root'));
-// define('DB_PASS', _cfg('CGO_DB_PASS', ''));
-// define('DB_NAME', _cfg('CGO_DB_NAME', 'caryego'));
-
-define('DB_HOST', _cfg('CGO_DB_HOST', '127.0.0.1'));
-define('DB_USER', _cfg('CGO_DB_USER', 'u728317772_caryego'));
-define('DB_PASS', _cfg('CGO_DB_PASS', '*IdjJpb9'));
-define('DB_NAME', _cfg('CGO_DB_NAME', 'u728317772_caryego')); 
-
-// ── Production credentials (set via env vars instead) ────────
-// CGO_DB_HOST=localhost
-// CGO_DB_USER=u141519101_careygo
-// CGO_DB_PASS=+DgrP256
-// CGO_DB_NAME=u141519101_careygo
+define('DB_HOST', cgo_database_env('CGO_DB_HOST', 'localhost'));
+define('DB_USER', cgo_database_env('CGO_DB_USER', 'root'));
+define('DB_PASS', cgo_database_env('CGO_DB_PASS', ''));
+define('DB_NAME', cgo_database_env('CGO_DB_NAME', 'careygo'));
 
 try {
     $pdo = new PDO(
