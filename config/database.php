@@ -1,4 +1,24 @@
 <?php
+if (file_exists(__DIR__ . '/../.env')) {
+    $envLines = file(__DIR__ . '/../.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+
+    foreach ($envLines as $line) {
+        if (strpos($line, '#') === 0 || strpos($line, '=') === false) {
+            continue;
+        }
+
+        [$key, $value] = explode('=', $line, 2);
+        $key = trim($key);
+        $value = trim($value);
+
+        // The deployment .env file is authoritative. This prevents inherited
+        // hosting variables with stale credentials from overriding it.
+        if ($key !== '') {
+            putenv("$key=$value");
+            $_ENV[$key] = $value;
+        }
+    }
+}
 /**
  * Database Configuration
  * Credentials can be overridden via environment variables for production.
