@@ -1,0 +1,8 @@
+# Environment files contain passwords and must stay on each server.
+.env
+.env.*
+!.env.example
+
+# Local runtime and editor files
+*.log
+.vscode/
