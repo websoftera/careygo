@@ -11,7 +11,9 @@ if (file_exists(__DIR__ . '/../.env')) {
         $key = trim($key);
         $value = trim($value);
 
-        if ($key !== '' && !isset($_ENV[$key]) && getenv($key) === false) {
+        // The deployment .env file is authoritative. This prevents inherited
+        // hosting variables with stale credentials from overriding it.
+        if ($key !== '') {
             putenv("$key=$value");
             $_ENV[$key] = $value;
         }
