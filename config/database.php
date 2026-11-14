@@ -24,7 +24,7 @@ if (file_exists(__DIR__ . '/../.env')) {
  * Credentials can be overridden via environment variables for production.
  */
 
-// ── Helper: read env var or fall back to a local-development default ──────
+// ── Helper: read env var or fall back to a default ───────────
 if (!function_exists('_cfg')) {
     function _cfg(string $key, string $default): string
     {
@@ -33,10 +33,21 @@ if (!function_exists('_cfg')) {
     }
 }
 
-define('DB_HOST', _cfg('CGO_DB_HOST', 'localhost'));
-define('DB_USER', _cfg('CGO_DB_USER', 'root'));
-define('DB_PASS', _cfg('CGO_DB_PASS', ''));
-define('DB_NAME', _cfg('CGO_DB_NAME', 'careygo'));
+// define('DB_HOST', _cfg('CGO_DB_HOST', 'localhost'));
+// define('DB_USER', _cfg('CGO_DB_USER', 'root'));
+// define('DB_PASS', _cfg('CGO_DB_PASS', ''));
+// define('DB_NAME', _cfg('CGO_DB_NAME', 'caryego'));
+
+define('DB_HOST', _cfg('CGO_DB_HOST', '127.0.0.1'));
+define('DB_USER', _cfg('CGO_DB_USER', 'u728317772_caryego'));
+define('DB_PASS', _cfg('CGO_DB_PASS', '*IdjJpb9'));
+define('DB_NAME', _cfg('CGO_DB_NAME', 'u728317772_caryego')); 
+
+// ── Production credentials (set via env vars instead) ────────
+// CGO_DB_HOST=localhost
+// CGO_DB_USER=u141519101_careygo
+// CGO_DB_PASS=+DgrP256
+// CGO_DB_NAME=u141519101_careygo
 
 try {
     $pdo = new PDO(
