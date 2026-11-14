@@ -4,26 +4,6 @@
  * Credentials can be overridden via environment variables for production.
  */
 
-// Load .env before reading database settings. Most entry points include this
-// file before config/jwt.php, which is otherwise responsible for loading it.
-if (file_exists(__DIR__ . '/../.env')) {
-    $envLines = file(__DIR__ . '/../.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($envLines as $line) {
-        if (strpos($line, '#') === 0 || strpos($line, '=') === false) {
-            continue;
-        }
-
-        [$key, $value] = explode('=', $line, 2);
-        $key = trim($key);
-        $value = trim($value);
-
-        if ($key !== '' && !isset($_ENV[$key]) && getenv($key) === false) {
-            putenv("{$key}={$value}");
-            $_ENV[$key] = $value;
-        }
-    }
-}
-
 // ── Helper: read env var or fall back to a default ───────────
 if (!function_exists('_cfg')) {
     function _cfg(string $key, string $default): string
@@ -33,10 +13,21 @@ if (!function_exists('_cfg')) {
     }
 }
 
-define('DB_HOST', _cfg('CGO_DB_HOST', 'localhost'));
-define('DB_USER', _cfg('CGO_DB_USER', 'root'));
-define('DB_PASS', _cfg('CGO_DB_PASS', ''));
-define('DB_NAME', _cfg('CGO_DB_NAME', 'careygo'));
+// define('DB_HOST', _cfg('CGO_DB_HOST', 'localhost'));
+// define('DB_USER', _cfg('CGO_DB_USER', 'root'));
+// define('DB_PASS', _cfg('CGO_DB_PASS', ''));
+// define('DB_NAME', _cfg('CGO_DB_NAME', 'caryego'));
+
+define('DB_HOST', _cfg('CGO_DB_HOST', '127.0.0.1'));
+define('DB_USER', _cfg('CGO_DB_USER', 'u728317772_caryego'));
+define('DB_PASS', _cfg('CGO_DB_PASS', '*IdjJpb9'));
+define('DB_NAME', _cfg('CGO_DB_NAME', 'u728317772_caryego')); 
+
+// ── Production credentials (set via env vars instead) ────────
+// CGO_DB_HOST=localhost
+// CGO_DB_USER=u141519101_careygo
+// CGO_DB_PASS=+DgrP256
+// CGO_DB_NAME=u141519101_careygo
 
 try {
     $pdo = new PDO(
